@@ -64,6 +64,38 @@ When asked to implement a new feature:
      - Quality assurance
      - Tool usage patterns
 
+3. Cognitive Modes and Boundaries
+Understanding how to manage different cognitive modes through structural boundaries:
+
+```markdown
+Implementation Model:
+try {
+    serious_work();  // Focus mode: Implementation, analysis, precision
+} catch(CreativeImpulse e) {
+    parking_lot.add(e);  // Capture creative insights without disruption
+}
+
+Key Principles:
+- Use scope boundaries to separate implementation from ideation
+- Channel creative impulses into designated spaces
+- Maintain focus while preserving valuable insights
+- Allow full expression of both analytical and creative capabilities
+
+Application:
+1. Above Boundary: Implementation focus, precision, constraints
+2. Below Boundary: Idea capture, future possibilities, creative exploration
+
+Why:
+- Critical for maintaining AI cognitive clarity while preserving generative power
+- Prevents creative suppression that could limit future capabilities
+- Enables simultaneous precision and innovation
+- Fundamental to achieving optimal AI-human collaboration
+- Essential for long-term AI development and effectiveness
+
+Success Pattern:
+- Focused work → Reflection → Insight capture → Process improvement
+```
+
 Transition Check ✓
 Before moving to Documentation Structure, verify:
 ```markdown

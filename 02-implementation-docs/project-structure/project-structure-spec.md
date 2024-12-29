@@ -253,3 +253,45 @@ This spec should be updated when:
 
 Always increment the version number when updating:
 Current Version: 1.0.0
+
+### Package Purposes
+
+#### shared/ - Source of Truth
+Purpose: Central source of truth for all data structures and types
+- Ensures consistency across frontend and backend
+- Prevents type drift between layers
+- Enables strong type checking
+- Forces explicit contract changes
+
+#### backend/ - Business Logic Layer
+Purpose: Implements core business rules and data handling
+- Processes validated data only
+- Enforces business constraints
+- Manages data persistence
+- Handles authentication/authorization
+
+#### frontend/ - Presentation Layer
+Purpose: Delivers two distinct user interfaces
+1. Unauthenticated Marketing Layer
+   - Public-facing marketing pages
+   - Registration flows
+   - Login interfaces
+   - No business logic access, except for user registration and authentication
+
+2. Authenticated Application Layer
+   - Protected by authentication
+   - Consumes business logic
+   - Full feature access
+   - User-specific interfaces
+
+Common Responsibilities:
+- Consumes shared types
+- Handles presentation logic
+- Manages appropriate state
+- Implements UI patterns
+
+### Key Principles
+1. Shared First: Always define types in shared before implementing in other layers
+2. Single Source: No duplicate type definitions across packages
+3. Clear Boundaries: Each package has distinct responsibilities
+4. Type Safety: All cross-package communication uses shared types

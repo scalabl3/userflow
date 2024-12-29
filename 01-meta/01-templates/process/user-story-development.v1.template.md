@@ -74,7 +74,49 @@ STORY TRANSITION POINTS:
 Use New Composer strategically at these points to maintain clear story context.
 ```
 
+## Technical Notes Structure
+```markdown
+## Technical Notes
+
+### Core Requirements (Must Have)
+- List essential functionality required for base implementation
+- Include core system capabilities
+- Define fundamental features
+
+System-wide Constraints:
+- List system-wide rules and limitations
+- Define cross-cutting concerns
+- Specify global requirements
+
+Implementation Requirements:
+- Detail specific implementation needs
+- Define base functionality scope
+- List essential technical requirements
+
+# =====================================================
+# SCOPE BOUNDARY - Base Implementation Ends Here
+# =====================================================
+# The following section describes features that are explicitly OUT OF SCOPE
+# for the base template implementation. These are documented for awareness and future
+# extension possibilities only.
+
+### Enhanced Features (Should Have)
+- List important but non-blocking features
+- Include planned enhancements
+- Define secondary capabilities
+
+### Advanced Capabilities (Nice to Have)
+- List future possibilities
+- Include advanced features
+- Define stretch goals
+
+# Future Considerations
+- List enterprise or advanced features not in base implementation
+- Document potential extensions
+- Note infrastructure requirements
+```
+
 ## Version History
-VERSION: 1.0
+VERSION: 1.1
 DATE: [current_date]
-CHANGES: Initial version 
+CHANGES: Added Technical Notes structure with scope boundary pattern 
