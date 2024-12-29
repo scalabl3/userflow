@@ -1,5 +1,12 @@
 # Vision Development Guide (v1)
 
+## Output Location
+Generated vision documents MUST be placed in: `02-implementation-docs/product/vision/`
+Following naming convention: `VISION-{TYPE}-V{NUMBER}.md`
+Example: `VISION-BASE-V1.md`, `VISION-EXTENSION-V1.md`
+
+⚠️ IMPORTANT: Never create vision documents in the template directory. All generated content goes to the implementation directory.
+
 ## Purpose
 Guide AI assistants in developing clear product and feature area visions that align with user needs and strategic goals.
 

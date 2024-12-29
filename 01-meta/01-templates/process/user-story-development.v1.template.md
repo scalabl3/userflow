@@ -1,5 +1,12 @@
 # User Story Development Guide (v1)
 
+## Output Location
+Generated stories MUST be placed in: `02-implementation-docs/product/stories/`
+Following naming convention: `STORY-{TYPE}-{NUMBER}.md`
+Example: `STORY-USER-001.md`, `STORY-DEPLOY-001.md`
+
+⚠️ IMPORTANT: Never create stories in the template directory. All generated content goes to the implementation directory.
+
 ## Purpose
 Guide AI assistants in creating and managing user stories that capture user needs and drive implementation decisions.
 

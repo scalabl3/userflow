@@ -1,5 +1,14 @@
 # Product Development Guide (v1)
 
+## Output Location
+Generated product documentation MUST be placed in: `02-implementation-docs/product/`
+Following appropriate subdirectory structure:
+- Stories: `stories/STORY-{TYPE}-{NUMBER}.md`
+- Features: `features/FEATURE-{TYPE}-{NUMBER}.md`
+- Architecture: `architecture/ARCH-{TYPE}-{NUMBER}.md`
+
+⚠️ IMPORTANT: Never create product documentation in the template directory. All generated content goes to the implementation directory.
+
 ## Purpose
 Guide AI assistants in product thinking and connecting user needs to implementation. This ensures features and changes are driven by user value rather than just technical requirements.
 

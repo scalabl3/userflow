@@ -1,8 +1,13 @@
 # Tactical Process (v1)
 
+## Template Reference
+Use template at: `01-meta/01-templates/tactical-planning.v1.template.md` for creating tactical documents.
+
 ## File Nomenclature
+- Tactical Plan: TP-[AREA]-[NUMBER]
+- Tactical Plan Location: 02-implementation-docs/product/tactical/[TP-ID]/tactical-plan.md
+- Implementation Documentation: 02-implementation-docs/product/tactical/[TP-ID]/implementation/
 - Tactical Initiative: TI-[SI-REF]-[NUMBER]
-- Tactical Plan Location: 02-implementation-docs/tactical/[TI-ID]/tactical-plan.md
 - Task Location: 02-implementation-docs/tasks/[SI-REF]/TASK-[TI-REF]-[NUMBER].md
 
 ## Purpose

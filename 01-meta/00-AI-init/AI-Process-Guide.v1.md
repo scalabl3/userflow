@@ -3,6 +3,73 @@
 ## Purpose
 This document guides new AI assistants in understanding and navigating the process documentation system. Follow this guide to quickly understand the project's process hierarchy, documentation standards, and file organization.
 
+## Directory Structure Fundamentals
+
+### Immutable Process Documentation (01-meta)
+This directory contains process documentation and templates. It is IMMUTABLE and requires explicit permission for any modifications.
+- `00-AI-init`: AI initialization and process guides
+- `01-templates`: Document templates
+- `02-process`: Process definitions and workflows
+
+#### Immutability Implementation
+The `01-meta` directory's immutability is enforced through file system permissions:
+- Files are set to read-only (444)
+- Directories are set to read-execute only (555)
+- NO new files or directories may be created
+- NO modifications to existing files
+- NO structural changes allowed
+- Changes require explicit permission and temporary permission changes
+- After modifications, permissions must be restored:
+  ```bash
+  chmod -R 444 01-meta/     # Files read-only
+  chmod -R 555 01-meta/*/   # Directories read-execute only
+  ```
+
+⚠️ NOTE: Directory creation and file modification are BOTH prohibited. The `01-meta` directory structure is FIXED and requires explicit permission for ANY changes.
+
+### Implementation Documentation (02-implementation-docs)
+This directory contains all generated content and implementations:
+- `product/`: Product-related documentation
+  - `stories/`: User stories and features (e.g., `STORY-TYPE-NUMBER.md`)
+  - `vision/`: Product vision documents
+- `deployment/`: Deployment configurations and docs
+- `project-structure/`: Implementation structure docs
+- `00-ai-self-assessments/`: AI learning and improvements
+- `misc/`: Other implementation documents
+
+⚠️ IMPORTANT: Never modify content in `01-meta` without explicit permission. All generated content goes into `02-implementation-docs`.
+
+### Content Placement Rules
+1. Templates (`01-meta/01-templates/*`)
+   - Are read-only reference documents
+   - Output goes to corresponding folders in `02-implementation-docs`
+   - Example: Story template → `02-implementation-docs/product/stories/`
+   - Always follow existing naming conventions in target directories
+
+2. Process Documents (`01-meta/02-process/*`)
+   - Define how to work, not where to store work
+   - Implementation details go to `02-implementation-docs`
+   - Always check existing patterns in `02-implementation-docs` before creating new structures
+
+### Shorthand Commands
+To improve efficiency in communication, the following shorthand commands are recognized:
+
+1. Process Guide Refresh
+   - Full Command: `Read and refresh understanding of all core process documents`
+   - Shorthand: `Refresh Dev Process` or `RDP`
+   - Scope: Must be re-established in each new conversation
+   - Usage: Request the AI to refresh its understanding of the entire process structure
+   - Core Documents Refreshed:
+     - Process Guide: `01-meta/00-AI-init/AI-Process-Guide.v1.md`
+     - Strategic Process: `01-meta/02-process/strategic/strategic-process.v1.md`
+     - Tactical Process: `01-meta/02-process/tactical/tactical-process.v1.md`
+     - Core Templates:
+       - Strategic Planning: `01-meta/01-templates/strategic-planning.v1.template.md`
+       - Tactical Planning: `01-meta/01-templates/tactical-planning.v1.template.md`
+       - User Story Development: `01-meta/01-templates/process/user-story-development.v1.template.md`
+
+⚠️ NOTE: Shorthand commands are conversation-specific and must be re-established in each new conversation due to the AI's stateless nature between conversations.
+
 ## Reading Order
 
 The reading order is specifically designed to build your understanding layer by layer, ensuring you have the right mental models and tools before diving into specific processes:
@@ -146,11 +213,15 @@ Before moving to Templates, verify:
 [ ] You understand how different layers connect
 [ ] You know where to find and place documents
 [ ] You can explain the process hierarchy
+[ ] You understand the distinction between process docs (01-meta) and implementation docs (02-implementation-docs)
+[ ] You know to never modify 01-meta without explicit permission
+[ ] You know where to place generated content from templates
 
 Key Questions:
 1. Can you describe the path from strategic to task level?
 2. Do you know where to find related documents?
 3. Can you explain how information flows between layers?
+4. Can you explain where template-generated content should be stored?
 ```
 
 ### 3. Templates (Learn the formats)

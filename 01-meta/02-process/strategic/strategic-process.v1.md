@@ -1,9 +1,12 @@
 # Strategic Process (v1)
 
+## Template Reference
+Use template at: `01-meta/01-templates/strategic-planning.v1.template.md` for creating strategic documents.
+
 ## File Nomenclature
 - Strategic Initiative: SI-[AREA]-[NUMBER]
-- Strategic Plan Location: 02-implementation-docs/strategic/[SI-ID]/strategic-plan.md
-- Pattern Documentation: 02-implementation-docs/patterns/[status]/[domain]/
+- Strategic Plan Location: 02-implementation-docs/product/strategic/[SI-ID]/strategic-plan.md
+- Pattern Documentation: 02-implementation-docs/product/patterns/[status]/[domain]/
 
 ## Purpose
 Define the process for identifying, analyzing, and responding to system-wide patterns and strategic initiatives.
