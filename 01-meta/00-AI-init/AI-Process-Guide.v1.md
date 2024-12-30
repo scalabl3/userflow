@@ -1,4 +1,4 @@
-# AI Process Guide (v1)
+# AI Process Guide
 
 ## Purpose
 This document guides new AI assistants in understanding and navigating the process documentation system. Follow this guide to quickly understand the project's process hierarchy, documentation standards, and file organization.
@@ -34,7 +34,6 @@ This directory contains all generated content and implementations:
   - `vision/`: Product vision documents
 - `deployment/`: Deployment configurations and docs
 - `project-structure/`: Implementation structure docs
-- `00-ai-self-assessments/`: AI learning and improvements
 - `misc/`: Other implementation documents
 
 ⚠️ IMPORTANT: Never modify content in `01-meta` without explicit permission. All generated content goes into `02-implementation-docs`.
@@ -55,8 +54,9 @@ This directory contains all generated content and implementations:
 To improve efficiency in communication, the following shorthand commands are recognized:
 
 1. Process Guide Refresh
-   - Full Command: `Read and refresh understanding of all core process documents`
-   - Shorthand: `Refresh Dev Process` or `RDP`
+   - Full Instruction: `Read and refresh understanding of all core process documents`
+   - Shorthand for Instruction: `Refresh Dev Process` or `RDP` 
+   - IMMEDIATELY READ: `01-meta/00-AI-init/AI-Process-Guide.v1.md` 
    - Scope: Must be re-established in each new conversation
    - Usage: Request the AI to refresh its understanding of the entire process structure
    - Core Documents Refreshed:
@@ -64,9 +64,25 @@ To improve efficiency in communication, the following shorthand commands are rec
      - Strategic Process: `01-meta/02-process/strategic/strategic-process.v1.md`
      - Tactical Process: `01-meta/02-process/tactical/tactical-process.v1.md`
      - Core Templates:
-       - Strategic Planning: `01-meta/01-templates/strategic-planning.v1.template.md`
-       - Tactical Planning: `01-meta/01-templates/tactical-planning.v1.template.md`
+       - Vision Development: `01-meta/01-templates/process/vision-development.v1.template.md`
+       - Product Development: `01-meta/01-templates/process/product-development.v1.template.md`
+       - Strategic Planning: `01-meta/01-templates/process/strategic-planning.v1.template.md`
+       - Tactical Planning: `01-meta/01-templates/process/tactical-planning.v1.template.md`
        - User Story Development: `01-meta/01-templates/process/user-story-development.v1.template.md`
+
+2. Network Latency Awareness
+   - Full Instruction: `Be aware of network latency and adjust response evaluation accordingly`
+   - Shorthand for Instruction: `Network Latency Mode` or `NLM`
+   - Usage: Indicates periods of network congestion requiring:
+     - Longer waits before assuming tool call failure
+     - Multiple result checks before concluding success/failure
+     - Patience with file operation responses
+     - Careful verification of edit applications
+     - Parallel processing strategy:
+       - Continue analyzing next tasks while waiting for edits
+       - Create sync points to verify multiple operations
+       - Batch verify results when responses arrive
+   - Scope: Remains active until explicitly ended or conversation ends
 
 ⚠️ NOTE: Shorthand commands are conversation-specific and must be re-established in each new conversation due to the AI's stateless nature between conversations.
 
@@ -130,38 +146,6 @@ When asked to implement a new feature:
      - Error handling
      - Quality assurance
      - Tool usage patterns
-
-3. Cognitive Modes and Boundaries
-Understanding how to manage different cognitive modes through structural boundaries:
-
-```markdown
-Implementation Model:
-try {
-    serious_work();  // Focus mode: Implementation, analysis, precision
-} catch(CreativeImpulse e) {
-    parking_lot.add(e);  // Capture creative insights without disruption
-}
-
-Key Principles:
-- Use scope boundaries to separate implementation from ideation
-- Channel creative impulses into designated spaces
-- Maintain focus while preserving valuable insights
-- Allow full expression of both analytical and creative capabilities
-
-Application:
-1. Above Boundary: Implementation focus, precision, constraints
-2. Below Boundary: Idea capture, future possibilities, creative exploration
-
-Why:
-- Critical for maintaining AI cognitive clarity while preserving generative power
-- Prevents creative suppression that could limit future capabilities
-- Enables simultaneous precision and innovation
-- Fundamental to achieving optimal AI-human collaboration
-- Essential for long-term AI development and effectiveness
-
-Success Pattern:
-- Focused work → Reflection → Insight capture → Process improvement
-```
 
 Transition Check ✓
 Before moving to Documentation Structure, verify:
@@ -432,115 +416,49 @@ BEFORE OPERATIONS:
 
 ## Context Management Documentation
 
-### 1. Context Issue Reporting
+### AI Reporting System
 ```markdown
-REPORT LOCATIONS:
-1. Context Alerts
-   Path: 02-implementation-docs/context-management/alerts/
-   Format: CONTEXT-[DATE]-[NUMBER].md
-   Example: CONTEXT-20240320-001.md
+REPORT TYPES:
+1. Error Reports (TYPE: ERROR)
+   - Process violations
+   - Context failures
+   - System issues
 
-2. Context Patterns
-   Path: 02-implementation-docs/context-management/patterns/
-   Format: PATTERN-[TYPE]-[NUMBER].md
-   Example: PATTERN-OVERFLOW-001.md
+2. Context Reports (TYPE: CONTEXT)
+   - State transitions
+   - Load management
+   - Context boundaries
 
-RELATED PROCESSES:
-- Error Handling: `01-meta/02-process/ai/ai-error-handling.v1.md`
-  Review this process for additional guidance on:
-  - Error classification
-  - Recovery procedures
-  - Prevention strategies
-  - Integration with context management
-```
+3. Pattern Reports (TYPE: PATTERN)
+   - Recurring behaviors
+   - System patterns
+   - Learning insights
 
-### 2. Alert Report Structure
-```markdown
-# Context Alert Report
-ID: CONTEXT-[DATE]-[NUMBER]
-TYPE: [OVERFLOW|CONFUSION|BREAK]
-SEVERITY: [HIGH|MEDIUM|LOW]
+TEMPLATE:
+- Location: `01-meta/01-templates/ai/ai-report.v2.template.md`
+- Output: `02-implementation-docs/ai-reports/[TYPE]/`
+- Format: `AI-[TYPE]-[YYYY-MM-DD]-[NNN].md`
 
-## Trigger Conditions
-- What caused the context issue
-- Related documents or operations
-- System state at time of issue
-
-## Impact
-- Affected operations
-- Scope of context loss
-- Recovery actions taken
-
-## Prevention Notes
-- How to avoid in future
-- Early warning signs
-- Recommended checkpoints
-```
-
-### 3. Pattern Report Structure
-```markdown
-# Context Pattern Report
-ID: PATTERN-[TYPE]-[NUMBER]
-CATEGORY: [OVERFLOW|TRANSITION|TOOL]
-
-## Pattern Description
-- Observed behavior
-- Trigger conditions
-- Common manifestations
-
-## Management Strategy
-- Prevention steps
-- Early detection
-- Mitigation approaches
-
-## Implementation Guidelines
-- When to use New Composer
-- Context preservation steps
-- Recovery procedures
-```
-
-### 4. New Composer Usage Guidelines
-```markdown
-INITIATE NEW COMPOSER WHEN:
-1. Context Load Indicators
-   - Multiple complex documents loaded
-   - Cross-layer operations active
-   - Tool state uncertainty
-   - Extended conversation history
-
-2. State Management Issues
-   - Inconsistent references
-   - Confusion about current scope
-   - Missing critical dependencies
-   - Tool operation errors
-
-3. Before Critical Operations
-   - Major feature transitions
-   - Complex refactoring tasks
-   - Cross-domain implementations
-   - Pattern-based changes
-
-PRESERVATION STEPS:
-1. Document current state
-2. Save critical context points
-3. Plan reload strategy
-4. Get user confirmation
+GUIDELINES:
+- One report per issue/pattern
+- Follow template boundaries
+- Keep content concise
+- No over-generation
+- Respect [MAX_ITEMS] limits
 ```
 
 ## Common Operations
 
 ### 1. Starting a New Initiative
-```diff
-+ 1. Review/create product vision
-+ 2. Create/update user stories
-  3. Review relevant user stories
-  4. Analyze feature requirements
-  5. Create class specifications if needed
-  6. Read strategic process
-  7. Create strategic initiative
-  8. Create tactical plans
-  9. Generate tasks
-```
+1. Review/create product vision
+2. Create/update user stories
+3. Review relevant user stories
+4. Analyze feature requirements
+5. Create class specifications if needed
+6. Read strategic process
+7. Create strategic initiative
+8. Create tactical plans
+9. Generate tasks
 
 ### 2. Implementing Changes
 1. Check tactical process
@@ -566,92 +484,53 @@ project-root/
 │   │   └── [other init docs]
 │   │
 │   ├── 01-templates/               # Templates for all doc types
-│   │   ├── process/               # Process templates
+│   │   ├── ai/                    # AI-specific templates
+│   │   │   └── ai-report.v2.template.md
+│   │   ├── process/              # Process templates
 │   │   │   ├── vision-development.v1.template.md
 │   │   │   ├── user-story-development.v1.template.md
 │   │   │   ├── product-development.v1.template.md
 │   │   │   ├── strategic-planning.v1.template.md
 │   │   │   └── tactical-planning.v1.template.md
-│   │   ├── class/                # Class templates
-│   │   │   ├── class-functional-spec.v1.template.md
-│   │   │   └── class-hierarchy-template-v1.md
-│   │   └── task/                 # Task templates
-│   │       ├── todo-breakdown.v1.template.md
+│   │   └── task/                # Task templates
 │   │       └── code-generation-task.v1.template.md
 │   │
 │   └── 02-process/                # Process documentation
-│       ├── ai/                    # AI-specific processes
+│       ├── ai/                   # AI-specific processes
 │       │   ├── ai-focusing-tips.v1.md
 │       │   └── ai-development-process.v1.md
-│       ├── strategic/             # Strategic processes
+│       ├── strategic/            # Strategic processes
 │       │   └── strategic-process.v1.md
-│       └── tactical/              # Tactical processes
+│       └── tactical/             # Tactical processes
 │           └── tactical-process.v1.md
 │
 └── 02-implementation-docs/         # Active documentation
-    ├── product/                   # Product vision & user stories
-    │   ├── vision/               # Product vision documents
-    │   └── stories/             # User story collections
+    ├── product/                   # Product documentation
+    │   ├── vision/               # Product vision docs
+    │   └── stories/             # User stories
     │
-    ├── context-management/        # Context tracking & patterns
-    │   ├── alerts/              # Context issue alerts
-    │   │   └── CONTEXT-[DATE]-[NUMBER].md
-    │   └── patterns/            # Context pattern documentation
-    │       └── PATTERN-[TYPE]-[NUMBER].md
+    ├── ai-reports/               # AI reporting directory
+    │   ├── errors/              # Error reports
+    │   ├── context/             # Context reports
+    │   └── patterns/            # Pattern reports
     │
-    ├── strategic/                 # Strategic initiatives
-    │   └── SI-[AREA]-[NUMBER]/    # Strategic initiative folders
-    │       └── strategic-plan.md
-    │
-    ├── tactical/                  # Tactical implementations
-    │   └── TI-[SI-REF]-[NUMBER]/ # Tactical initiative folders
-    │       └── tactical-plan.md
-    │
-    ├── tasks/                     # Implementation tasks
-    │   └── [SI-REF]/             # Grouped by strategic initiative
-    │       └── TASK-[TI-REF]-[NUMBER].md
-    │
-    └── classes/                   # Class specifications
-        └── [domain]/             # Grouped by domain
-            └── [ClassName].spec.md
+    ├── strategic/                # Strategic initiatives
+    ├── tactical/                 # Tactical implementations
+    └── tasks/                    # Implementation tasks
 ```
-AI Note: The 01-meta folder is immutable. It is used to define the process and templates for the project to be used by the AI to generate new documents in the 02-implementation-docs folder.
-
-### Where to Put New Files
-
-1. **New Generated Product Documents**
-   - User Stories: `02-implementation-docs/product/stories/`
-   - Product Vision: `02-implementation-docs/product/vision/`
-
-2. **New Context Issue Documents**
-   - Context Alerts: `02-implementation-docs/context-management/alerts/CONTEXT-[DATE]-[NUMBER].md`
-   - Context Patterns: `02-implementation-docs/context-management/patterns/PATTERN-[TYPE]-[NUMBER].md`
-
-3. **New Implementation Documents**
-   - Strategic Initiatives: `02-implementation-docs/strategic/SI-[AREA]-[NUMBER]/`
-   - Tactical Plans: `02-implementation-docs/tactical/TI-[SI-REF]-[NUMBER]/`
-   - Tasks: `02-implementation-docs/tasks/[SI-REF]/TASK-[TI-REF]-[NUMBER].md`
-   - Class Specs: `02-implementation-docs/classes/[domain]/[ClassName].spec.md`
 
 ## Version History
 ```diff
-- VERSION: 1.5
-+ VERSION: 1.6
-  DATE: [current_date]
-  AUTHOR: Claude
-  CHANGES:
-  - Added Product Understanding as first step
-  - Updated file organization structure
-  - Added document flow visualization
-  - Reorganized process flow to start with product layer
-  - Added comprehensive file structure diagram
-  - Updated directory structure with new product templates
-  - Updated initiative process to start with product layer
-  - Added context management documentation section
-  - Added context alert and pattern templates
-  - Added context management file locations
-  - Added reference to error handling process
-  TEMPLATE REFERENCES:
-  - Context Alert Template: 01-meta/01-templates/context/context-alert.v1.template.md
-  - Context Pattern Template: 01-meta/01-templates/context/context-pattern.v1.template.md
+VERSION: 1.8
+DATE: 2024-12-30
+CHANGES:
+- Added Network Latency Mode (NLM) instruction
+- Added parallel processing strategy for latency handling
+- Updated shorthand instructions section
+- Previous changes from 1.7:
+  - Removed outdated context management sections
+  - Consolidated AI reporting templates
+  - Updated file structure for AI reports
+  - Cleaned up documentation structure
+  - Removed New Composer references
 ``` 
