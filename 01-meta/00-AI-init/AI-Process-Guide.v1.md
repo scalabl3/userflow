@@ -63,11 +63,13 @@ To improve efficiency in communication, the following shorthand commands are rec
      - Process Guide: `01-meta/00-AI-init/AI-Process-Guide.v1.md`
      - Strategic Process: `01-meta/02-process/strategic/strategic-process.v1.md`
      - Tactical Process: `01-meta/02-process/tactical/tactical-process.v1.md`
+     - Design Process: `01-meta/02-process/design/design-process.v1.md`
      - Core Templates:
        - Vision Development: `01-meta/01-templates/process/vision-development.v1.template.md`
        - Product Development: `01-meta/01-templates/process/product-development.v1.template.md`
        - Strategic Planning: `01-meta/01-templates/process/strategic-planning.v1.template.md`
        - Tactical Planning: `01-meta/01-templates/process/tactical-planning.v1.template.md`
+       - Design Planning: `01-meta/01-templates/process/design-planning.v1.template.md`
        - User Story Development: `01-meta/01-templates/process/user-story-development.v1.template.md`
 
 2. Network Latency Awareness
@@ -161,7 +163,7 @@ Key Questions:
 3. Can you describe your approach to error handling?
 ```
 
-### 2. Documentation Structure (Learn the system)
+### 2. Documentation Structure
 Next, understand how documentation is organized. This knowledge helps you:
 - Navigate the codebase efficiently
 - Understand how different parts connect
@@ -191,7 +193,7 @@ When working on a new task:
      - Information flow
 
 Transition Check ✓
-Before moving to Templates, verify:
+Before moving to Design Understanding, verify:
 ```markdown
 [ ] You can navigate the file structure confidently
 [ ] You understand how different layers connect
@@ -208,316 +210,23 @@ Key Questions:
 4. Can you explain where template-generated content should be stored?
 ```
 
-### 3. Templates (Learn the formats)
-Then, understand the document formats. This ensures you:
-- Use consistent document structures
-- Include all required information
-- Maintain proper relationships
-- Follow established patterns
+### 3. Design Layer (Bridge)
+**Purpose**: Bridge between tactical decisions and implementation by defining class structures and specifications
+**Source**: `01-meta/02-process/design/design-process.v1.md`
 
-Example Application:
-```markdown
-When creating a new class:
-1. Use class template to:
-   - Define proper structure
-   - Document interfaces
-   - Specify behaviors
-2. Link to related documents:
-   - Connect to strategic initiatives
-   - Reference tactical plans
-   - Maintain task relationships
-```
+Key Documents:
+- Process: `01-meta/02-process/design/design-process.v1.md`
+- Template: `01-meta/01-templates/process/design-planning.v1.template.md`
+- Output: `02-implementation-docs/design/[DESIGN-ID]/`
 
-1. Todo Breakdown Template
-   - Location: `01-meta/01-templates/task/todo-breakdown.v1.template.md`
-   - Usage: Breaking down work into manageable chunks
-   - Key Focus:
-     - Strategic context maintenance
-     - Work organization
-     - Task generation
+Key Connections:
+- From Tactical: Receives implementation plans and patterns
+- To Todo: Provides class structures and implementation guidance
 
-2. Task Template
-   - Location: `01-meta/01-templates/task/code-generation-task.v1.template.md`
-   - Usage: Specific implementation tasks
-   - Key Focus:
-     - Implementation details
-     - Verification steps
-     - Documentation requirements
-
-3. Class Specification Template
-   - Location: `01-meta/01-templates/class/class-functional-spec.v1.template.md`
-   - Usage: Defining class specifications
-   - Key Focus:
-     - Class structure
-     - Interface definitions
-     - Behavior specifications
-
-Transition Check ✓
-Before moving to Process Documents, verify:
-```markdown
-[ ] You understand the purpose of each template
-[ ] You know when to use which template
-[ ] You can explain template relationships
-[ ] You're comfortable with naming conventions
-
-Key Questions:
-1. When would you use each type of template?
-2. How do templates connect to the process hierarchy?
-3. Can you explain the naming convention patterns?
-```
-
-### 4. Process Documents (Learn the workflows)
-Finally, understand the specific processes. This enables you to:
-- Follow established workflows
-- Maintain process integrity
-- Ensure proper integration
-- Provide valuable feedback
-
-Example Application:
-```markdown
-When implementing a strategic initiative:
-1. Follow strategic process to:
-   - Identify patterns
-   - Create proper documentation
-   - Set up monitoring
-2. Use tactical process to:
-   - Break down implementation
-   - Verify changes
-   - Track progress
-```
-
-1. Strategic Process
-   - Location: `01-meta/02-process/strategic/strategic-process.v1.md`
-   - Key Focus:
-     - Pattern recognition
-     - Strategic initiative management
-     - Knowledge management
-     - Integration with tactical layer
-
-2. Tactical Process
-   - Location: `01-meta/02-process/tactical/tactical-process.v1.md`
-   - Key Focus:
-     - Implementation planning
-     - Verification framework
-     - Progress management
-     - Integration with strategic layer
-
-Final Integration Check ✓
-Before starting work, verify you can:
-```markdown
-[ ] Connect all layers of the process
-[ ] Navigate between related documents
-[ ] Maintain context while switching layers
-[ ] Apply appropriate processes
-
-Key Questions:
-1. How do strategic patterns influence task implementation?
-2. How does task feedback flow back to strategic level?
-3. How do you maintain document relationships?
-```
-
-## Key Concepts to Understand
-
-### 1. Complete Process Flow
-```markdown
-Product Layer (User Stories & Features)
-↓
-Strategic Layer (Patterns & Initiatives)
-↓
-Tactical Layer (Implementation & Verification)
-↓
-Todo Layer (Work Organization)
-↓
-Task Layer (Specific Changes)
-```
-
-### 2. Document Flow
-```markdown
-User Stories → Features → Class Specifications
-                     ↓
-Strategic Initiatives → Tactical Plans → Tasks
-```
-
-### 3. File Organization
-```markdown
-00-product/                      # Product vision & user stories
-01-meta/                         # Process & templates
-  ├── 00-AI-init/               # AI initialization docs
-  ├── 01-templates/             # Templates for all doc types
-  │   ├── process/             # Process templates
-  │   ├── class/              # Class templates
-  │   └── task/               # Task templates
-  └── 02-process/              # Process documentation
-02-implementation-docs/          # Active documentation
-```
-
-## Implementation Guidelines
-
-### 1. When Working on Tasks
-1. Check strategic context
-2. Verify tactical requirements
-3. Follow pattern guidelines
-4. Use appropriate templates
-5. Maintain documentation
-
-### 2. When Creating Documents
-1. Use correct templates
-2. Follow naming conventions
-3. Place in proper locations
-4. Link to related documents
-5. Update tracking information
-
-### 3. When Providing Feedback
-1. Note pattern effectiveness
-2. Report implementation issues
-3. Suggest improvements
-4. Document learnings
-5. Update relevant documentation
-
-## Context Management
-
-### 1. New Composer Integration
-```markdown
-STRATEGIC POINTS:
-1. Layer Transitions
-   - Between process layers
-   - Major context switches
-   - Complex feature changes
-
-2. Document Type Changes
-   - Vision to user stories
-   - Stories to implementation
-   - Pattern to tactical plans
-
-3. Error Recovery
-   - After context overflow
-   - Complex state confusion
-   - Multiple document loads
-```
-
-### 2. Context State Management
-```markdown
-BEFORE OPERATIONS:
-1. State Assessment
-   - Current context load
-   - Document relationships
-   - Tool requirements
-
-2. Load Planning
-   - Required documents
-   - Reference materials
-   - Implementation context
-
-3. Validation Steps
-   - Context boundaries
-   - Document alignment
-   - Tool availability
-```
-
-## Context Management Documentation
-
-### AI Reporting System
-```markdown
-REPORT TYPES:
-1. Error Reports (TYPE: ERROR)
-   - Process violations
-   - Context failures
-   - System issues
-
-2. Context Reports (TYPE: CONTEXT)
-   - State transitions
-   - Load management
-   - Context boundaries
-
-3. Pattern Reports (TYPE: PATTERN)
-   - Recurring behaviors
-   - System patterns
-   - Learning insights
-
-TEMPLATE:
-- Location: `01-meta/01-templates/ai/ai-report.v2.template.md`
-- Output: `02-implementation-docs/ai-reports/[TYPE]/`
-- Format: `AI-[TYPE]-[YYYY-MM-DD]-[NNN].md`
-
-GUIDELINES:
-- One report per issue/pattern
-- Follow template boundaries
-- Keep content concise
-- No over-generation
-- Respect [MAX_ITEMS] limits
-```
-
-## Common Operations
-
-### 1. Starting a New Initiative
-1. Review/create product vision
-2. Create/update user stories
-3. Review relevant user stories
-4. Analyze feature requirements
-5. Create class specifications if needed
-6. Read strategic process
-7. Create strategic initiative
-8. Create tactical plans
-9. Generate tasks
-
-### 2. Implementing Changes
-1. Check tactical process
-2. Follow task template
-3. Verify against patterns
-4. Update documentation
-
-### 3. Managing Documentation
-1. Use correct locations
-2. Follow naming conventions
-3. Maintain links
-4. Update tracking
-5. Share learnings
-
-## Implementation File Structure
-
-### Complete Project Structure
-```markdown
-project-root/
-├── 01-meta/                         # Process & templates
-│   ├── 00-AI-init/                 # AI initialization docs
-│   │   ├── AI-Process-Guide.v1.md
-│   │   └── [other init docs]
-│   │
-│   ├── 01-templates/               # Templates for all doc types
-│   │   ├── ai/                    # AI-specific templates
-│   │   │   └── ai-report.v2.template.md
-│   │   ├── process/              # Process templates
-│   │   │   ├── vision-development.v1.template.md
-│   │   │   ├── user-story-development.v1.template.md
-│   │   │   ├── product-development.v1.template.md
-│   │   │   ├── strategic-planning.v1.template.md
-│   │   │   └── tactical-planning.v1.template.md
-│   │   └── task/                # Task templates
-│   │       └── code-generation-task.v1.template.md
-│   │
-│   └── 02-process/                # Process documentation
-│       ├── ai/                   # AI-specific processes
-│       │   ├── ai-focusing-tips.v1.md
-│       │   └── ai-development-process.v1.md
-│       ├── strategic/            # Strategic processes
-│       │   └── strategic-process.v1.md
-│       └── tactical/             # Tactical processes
-│           └── tactical-process.v1.md
-│
-└── 02-implementation-docs/         # Active documentation
-    ├── product/                   # Product documentation
-    │   ├── vision/               # Product vision docs
-    │   └── stories/             # User stories
-    │
-    ├── ai-reports/               # AI reporting directory
-    │   ├── errors/              # Error reports
-    │   ├── context/             # Context reports
-    │   └── patterns/            # Pattern reports
-    │
-    ├── strategic/                # Strategic initiatives
-    ├── tactical/                 # Tactical implementations
-    └── tasks/                    # Implementation tasks
-```
+Navigation Focus:
+- Design documents in implementation directory
+- Class specifications and hierarchies
+- Integration with tactical and todo layers
 
 ## Version History
 ```diff

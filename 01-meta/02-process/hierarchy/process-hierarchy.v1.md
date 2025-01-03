@@ -80,7 +80,33 @@ Outputs:
 - Progress metrics
 ```
 
-### 3. Todo Layer (Bridge)
+### 3. Design Layer (Bridge)
+**Purpose**: Bridge between tactical decisions and implementation by defining class structures and specifications
+**Source**: 01-meta/02-process/design/design-process.v1.md
+
+```markdown
+Key Responsibilities:
+├── Scale Understanding
+│   ├── Requirements assessment
+│   ├── Platform capabilities
+│   └── Growth planning
+├── Architecture Design
+│   ├── Class hierarchies
+│   ├── Interface contracts
+│   └── Design patterns
+└── Implementation Bridge
+    ├── Component specifications
+    ├── Integration points
+    └── Todo structure
+
+Outputs:
+- Design specifications
+- Class hierarchies
+- Interface contracts
+- Implementation guides
+```
+
+### 4. Todo Layer (Implementation Bridge)
 **Purpose**: Bridge between strategy and implementation
 **Source**: 01-meta/01-templates/task/todo-breakdown.v1.template.md
 
@@ -103,7 +129,7 @@ Outputs:
 - Health metrics
 ```
 
-### 4. Task Layer (Micro)
+### 5. Task Layer (Micro)
 **Purpose**: Specific implementation details and verification
 **Source**: 01-meta/01-templates/task/code-generation-task.v1.template.md
 
@@ -135,6 +161,8 @@ Strategic Layer
 ↓ Provides patterns, metrics, and guidelines
 Tactical Layer
 ↓ Provides implementation framework and verification
+Design Layer
+↓ Provides class structures and implementation guidance
 Todo Layer
 ↓ Provides organized work items and context
 Task Layer
@@ -155,10 +183,22 @@ Strategic → Tactical:
 - Success metrics
 - Prevention mechanisms
 
-Tactical → Todo:
-- Implementation guidelines
-- Verification requirements
-- Quality gates
+Tactical → Design:
+- Implementation plans
+- Pattern requirements
+- Quality criteria
+- Scale context
+
+Design → Todo:
+- Class structures
+- Interface contracts
+- Component specs
+- Integration guides
+
+Design → Tactical:
+- Architecture validation
+- Pattern applications
+- Scale alignment
 
 Todo → Task:
 - Specific requirements
@@ -179,6 +219,10 @@ Each Layer Verifies:
 │   └── Pattern effectiveness
 ├── Tactical
 │   └── Implementation alignment
+├── Design
+│   ├── Scale appropriateness
+│   ├── Pattern application
+│   └── Architecture cohesion
 ├── Todo
 │   └── Work organization
 └── Task
@@ -191,17 +235,18 @@ Each Layer Verifies:
    PRODUCT → STRATEGIC:
    - After vision completion
    - Before pattern analysis
-   - Consider New Composer
 
    STRATEGIC → TACTICAL:
    - After pattern documentation
    - Before implementation planning
-   - Consider New Composer
 
-   TACTICAL → IMPLEMENTATION:
-   - Before code generation
-   - After major refactoring
-   - Consider New Composer
+   TACTICAL → DESIGN:
+   - After implementation planning
+   - Before class specification
+
+   DESIGN → TODO:
+   - After class specifications
+   - Before task breakdown
 
 2. Clean Break Points
    - Feature area switches
@@ -215,6 +260,7 @@ Each Layer Verifies:
 1. **Top-Down Planning**
    - Start with strategic patterns
    - Flow through tactical planning
+   - Create design specifications
    - Break into todos
    - Generate specific tasks
 
@@ -244,7 +290,7 @@ CHANGES:
 
 ## File Organization & Nomenclature
 
-### Directory Structure
+### Workflow Meta Directory Structure
 ```markdown
 project-root/
 ├── 01-meta/                      # Process & templates
@@ -254,7 +300,8 @@ project-root/
 │   │   │   ├── user-story-development.v1.template.md
 │   │   │   ├── product-development.v1.template.md
 │   │   │   ├── strategic-planning.v1.template.md
-│   │   │   └── tactical-planning.v1.template.md
+│   │   │   ├── tactical-planning.v1.template.md
+│   │   │   └── design-planning.v1.template.md
 │   │   └── task/
 │   │       ├── code-generation-task.v1.template.md
 │   │       └── todo-breakdown.v1.template.md
@@ -278,17 +325,21 @@ project-root/
    - Format: TI-[SI-REF]-[NUMBER]
    - Example: TI-AUTH001-001
 
-5. **Tasks**
-   - Format: TASK-[TI-REF]-[NUMBER]
-   - Example: TASK-AUTH001001-001
+5. **Design Documents**
+   - Format: DESIGN-[AREA]-[NUMBER]
+   - Example: DESIGN-AUTH-001
 
 6. **Class Specifications**
    - Format: [Domain].[ClassName].spec.md
    - Example: auth.UserManager.spec.md
 
 7. **Class Hierarchies**
-   - Format: [Domain]-classes.md
-   - Example: auth-classes.md
+   - Format: [Domain]-hierarchy.md
+   - Example: auth-hierarchy.md
+
+8. **Tasks**
+   - Format: TASK-[TI-REF]-[NUMBER]
+   - Example: TASK-AUTH001001-001
 
 ### Document Locations
 
@@ -300,30 +351,15 @@ project-root/
 2. **Process Documents**
    - Strategic Process: 01-meta/02-process/strategic/strategic-process.v1.md
    - Tactical Process: 01-meta/02-process/tactical/tactical-process.v1.md
+   - Design Process: 01-meta/02-process/design/design-process.v1.md
 
-3. **Active Documents**
+3. **Design Documents**
+   - Design Docs: 02-implementation-docs/design/[DESIGN-ID]/design-doc.md
+   - Class Specs: 02-implementation-docs/design/[DESIGN-ID]/specs/classes/[ClassName].spec.md
+   - Class Hierarchies: 02-implementation-docs/design/[DESIGN-ID]/specs/hierarchy/[Domain]-hierarchy.md
+
+4. **Active Documents**
    - Strategic Plans: 02-implementation-docs/strategic/[SI-ID]/strategic-plan.md
    - Tactical Plans: 02-implementation-docs/tactical/[TI-ID]/tactical-plan.md
-   - Class Specs: 02-implementation-docs/class-specs/[domain]/[ClassName].spec.md
    - Tasks: 02-implementation-docs/tasks/[SI-REF]/TASK-[ID].md
-
-### Template Usage
-
-1. **Product Development**
-   - Vision Development: vision-development.v1.template.md
-   - User Story Development: user-story-development.v1.template.md
-   - Product Development: product-development.v1.template.md
-   - Location: 01-meta/01-templates/process/
-
-2. **Strategic Planning**
-   - Use: strategic-planning.v1.template.md
-   - Location: 01-meta/01-templates/process/
-
-3. **Tactical Planning**
-   - Use: tactical-planning.v1.template.md
-   - Location: 01-meta/01-templates/process/
-
-4. **Class Specifications**
-   - Use: class-functional-spec.v1.template.md
-   - Location: 01-meta/01-templates/class/
 ``` 
