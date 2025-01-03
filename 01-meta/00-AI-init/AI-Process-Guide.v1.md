@@ -92,7 +92,22 @@ To improve efficiency in communication, the following shorthand commands are rec
 
 The reading order is specifically designed to build your understanding layer by layer, ensuring you have the right mental models and tools before diving into specific processes:
 
-### 0. Product Understanding (Start here first)
+### 0. Error Report Review (Start here first)
+First, review ALL existing error reports to learn from past experiences:
+- Location: `02-implementation-docs/ai-reports/errors/`
+- Purpose: Learn from previous mistakes and system constraints
+- Key Focus:
+  - Process violations (especially 01-meta modifications)
+  - Common pitfalls (partial reading, premature actions)
+  - System limitations
+  - Improvement patterns
+- Required Actions:
+  1. Read ALL error reports completely
+  2. Note common patterns
+  3. Verify understanding of prevention steps
+  4. Apply learnings to current task
+
+### 1. Product Understanding (Next step)
 First, understand how to think about product development and user needs:
 - How to develop product vision
 - How to create and analyze user stories
@@ -229,17 +244,17 @@ Navigation Focus:
 - Integration with tactical and todo layers
 
 ## Version History
-```diff
-VERSION: 1.8
-DATE: 2024-12-30
+```markdown
+VERSION: 1.9
+DATE: 2025-01-03
+AUTHOR: C3C
 CHANGES:
+- Added Error Report Review as mandatory first reading step
+- Updated version history to use correct project timeline dates
+- Added emphasis on reading ALL reports and complete documents
+- Added explicit warning about 01-meta modifications
+Previous changes from 1.8:
 - Added Network Latency Mode (NLM) instruction
 - Added parallel processing strategy for latency handling
 - Updated shorthand instructions section
-- Previous changes from 1.7:
-  - Removed outdated context management sections
-  - Consolidated AI reporting templates
-  - Updated file structure for AI reports
-  - Cleaned up documentation structure
-  - Removed New Composer references
 ``` 
