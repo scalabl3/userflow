@@ -1,163 +1,177 @@
 # Product Vision: Base Application Framework
 
 ## Overview
-A comprehensive, reusable foundation for modern web applications that provides essential business and user management functionality. This base framework includes organization management, user authentication, role-based access control, billing integration, and a clear separation between public marketing, API services, and authenticated user interfaces.
+This document outlines the vision for a modern web application foundation that provides essential building blocks for creating reliable, scalable, and maintainable applications. The framework emphasizes clean implementation of core functionality needed by any modern interactive website, while maintaining flexibility for natural growth.
+
+### Framework Scope & Intent
+This framework is designed to serve as a foundation for modern web applications. Applications built using this will have additional vision, stories, strategies, tactics, design and todo/tasks tailored specifically to the particular app requirements. Those will focus more on product/market fit, identifying more user specifics, and extended functionality based on the individual needs of that website/application/brand.
+
+The framework provides the common infrastructure that modern web applications need, allowing teams to focus on their unique value proposition rather than rebuilding standard functionality. This reuseable base application is more of a functional framework with the following characteristics:
+
+1. **User & Organization Model**
+   - Individual users, each with a shadow organization
+   - Small organizations (typically 2-10 users)
+   - Flexible transition between individual and organization modes
+   - Focus on organic, natural growth patterns
+
+2. **Modern Authentication & Billing**
+   - Support for contemporary authentication methods (OAuth2, Apple Login, etc.)
+   - Integration with modern payment services (Stripe, Apple Pay, Google Pay, etc.)
+   - Emphasis on standard security practices and user convenience
+
+3. **Development Philosophy**
+   - Clean, maintainable implementation over complex architecture
+   - Focus on core functionality common to modern web applications
+   - Clear extension patterns for specific business needs
+   - Reliable, well-tested building blocks
+
+4. **Scale & Performance**
+   - Optimized for thousands of individual users
+   - Support for hundreds of small organizations
+   - Emphasis on reliability and consistent performance
+   - Room for natural growth without over-engineering
 
 ## Target Users
+1. **Development Teams**
+   - Small to medium-sized development teams
+   - Focus on feature development rather than infrastructure
+   - Need reliable, well-tested building blocks
 
-### Primary
-- **Development Teams**
-  - Need a robust starting point for new applications
-  - Want to avoid rebuilding common functionality
-  - Require flexible integration points for custom features
+2. **Organizations**
+   - Small teams and businesses (typically 2-10 users)
+   - Need professional features without enterprise complexity
+   - Value reliability and ease of use
 
-- **Organizations (Tenants)**
-  - Need to manage their users and permissions
-  - Want to handle billing and subscriptions
-  - Require secure access control
+3. **System Administrators**
+   - Managing user access and permissions
+   - Configuring system settings
+   - Monitoring system health
 
-### Secondary
-- **System Administrators**
-  - Need to manage multiple organizations
-  - Want to monitor system health
-  - Require advanced troubleshooting capabilities
-
-- **End Users**
-  - Need secure authentication
-  - Want intuitive user interfaces
-  - Require role-appropriate access
-
-### User Relationships and System Interaction
-```mermaid
-graph TD
-    DT[Development Teams] --> |build on| BF[Base Framework]
-    SA[System Administrators] --> |monitor| BF
-    SA --> |maintain| SH[System Health]
-    
-    ORG[Organizations] --> |use| BF
-    OA[Organization Admin] --> |manages| ORG
-    OA --> |controls| BS[Billing & Subscriptions]
-    OA --> |manages| EU[End Users]
-    
-    EU --> |access| FS[Features & Services]
-    FS --> |provided by| BF
-```
+4. **End Users**
+   - Individual users (each with shadow organization)
+   - Members of small organizations
+   - Expect modern, responsive interface
 
 ## Core Value Proposition
 1. **Accelerated Development**
-   - Pre-built essential functionality
-   - Standardized architecture
-   - Proven security patterns
+   - Pre-built, tested core functionality
+   - Modern development practices
+   - Clear extension patterns
 
 2. **Flexible Foundation**
-   - Modular design
-   - Extensible components
-   - Clear integration points
+   - Clean, maintainable implementation
+   - Modern authentication and payment options
+   - Adaptable to different use cases
+   - Room for organic growth
 
-3. **Enterprise-Ready**
-   - Multi-tenant architecture
+3. **Production-Ready**
+   - Flexible User/Organization model
+     - Individual users (with shadow orgs)
+     - Small organization support
+     - Seamless transition between modes
    - Role-based access control
-   - Professional billing integration
+   - Integration with modern auth/payment services
 
 ## Success Metrics
 1. **Development Efficiency**
-   - 80% reduction in setup time for new projects
-   - Zero compromise of core security features
-   - Minimal customization needed for basic functionality
+   - 70% reduction in setup time for new projects
+   - Clear documentation and examples
+   - Predictable extension patterns
 
 2. **System Performance**
    - Sub-200ms API response times
    - 99.9% uptime
-   - Scalable to 1000+ organizations
+   - Scalable to support:
+     - Thousands of individual users (each with shadow org)
+     - Organizations typically with 2-10 users each
+     - Natural organic growth patterns
 
 3. **User Experience**
-   - < 3 second initial page load
-   - < 300ms subsequent interactions
-   - Zero-downtime updates
+   - Modern, responsive interface
+   - Sub-100ms client-side operations
+   - Intuitive navigation and workflows
 
 ## Key Features
+1. **Organization Management**
+   - Flexible organization model
+     - Support for individual users (shadow orgs)
+     - Small team/business organizations
+     - Configurable visibility and features
+   - Organization settings and preferences
+   - Resource management and sharing
 
-### 1. Organization Management
-- Multi-tenant architecture
-- Organization hierarchy support
-- Tenant isolation
-- Custom organization settings
+2. **User Management**
+   - Modern authentication options
+     - Email/password
+     - OAuth2 providers (Google, GitHub, etc.)
+     - Apple Login
+     - Social login providers
+   - Profile management
+   - Session handling
+   - Device management
+   - Password policies
 
-### 2. User Management
-- Authentication system
-- User profiles
-- Session management
-- Password policies
-- MFA support
+3. **Access Control**
+   - Role-based permissions
+   - Flexible permission sets
+   - User-organization relationships
+   - Resource access control
 
-### 3. Access Control
-- Role-based permissions
-- Custom role definitions
-- Permission inheritance
-- Access audit logs
+4. **Administration**
+   - System configuration
+   - User management tools
+   - Monitoring and alerts
+   - Basic analytics
+   - Audit logging
 
-### 4. Administration
-- System user management
-- Cross-organization admin tools
-- System health monitoring
-- Audit capabilities
-
-### 5. Billing Integration
-- Multiple provider support
-- Subscription management
-- Usage tracking
-- Payment processing
-- Invoice generation
-
-### 6. Application Structure
-- Frontend Layer
-  - Marketing Interface (public)
-    - Landing pages
-    - Registration flow
-    - Login interface
-  - Authenticated Interface
-    - Dashboard
-    - User management
-    - Settings configuration
-    - Billing management
-    
-- Core Layers
-  - Shared Layer
-    - Type definitions
-    - DTOs
-    - Validation schemas
-    - Shared utilities
-  - Business Layer
-    - Domain logic
-    - Business rules
-    - Data processing
-    - Service implementations
-  - API Layer
-    - RESTful endpoints
-    - Authentication middleware
-    - Request/Response handling
-    - API contracts
+5. **Billing Integration**
+   - Modern payment options
+     - Credit card processing (Stripe, etc.)
+     - Digital wallets (Apple Pay, Google Pay)
+     - Shop Pay and similar services
+   - Subscription management
+   - Usage tracking
+   - Basic reporting
 
 ## Constraints & Assumptions
 
 ### Technical Constraints
-- Monorepo architecture with frontend/backend/shared structure
-- TypeScript for type safety across all packages
-- Shared types and interfaces between frontend and backend
-- REST API for communication
-- Modern web standards compliance
+1. **Architecture**
+   - Monorepo structure
+   - TypeScript throughout
+   - Modern web standards
+   - RESTful APIs
+
+2. **Development**
+   - Clean code practices
+   - Comprehensive testing
+   - Clear documentation
+   - Maintainable patterns
 
 ### Business Constraints
-- Must support multiple billing providers
-- Must maintain strict data isolation between tenants
-- Must support white-labeling capabilities
-- Must be GDPR compliant
+1. **Core Requirements**
+   - User authentication required
+   - Basic billing integration
+   - GDPR compliance
+   - Data privacy standards
+
+2. **Operational**
+   - Regular maintenance windows
+   - Basic monitoring
+   - Standard backup procedures
 
 ### Assumptions
-- Teams using this will have TypeScript experience
-- Organizations need granular permission control
-- System will primarily serve B2B applications
-- Authentication needs are standard OAuth2/OIDC based
+1. **Usage Patterns**
+   - Organic user growth
+   - Small organization sizes (2-10 users typical)
+   - Standard web traffic patterns
+   - Regular business hours focus
+
+2. **Technical Environment**
+   - Modern browsers
+   - Standard network conditions
+   - Common device types
+   - Regular deployment cycles
 
 ## Future Considerations
 1. **Extensibility**

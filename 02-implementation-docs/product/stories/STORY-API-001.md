@@ -16,7 +16,7 @@ So that I can build consistent and maintainable endpoints
    Then I should have:
    - OpenAPI/Swagger documentation
    - Standard error responses
-   - Consistent URL patterns
+   - RESTful URL patterns
    - Type definitions
    And the documentation should be machine-readable
 
@@ -37,15 +37,6 @@ So that I can build consistent and maintainable endpoints
    - Proper HTTP status codes
    - Clear success/error messages
    And responses should be properly typed
-
-4. Given I am extending the base API
-   When I add custom endpoints
-   Then I should:
-   - Follow established patterns
-   - Maintain documentation standards
-   - Use existing middleware
-   - Keep consistent structure
-   And new endpoints should integrate seamlessly
 
 ### STORY-API-002: API Documentation Standards
 As an API consumer
@@ -71,24 +62,6 @@ So that I can understand and use the API effectively
    - Generated client code
    And the experience should be consistent across endpoints
 
-3. Given I am extending the API
-   When I add new features
-   Then I should:
-   - Generate updated documentation
-   - Maintain type definitions
-   - Update client code
-   - Preserve existing patterns
-   And changes should be automatically reflected
-
-4. Given I am troubleshooting
-   When I encounter issues
-   Then I should have:
-   - Clear error messages
-   - Debug information
-   - Request validation details
-   - Logging standards
-   And issues should be easy to diagnose
-
 ### STORY-API-003: API Version Management
 As an API maintainer
 I want clear version management
@@ -108,32 +81,46 @@ So that I can evolve the API while maintaining compatibility
    When I implement them
    Then I should:
    - Create new versions
-   - Maintain old versions
-   - Migrate clients gradually
+   - Maintain old versions temporarily
    - Document migration paths
-   And both versions should work simultaneously
+   And provide clear upgrade guidance
 
-3. Given I am deprecating features
-   When I mark them as deprecated
-   Then I should:
-   - Notify users
-   - Provide alternatives
-   - Set deprecation timelines
-   - Monitor usage
-   And give clients time to migrate
+### STORY-API-004: API Extension Patterns
+As an application developer
+I want clear patterns for extending the base API
+So that I can add application-specific endpoints while maintaining consistency
 
-4. Given I am supporting multiple versions
-   When clients make requests
-   Then I should:
-   - Route to correct version
-   - Maintain consistent patterns
-   - Track version usage
-   - Handle errors appropriately
-   And support graceful degradation
+**Acceptance Criteria:**
+1. Given I am building upon the base API
+   When I add new application-specific endpoints
+   Then I should have:
+   - Clear extension points
+   - Base middleware hooks
+   - Standard error handling
+   - Documentation templates
+   And my extensions should feel native to the framework
+
+2. Given I am customizing authentication
+   When I add new auth requirements
+   Then I should be able to:
+   - Extend base auth middleware
+   - Add custom validation rules
+   - Integrate new providers
+   - Maintain type safety
+   And security standards should be preserved
+
+3. Given I am adding custom business logic
+   When I implement new endpoints
+   Then I should have:
+   - Access to core utilities
+   - Type generation tools
+   - Testing patterns
+   - Documentation generation
+   And the development experience should be consistent
 
 ## Technical Notes
 
-### Core Requirements (Must Have)
+### Core Requirements
 - OpenAPI/Swagger implementation
 - Standard REST patterns
 - Consistent endpoint structure
@@ -145,7 +132,7 @@ So that I can evolve the API while maintaining compatibility
 - Version management
 - Documentation generation
 
-System-wide Constraints:
+### System-wide Constraints
 - All endpoints must be documented
 - Authentication must be consistent
 - Responses must follow standards
@@ -155,27 +142,17 @@ System-wide Constraints:
 - Documentation must be automated
 - Security must be standardized
 
-Implementation Requirements:
-- OpenAPI/Swagger tooling
-- Type generation system
-- Authentication framework
-- Validation middleware
-- Error handling middleware
-- Documentation automation
-- Version routing
-- Testing framework
-
-### Extension Patterns
-- Custom endpoint registration
-- Middleware injection points
-- Response transformation hooks
+### Extension Points
+- Route registration hooks
+- Middleware extension patterns
+- Auth provider integration
 - Error handler customization
-- Documentation extensions
-- Version management hooks
-- Authentication customization
-- Validation rule extension
+- Response transformer hooks
+- Type definition extensions
+- Documentation generation hooks
+- Test utility integration
 
-### Implementation Guidelines for AI Collaboration
+### Implementation Guidelines
 - Keep endpoint logic isolated and documented
 - Use clear interface boundaries
 - Document all extension points
@@ -184,73 +161,8 @@ Implementation Requirements:
 - Mark security-critical code
 - Separate config from logic
 - Document common patterns
-
-# =====================================================
-# SCOPE BOUNDARY - Base Implementation Ends Here
-# =====================================================
-# The following section describes features that are explicitly OUT OF SCOPE
-# for the base template implementation. These are documented for awareness and future
-# extension possibilities only.
-
-### Enhanced Features (Should Have)
-- Advanced rate limiting
-- Request/Response caching
-- Advanced monitoring
-- Performance analytics
-- Custom middleware chains
-- Advanced validation rules
-- Automated testing
-- Load balancing
-
-### Advanced Capabilities (Nice to Have)
-- AI-powered API optimization
-- GraphQL integration
-- Real-time streaming
-- Advanced caching
-- Custom protocol support
-- Advanced security
-- Performance profiling
-- Automated documentation
-
-# Future Enterprise Administration Considerations
-
-### API Governance
-- API lifecycle management
-- Usage analytics/metrics
-- Compliance monitoring
-- Rate limit policies
-- SLA management
-- API monetization
-- Quota management
-- Cost allocation
-
-### Enterprise Integration
-- Legacy system adapters
-- ESB integration
-- EDI support
-- B2B gateways
-- Protocol transformation
-- Data mapping services
-- Multi-format support
-- Cross-system routing
-
-### Advanced Security
-- Zero-trust architecture
-- API threat detection
-- DDoS protection
-- Advanced encryption
-- Key rotation
-- Certificate management
-- Security analytics
-- Compliance automation
-
-### Scale Considerations
-- Global API distribution
-- Multi-region routing
-- Load distribution
-- Traffic shaping
-- Cache strategies
-- Failover patterns
-- Disaster recovery
-- Performance optimization
+- Provide extension examples
+- Include type generation utilities
+- Support middleware composition
+- Enable auth customization
 ``` 

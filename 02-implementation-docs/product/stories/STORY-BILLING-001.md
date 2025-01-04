@@ -1,226 +1,134 @@
 # Billing Management Stories
 
-## Epic: Organization Subscription and Payment Management
-As an Organization Admin
-I want to manage my organization's billing and subscriptions
-So that I can maintain active service and track costs
+## Epic: Subscription and Payment
+As an organization admin
+I want to manage billing
+So that I can maintain our service
 
 ### STORY-BILLING-001: Subscription Management
-As an Organization Admin
-I want to manage my organization's subscription plan
-So that I can control our service level and costs
+As an organization admin
+I want to manage our subscription
+So that I can control our service level
 
 **Acceptance Criteria:**
-1. Given I am in billing settings
-   When I view subscription options
+1. Given I view billing
+   When I check plans
    Then I should see:
    - Available plans
-   - Current plan status
-   - Billing cycle info
-   - Usage limits
-   And clear pricing for each option
+   - Current status
+   - Next payment
+   - Clear pricing
+   And understand options
 
-2. Given I select a new plan
-   When I confirm the change
+2. Given I change plans
+   When I confirm
    Then I should:
-   - See transition timing
-   - Get cost difference preview
-   - Receive confirmation email
-   And service level should update accordingly
+   - See cost changes
+   - Know when it starts
+   - Get confirmation
+   And service updates properly
 
-3. Given I have an active subscription
-   When I view billing dashboard
-   Then I should see:
-   - Next billing date
-   - Payment method status
-   - Recent transactions
-   - Usage trends
+3. Given I have questions
+   When I need help
+   Then I should:
+   - Find clear info
+   - Know who to contact
+   - See FAQ answers
+   And get assistance
 
-### STORY-BILLING-002: Payment Method Management
-As an Organization Admin
-I want to manage my organization's payment methods
-So that I can ensure uninterrupted service
+### STORY-BILLING-002: Payment Setup
+As an organization admin
+I want to set up payments
+So that I can pay for service
 
 **Acceptance Criteria:**
-1. Given I am in payment settings
-   When I add a payment method
-   Then I should be able to:
-   - Enter card details securely
-   - Set as default method
-   - Add billing address
-   And receive confirmation
+1. Given I add payment
+   When I choose method
+   Then I should see:
+   - Credit/debit cards
+   - Digital wallets
+   - Other modern options
+   And pay securely
 
-2. Given I have multiple payment methods
-   When I manage them
-   Then I should be able to:
-   - View all methods
-   - Update details
-   - Remove methods
-   - Change default
-   And maintain at least one valid method
-
-3. Given a payment method is expiring
-   When within 30 days of expiry
+2. Given I enter details
+   When I submit payment
    Then I should:
-   - Receive notifications
-   - See clear warnings
-   - Get update prompts
-   And have easy update process
+   - Use secure forms
+   - Get confirmation
+   - See it's active
+   And feel confident
 
-### STORY-BILLING-003: Invoice Management
-As an Organization Admin
-I want to access my organization's billing history
-So that I can track and report on expenses
+3. Given payment changes
+   When something's wrong
+   Then I should:
+   - Know what happened
+   - See how to fix it
+   - Get clear notices
+   And stay informed
+
+### STORY-BILLING-003: Payment History
+As an organization admin
+I want to see payment history
+So that I can track expenses
 
 **Acceptance Criteria:**
-1. Given I am in billing history
-   When I view invoices
+1. Given I view history
+   When I check payments
    Then I should see:
-   - Invoice dates
+   - Recent charges
    - Payment status
-   - Amount details
-   - Service period
-   And be able to download PDF versions
+   - Clear amounts
+   And download receipts
 
-2. Given I need billing records
-   When I export data
-   Then I should get:
-   - Structured formats
-   - Complete history
-   - Line item details
-   - Payment records
-   And be able to filter by date range
-
-3. Given an invoice is generated
-   When payment processes
+2. Given I need records
+   When I export them
    Then I should:
-   - Receive email copy
+   - Get clean PDFs
+   - See payment details
+   - Have what I need
+   And handle expenses
+
+3. Given payments process
+   When they complete
+   Then I should:
+   - Get notifications
    - See updated history
-   - Access payment receipt
-   And have immediate download access
+   - Access receipts
+   And stay organized
 
-## Technical Notes
+### Technical Notes
 
-### Core Requirements (Must Have)
-- Support multiple subscription plans
-- Secure payment method handling
-- Basic invoice generation
-- Payment processing integration
-- Subscription status tracking
-- Payment method expiry handling
-- Basic usage tracking
+### Implementation
+- Stripe integration
+- Modern payment UI
+- Simple plan management
+- Basic notifications
+- Clear receipts
+- Essential security
+
+### Core Requirements
+- Subscription handling
+- Payment processing
+- History tracking
+- Receipt generation
+- Status updates
+- Security measures
 
 System-wide Constraints:
-- PCI compliance requirements
-- Secure payment data handling
-- Audit trail for all transactions
-- Data retention compliance
-- Currency handling standards
-- Tax calculation requirements
+- PCI compliance
+- Secure handling
+- Clear pricing
+- Basic reporting
+- Data privacy
 
 Implementation Requirements:
-- Stripe integration (primary)
-- Subscription plan management
-- Payment method CRUD
-- Invoice generation
-- Email notifications
-- Usage tracking
-- Basic reporting
+- Stripe setup
+- Payment flows
+- Plan management
+- Receipt system
+- Email notices
+- Security checks
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here
-# =====================================================
-# The following section describes features that are explicitly OUT OF SCOPE
-# for the base template implementation. These are documented for awareness and future
-# extension possibilities only.
-
-### Enhanced Features (Should Have)
-- Advanced subscription management
-- Complex pricing models
-- Usage analytics
-- Revenue reporting
-- Payment optimization
-- Automated reconciliation
-- Advanced invoicing
-- Billing notifications
-
-### Advanced Capabilities (Nice to Have)
-- AI-powered pricing
-- Predictive billing
-- Advanced analytics
-- Custom billing workflows
-- Revenue optimization
-- Fraud detection
-- Automated auditing
-- Financial forecasting
-
-# Future Enterprise Administration Considerations
-
-### Billing Governance
-- Revenue recognition
-- Compliance management
-- Audit trail systems
-- Policy enforcement
-- Cost allocation
-- Pricing strategies
-- Risk management
-- Financial reporting
-
-### Enterprise Integration
-- ERP integration
-- Accounting systems
-- Tax management
-- Payment gateways
-- Banking systems
-- Procurement systems
-- Contract management
-- Financial planning
-
-### Advanced Security
-- Payment tokenization
-- Fraud prevention
-- Compliance automation
-- Encryption standards
-- Key management
-- Audit logging
-- Risk assessment
-- Security analytics
-
-### Scale Considerations
-- Global payment processing
-- Multi-currency support
-- Tax jurisdiction handling
-- High-volume transactions
-- Performance optimization
-- Failover systems
-- Disaster recovery
-- Data replication
-
-# Future Billing Considerations
-- Enterprise billing features:
-  - Custom payment terms
-  - Complex billing rules
-  - Advanced forecasting
-  - Budget management
-  - Department billing
-  - Cost center tracking
-  - Contract-based billing
-  - Custom payment methods
-
-# Payment Provider Integration Possibilities
-## Primary Provider (Stripe)
-- Basic subscription management
-- Card payment processing
-- Invoice generation
-- Webhook integration
-- Basic reporting
-
-## Future Provider Options
-- PayPal integration
-- Square integration
-- Regional payment methods
-- Crypto payment support
-- Bank direct integration
-- ACH/wire handling
-
-Note: Base template implements Stripe only. Additional providers require separate implementation consideration. 
+# ===================================================== 
