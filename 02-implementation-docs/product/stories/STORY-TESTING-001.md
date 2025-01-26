@@ -1,103 +1,97 @@
 # Testing Stories
 
-## Epic: Testing Foundation
-As a developer
-I want reliable testing tools
-So that I can ensure quality
+## Story Relationships
+1. STORY-DEPLOY-001 (Deployment)
+   - Provides: Development environment
+   - Required by: Test execution
+   - Enhances: Code quality
 
-### STORY-TESTING-001: Core Testing
+2. STORY-API-001 (API Structure)
+   - Provides: API endpoints
+   - Required by: Integration tests
+   - Enhances: API reliability
+
+3. STORY-USER-001 (Authentication)
+   - Provides: Auth flows
+   - Required by: User testing
+   - Enhances: Security checks
+
+4. STORY-ORG-001 (Organization)
+   - Provides: Org features
+   - Required by: Role testing
+   - Enhances: Access control
+
+## Epic: Essential Testing
 As a developer
-I want essential testing setup
-So that I can verify functionality
+I want basic testing tools
+So that I can ensure core features work
+
+### STORY-TESTING-001: Basic Testing
+As a developer
+I want simple test setup
+So that I can verify key functionality
 
 **Acceptance Criteria:**
 1. Given I write tests
    When implementing features
    Then I should have:
-   - Unit test tools
-   - Integration tests
-   - E2E basics
-   And write good tests
+   - Jest for unit tests
+   - React Testing Library
+   - Basic API tests
+   And cover essentials
 
 2. Given I run tests
    When checking code
    Then I should:
-   - Get clear results
-   - See test coverage
-   - Find issues fast
-   And fix problems
+   - Run npm test
+   - See pass/fail
+   - Get error details
+   And fix issues
 
-3. Given tests fail
-   When debugging
-   Then I should:
-   - See what failed
-   - Know why it failed
-   - Find related code
-   And fix quickly
-
-### STORY-TESTING-002: Test Patterns
+### STORY-TESTING-002: Test Examples
 As a developer
-I want consistent patterns
-So that I can test effectively
+I want clear examples
+So that I can write tests efficiently
 
 **Acceptance Criteria:**
-1. Given I need patterns
+1. Given I need guidance
    When writing tests
    Then I should have:
-   - Clear examples
-   - Common setups
-   - Useful helpers
-   And stay consistent
+   - Auth test example
+   - API test example
+   - UI test example
+   And follow patterns
 
-2. Given I use patterns
-   When testing features
+2. Given I add features
+   When testing new code
    Then I should:
-   - Follow standards
-   - Use best practices
-   - Write clean tests
+   - Use examples
+   - Test core paths
+   - Keep it simple
    And work efficiently
-
-3. Given I add tests
-   When covering new code
-   Then I should:
-   - Match patterns
-   - Maintain quality
-   - Update coverage
-   And stay reliable
 
 ### Technical Notes
 
-### Implementation
-- Jest setup
-- Testing-Library
-- Cypress basics
-- Common helpers
-- Clear patterns
-- Basic CI setup
-
 ### Core Requirements
-- Unit testing
-- Integration tests
-- E2E essentials
-- Coverage checks
-- Helper tools
-- CI pipeline
+- Essential tools
+  - Jest configuration
+  - Testing Library setup
+  - API test helpers
+- Basic patterns
+  - Auth testing
+  - API testing
+  - UI testing
 
-System-wide Constraints:
-- Coverage targets
-- Clean tests
-- Fast execution
-- Clear results
-- Good patterns
-
-Implementation Requirements:
-- Test setup
-- Tool config
-- Helper code
-- Documentation
-- CI config
-- Results display
+### Implementation Constraints
+- Must use Jest
+- Must test auth
+- Must test API
+- Must run in CI
+- Must be quick
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here
-# ===================================================== 
+# =====================================================
+
+Note: Focus is on essential testing for sites under 10K users.
+Complex test scenarios can be added as sites grow. 

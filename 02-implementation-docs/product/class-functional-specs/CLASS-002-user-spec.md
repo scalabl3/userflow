@@ -15,13 +15,11 @@
 
 🔒 ##### Model Reference:
 
-- User has-one ShadowOrganization
 - User has-many OrganizationMemberships
 - User has-many Sessions  
 - User has-many AuthenticationMethods
 
 User
-├── shadowOrg: ShadowOrganization
 ├── memberships: OrganizationMembership[]
 ├── sessions: Session[]
 └── authMethods: AuthenticationMethod[]
@@ -113,7 +111,7 @@ CONSTRUCTOR_BEHAVIOR:
 1. Validate email format
 2. Create base entity properties
 3. Initialize required authentication method
-4. Create default shadow organization
+4. Create default organization (isVisible=false)
 5. Set up default profile if not provided
 6. Initialize empty collections (sessions, memberships)
 

@@ -8,8 +8,6 @@
    - AdminUser is-a User (scope: system-wide administration)                                                   
    - OrganizationUser is-a User (scope: organization-specific)                                                 
  - Organization is-a BaseEntity (with member management)                                                       
-   - ShadowOrganization is-a Organization (scope: individual user container)                                   
-   - StandardOrganization is-a Organization (scope: multi-user team)                                           
  - Role is-a BaseEntity (with permission sets)                                                                 
    - AdminRole is-a Role (scope: organization administration)                                                  
    - MemberRole is-a Role (scope: standard member access)                                                      
@@ -21,7 +19,6 @@
  - Organization has-many Users (through OrganizationMembership)                                                
  - Organization has-one Subscription                                                                           
  - Organization has-many Roles                                                                                 
- - User has-one ShadowOrganization                                                                             
  - User has-many OrganizationMemberships                                                                       
  - User has-many Sessions                                                                                      
  - User has-many AuthenticationMethods                                                                         
@@ -68,7 +65,9 @@
  ├── members: OrganizationMembership[]                                                                         
  ├── roles: Role[]                                                                                             
  ├── subscription: Subscription                                                                                
- └── resources: Resource[]                                                                                     
+ ├── resources: Resource[]                                                                                     
+ ├── isVisible: Boolean                // Controls organization visibility                                                                
+ └── owner: User                       // The organization owner                                                                
  ```                                                                                                           
                                                                                                                
  ### Role                                                                                                      
@@ -102,13 +101,12 @@
                                                                                                                
  ## Data Isolation                                                                                             
  - Each Organization is a separate data boundary                                                               
- - ShadowOrganizations isolate individual user data                                                            
  - Cross-organization access requires explicit sharing                                                         
  - Subscription features scope available functionality                                                         
  - Role-based access controls within organizations                                                             
                                                                                                                
  ## Key Constraints                                                                                            
- 1. Users must have exactly one ShadowOrganization                                                             
+ 1. Users must have exactly one Organization                                                                  
  2. Organizations must have at least one admin role                                                            
  3. Users can belong to multiple organizations                                                                 
  4. Subscriptions are organization-scoped                                                                      
@@ -117,24 +115,25 @@
                                                                                                                
  ## Key Concepts                                                                                               
                                                                                                                
- ### Organization Types                                                                                        
- 1. ShadowOrganization (Individual):                                                                           
+ ### Organization Visibility                                                                                      
+ 1. Hidden Organizations (Shadow):                                                                                      
     - Created automatically with new users                                                                     
-    - Single member (owner)                                                                                    
-    - Limited sharing capabilities                                                                             
-    - Example: "john.doe's workspace"                                                                          
+    - Not visible in organization listings                                                                                    
+    - Can be made visible later                                                                                    
+    - Example: Default workspace for new users                                                                          
                                                                                                                
- 2. StandardOrganization (Team):                                                                               
-    - Multiple members                                                                                         
-    - Role-based access control                                                                                
-    - Resource sharing                                                                                         
-    - Example: "Acme Corp Team"                                                                                
+ 2. Visible Organizations:                                                                                           
+    - Listed in organization directory                                                                                    
+    - Discoverable by other users                                                                                    
+    - Full feature access                                                                                    
+    - Example: "Acme Corp Team"                                                                                    
                                                                                                                
- This separation enables:                                                                                      
- - Natural progression from individual to team use                                                             
- - Clear data ownership boundaries                                                                             
- - Flexible access control                                                                                     
- - Simple billing unit                                                                                         
+ This approach enables:                                                                                      
+ - Seamless user onboarding                                                                                      
+ - Progressive organization visibility                                                                                    
+ - Flexible workspace management                                                                                    
+ - Consistent data structure                                                                                    
+ - Simple visibility control                                                                                    
                                                                                                                
  ### Authentication Methods                                                                                    
  1. Primary Authentication (Required):                                                                         

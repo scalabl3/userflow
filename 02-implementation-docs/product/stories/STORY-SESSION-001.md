@@ -1,133 +1,100 @@
 # Session Management Stories
 
-## Epic: Session Security
+## Story Relationships
+1. STORY-USER-001 (Authentication)
+   - Provides: User identity for session creation
+   - Required by: All session management
+   - Enhances: Login/logout experience
+
+2. STORY-USER-003 (Security Management)
+   - Provides: Security policies for sessions
+   - Uses: Session monitoring for device management
+   - Enhances: Account security
+
+3. STORY-AUTH-UI-001 (Auth UI)
+   - Consumes: Session state
+   - Displays: Session notifications
+   - Required by: All session UI features
+
+4. STORY-ADMIN-UI-001 (System Admin)
+   - Uses: Session data for system monitoring
+   - Required for: System-wide session management
+
+## Epic: Session Management
 As a user
-I want my login sessions to be secure
-So that I can safely use the application
+I want my sessions to be properly managed
+So that I can access the system securely across devices
 
-### STORY-SESSION-001: Basic Session Management
+## STORY-SESSION-001: Session Lifecycle
 As a user
-I want to understand my login status
-So that I can manage my access securely
+I want clear session management
+So that I can understand and control my access state
 
-**Acceptance Criteria:**
-1. Given I am logged in
-   When I use the application
+Acceptance Criteria:
+1. Given I start a new session
+   When I log in successfully
    Then I should:
-   - Know I'm logged in
-   - See when I'll time out
-   - Get timeout warnings
-   And stay secure
+   - See my session status (active, time remaining)
+   - Know when my session will expire
+   - Understand how to extend my session
+   And work securely
 
-2. Given my session is timing out
-   When I'm still working
+2. Given my session is ending
+   When timeout approaches
    Then I should:
-   - Get a clear warning
-   - Have time to save work
-   - Be able to extend session
-   And not lose progress
+   - Get a warning notification
+   - Have option to extend session
+   - Be prompted to save work
+   And avoid data loss
 
 3. Given my session expires
-   When I try to continue
+   When I need to continue working
    Then I should:
-   - Be asked to login again
-   - Not lose my work
-   - Return where I was
-   And stay productive
+   - See clear relogin prompt
+   - Maintain my work context
+   - Return to previous location after login
+   And resume work smoothly
 
-### STORY-SESSION-002: Device Awareness
+## STORY-SESSION-002: Device Management
 As a user
-I want to know about my logins
-So that I can keep my account secure
+I want to manage my active sessions
+So that I can maintain account security
 
-**Acceptance Criteria:**
-1. Given I log in
-   When I view my account
+Acceptance Criteria:
+1. Given I view my account security
+   When I check active sessions
    Then I should:
-   - See my active sessions
-   - Know which devices
-   - Spot unfamiliar access
-   And stay informed
+   - See list of active devices/sessions
+   - Identify my current device
+   - View basic session details (time, location)
+   And understand my account access
 
-2. Given I see suspicious access
-   When I want to protect my account
+2. Given I find suspicious access
+   When I manage sessions
    Then I should:
-   - Be able to end sessions
-   - Get confirmation
-   - Know what happened
-   And feel secure
-
-3. Given I use multiple devices
-   When I log in somewhere new
-   Then I should:
-   - Get a notification
-   - Know it's a new device
-   - Be able to verify it
-   And maintain control
-
-### STORY-SESSION-003: Session Recovery
-As a user
-I want to recover my work
-So that I don't lose progress if I'm logged out
-
-**Acceptance Criteria:**
-1. Given I'm working
-   When I get logged out
-   Then I should:
-   - Not lose my changes
-   - Know what happened
-   - Know how to continue
-   And stay productive
-
-2. Given I log back in
-   When I return
-   Then I should:
-   - Find my work intact
-   - Resume easily
-   - Know what was saved
-   And continue working
-
-3. Given I have unsaved work
-   When my session ends
-   Then I should:
-   - Not lose important changes
-   - Know what was preserved
-   - Understand next steps
-   And feel confident
+   - Be able to end any session
+   - Have option to end all sessions
+   - Get confirmation of actions
+   And maintain account security
 
 ### Technical Notes
 
-### Session Implementation
-- Secure session tokens
-- Standard timeouts
-- Basic device tracking
-- Simple state preservation
-- Essential security measures
-- Clear user feedback
-
 ### Core Requirements
-- Session token management
-- Timeout handling
-- Device awareness
-- Work preservation
-- Security notifications
-
-System-wide Constraints:
-- Secure token handling
-- Standard timeout periods
+- Secure session lifecycle
+  - Token management
+  - Configurable timeouts
+  - State preservation
 - Basic device tracking
-- Essential state management
-- Core security measures
+  - Active session list
+  - Session termination
+  - Device identification
 
-Implementation Requirements:
-- Session CRUD
-- Token management
-- Timeout controls
-- Basic device info
-- State preservation
-- Security alerts
+### Implementation Constraints
+- Must use secure session tokens
+- Must have reasonable timeout defaults
+- Must preserve essential work state
+- Must log security-relevant actions
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here
 # =====================================================
-``` 

@@ -1,20 +1,18 @@
-# Tactical Initiative Plan: User & Organization
+# Tactical Initiative Plan: Organization Management
 
 ## Initiative Information
 ```markdown
 ID: TI-BASE001-003
-Title: User & Organization - Core Features
-Parent: SI-BASE-001
-Created: 2024-01-08
+Title: Organization Management Features
+Created: 2024-01-26
 Status: PLANNING
 Previous Version: None (Initial)
-Current Version: 1.0 (C3D)
+Current Version: 1.0
 
-Focus Area: FOUNDATION
+Focus Area: ORGANIZATION
 Dependencies: 
 - TI-BASE001-001 (Core Foundation)
 - TI-BASE001-002 (Data & API)
-Pattern Category: ESSENTIAL_FIRST
 ```
 
 ## Implementation Context
@@ -22,145 +20,191 @@ Pattern Category: ESSENTIAL_FIRST
 ### 1. Purpose & Scope
 ```markdown
 Primary Purpose:
-Implement essential user and organization management features needed for basic application functionality.
+Implement essential organization management features with account-based access control.
 
 Key Objectives:
-1. Create user registration and login flows
-2. Implement basic profile management
-3. Set up organization creation and management
-4. Add simple role assignments
-5. Maintain data integrity
+1. Organization access level management
+2. Organization creation and configuration
+3. Basic member management
+4. Account-based feature controls
 
 Scope Boundary:
-- IN: Basic user flows, simple org management, essential roles
-- OUT: Advanced permissions, team features, audit logs, user settings
+IN:
+- Account-based organization access
+- Basic organization CRUD
+- Simple member management
+- Essential role assignments
+
+OUT:
+- Advanced permissions
+- Team features
+- Organization hierarchies
+- Cross-organization sharing
+- Advanced analytics
 ```
 
 ### 2. Technical Requirements
+
+#### 2.1 Frontend Components
 ```markdown
-1. User Features (packages/frontend/src/features/user)
-   - Registration form
-   - Login form
-   - Profile view/edit
-   - Password reset
-   - Basic settings
+1. Organization Access UI (packages/frontend/src/features/org/access)
+   - Access level display
+   - Feature availability view
+   - Upgrade options display (if applicable)
+   - Transition handling
 
-2. Organization Features (packages/frontend/src/features/org)
-   - Create organization
-   - Basic org settings
+2. Organization Management UI (packages/frontend/src/features/org/manage)
+   - Organization creation form
+   - Settings management
+   - Member list view
+   - Role assignment interface
+
+3. Shared Components (packages/frontend/src/components/org)
+   - Organization card
+   - Member list item
+   - Role selector
+   - Access level badge
+```
+
+#### 2.2 Backend Services
+```markdown
+1. Organization Service (packages/backend/src/services/org)
+   - Organization CRUD
    - Member management
-   - Simple roles
-   - Org profile
+   - Access level checks
+   - Feature flag handling
 
-3. Shared Components (packages/frontend/src/components)
-   - Form components
-   - User avatar
-   - Error messages
-   - Loading states
-   - Basic modals
+2. Access Control Service (packages/backend/src/services/access)
+   - Account-based access control
+   - Feature availability checks
+   - Role management
+   - Permission validation
+```
 
-4. State Management (packages/frontend/src/state)
-   - User state
-   - Auth state
-   - Org state
-   - Basic caching
+#### 2.3 Data Models
+```markdown
+1. Organization
+   - id: UUID
+   - name: string
+   - settings: OrganizationSettings
+   - createdAt: DateTime
+   - updatedAt: DateTime
+
+2. OrganizationMember
+   - id: UUID
+   - organizationId: UUID
+   - userId: UUID
+   - role: Role
+   - joinedAt: DateTime
+
+3. AccountFeatures
+   - id: UUID
+   - accountId: UUID
+   - organizationEnabled: boolean
+   - features: FeatureFlags
 ```
 
 ### 3. Implementation Strategy
+
+#### Phase 1: Organization Access
 ```markdown
-Phase 1: User Features
-- Registration flow
-- Login system
-- Profile pages
-- Basic settings
+1. Account Feature System
+   - Feature flag implementation
+   - Account-based controls
+   - Access level management
 
-Phase 2: Organization
-- Org creation
-- Basic settings
-- Member list
-- Simple roles
+2. Organization Access UI
+   - Access level display
+   - Feature availability view
+   - Upgrade options
+```
 
-Phase 3: Components
-- Form elements
-- User elements
-- Error handling
-- Loading states
+#### Phase 2: Organization Management
+```markdown
+1. Core Organization Features
+   - Organization creation
+   - Basic settings management
+   - Data consistency
 
-Phase 4: Integration
-- State setup
-- API hooks
-- Error handling
-- Basic caching
+2. Organization UI
+   - Creation form
+   - Settings interface
+   - Status displays
+```
+
+#### Phase 3: Member Management
+```markdown
+1. Member Features
+   - Member invitation
+   - Role assignment
+   - Member list
+
+2. Member UI
+   - Member management interface
+   - Role selection
+   - Invitation handling
 ```
 
 ## Todo Structure
 
-### 1. User Tasks
+### 1. Access Management
 ```markdown
-TODO-TI003-001: Auth Pages
-- Registration page
-- Login page
-- Password reset
-- Error handling
+TODO-TI003-001: Account Features
+- Feature flag system
+- Access level management
+- Feature availability checks
 
-TODO-TI003-002: Profile Features
-- View profile
-- Edit profile
-- Basic settings
-- Form validation
+TODO-TI003-002: Access UI
+- Access level display
+- Feature availability view
+- Transition handling
 ```
 
-### 2. Organization Tasks
+### 2. Organization Setup
 ```markdown
-TODO-TI003-003: Org Setup
-- Create org
-- Basic settings
-- Org profile
-- Error states
+TODO-TI003-003: Core Organization
+- Organization creation
+- Settings management
+- Data validation
 
-TODO-TI003-004: Member Management
-- Member list
+TODO-TI003-004: Organization UI
+- Creation interface
+- Settings management
+- Status displays
+```
+
+### 3. Member Management
+```markdown
+TODO-TI003-005: Member Features
+- Member invitation
 - Role assignment
-- Basic actions
-- Validation
-```
+- Member listing
 
-### 3. Component Tasks
-```markdown
-TODO-TI003-005: Core Components
-- Form elements
-- User elements
-- Error displays
-- Loading states
-
-TODO-TI003-006: State Integration
-- User state
-- Auth state
-- Org state
-- Basic cache
+TODO-TI003-006: Member UI
+- Member management
+- Role selection
+- Invitation handling
 ```
 
 ## Success Criteria
 ```markdown
-1. Technical Quality
-   - Clean UI/UX
-   - Form validation
-   - Error handling
-   - State management
-   - Clear patterns
+1. Functionality
+   - Clear organization access levels
+   - Smooth organization creation
+   - Effective member management
+   - Proper role handling
 
-2. Development Experience
-   - Reusable components
-   - Clear state flow
-   - Easy testing
-   - Simple debugging
-   - Basic docs
+2. User Experience
+   - Clear feature availability
+   - Intuitive organization setup
+   - Simple member management
+   - Helpful error messages
 
-3. Performance
-   - Quick loads
-   - Fast updates
-   - Basic caching
-   - Error recovery
+3. Technical Quality
+   - Consistent data handling
+   - Proper access controls
+   - Clean component structure
+   - Efficient state management
 ```
 
 # =====================================================
@@ -203,7 +247,7 @@ TODO-TI003-006: State Integration
 ## Version History
 ```markdown
 VERSION: 1.0
-DATE: 2024-01-08
+DATE: 2024-01-26
 AUTHOR: C3D
-CHANGES: Initial version focusing on essential User & Organization features
+CHANGES: Initial version focusing on organization management features
 ``` 

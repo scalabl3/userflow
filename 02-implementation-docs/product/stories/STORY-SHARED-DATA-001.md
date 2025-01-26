@@ -1,136 +1,98 @@
 # Shared Data Stories
 
-## Epic: Shared Data Foundation
-As a developer
-I want a unified type system and persistence layer
-So that I can build features with consistent data handling
+## Story Relationships
+1. STORY-USER-001 (Authentication)
+   - Provides: User model
+   - Required by: Core data types
+   - Enhances: Type safety
 
-### STORY-SHARED-DATA-001: Core Domain Types
+2. STORY-ORG-001 (Organization)
+   - Provides: Organization model
+   - Required by: Data relationships
+   - Enhances: Data structure
+
+3. STORY-RBAC-001 (Role Management)
+   - Provides: Role types
+   - Required by: Access control
+   - Enhances: Data security
+
+4. STORY-API-001 (API Structure)
+   - Provides: API patterns
+   - Required by: Data operations
+   - Enhances: Data access
+
+## Epic: Essential Data Types
 As a developer
-I want shared domain types with persistence
-So that I can work with data consistently across the monorepo
+I want simple data management
+So that I can build features quickly
+
+### STORY-SHARED-DATA-001: Core Types
+As a developer
+I want basic type definitions
+So that I can work with data safely
 
 **Acceptance Criteria:**
-1. Given I need domain types
+1. Given I need data types
    When building features
    Then I should have:
-   - Core type definitions
-   - Prisma schema mapping
-   - Type-safe operations
+   - User type
+   - Organization type
+   - Role enum
    And maintain consistency
 
 2. Given I use these types
-   When implementing features
+   When coding features
    Then I should:
-   - Get full type safety
-   - Have persistence
+   - Get type checking
+   - Have Prisma models
    - See relationships
    And work efficiently
 
-3. Given I extend types
-   When adding features
-   Then I should:
-   - Update type definitions
-   - Extend Prisma schema
-   - Maintain mappings
-   And stay consistent
-
-### STORY-SHARED-DATA-002: Data Operations
+### STORY-SHARED-DATA-002: Data Access
 As a developer
-I want type-safe data operations
+I want simple data operations
 So that I can manage data reliably
 
 **Acceptance Criteria:**
-1. Given I need data access
+1. Given I need data
    When building features
    Then I should have:
-   - Type-safe queries
-   - CRUD operations
+   - Basic CRUD
+   - Type safety
    - Error handling
    And maintain integrity
 
-2. Given I fetch data
+2. Given I query data
    When implementing features
    Then I should:
    - Get typed results
-   - Handle filtering
+   - Handle basic filters
    - Support pagination
    And work efficiently
 
-3. Given I modify data
-   When saving changes
-   Then I should:
-   - Validate types
-   - Handle errors
-   - Maintain consistency
-   And prevent issues
-
-### STORY-SHARED-DATA-003: Data Model Extension
-As an application developer
-I want to extend the base data models
-So that I can add application-specific data while maintaining type safety
-
-**Acceptance Criteria:**
-1. Given I need custom fields
-   When extending base models
-   Then I should have:
-   - Clear extension patterns
-   - Type generation
-   - Migration tools
-   And maintain data integrity
-
-2. Given I add relationships
-   When connecting models
-   Then I should:
-   - Preserve existing relations
-   - Add new connections
-   - Update type definitions
-   And keep referential integrity
-
-3. Given I need custom operations
-   When implementing features
-   Then I should:
-   - Extend base queries
-   - Add new operations
-   - Maintain type safety
-   And follow framework patterns
-
-## Technical Notes
+### Technical Notes
 
 ### Core Requirements
-- Domain types
-- Schema mapping
-- Type safety
-- Data access
-- Error handling
-- Testing support
+- Essential types
+  - User model
+  - Organization model
+  - Role types
+  - Basic relationships
+- Simple operations
+  - CRUD functions
+  - Type checking
+  - Error handling
 
-### Extension Points
-- Model extension patterns
-- Field addition hooks
-- Relation builders
-- Query extensions
-- Migration utilities
-- Type generators
-
-### System-wide Constraints
-- Single source of truth
-- Type safety everywhere
-- Data integrity
-- Clear patterns
-- Test coverage
-- Simple extensions
-- Safe migrations
-
-### Implementation Guidelines
-- Keep models focused
-- Use clear naming
-- Document extensions
-- Maintain migrations
-- Test thoroughly
-- Provide examples
-- Enable safe evolution
+### Implementation Constraints
+- Must use Prisma
+- Must be type-safe
+- Must handle errors
+- Must be testable
+- Must be simple
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here
-# ===================================================== 
+# =====================================================
+
+Note: Focus is on essential data handling for sites under 10K users.
+Complex data patterns can be added as sites grow. 

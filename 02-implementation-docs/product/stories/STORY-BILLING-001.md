@@ -1,133 +1,93 @@
 # Billing Management Stories
 
-## Epic: Subscription and Payment
-As an organization admin
-I want to manage billing
-So that I can maintain our service
+## Story Relationships
+1. STORY-USER-001 (Authentication)
+   - Provides: User identity for billing
+   - Required by: Payment processing
+   - Enhances: Payment security
 
-### STORY-BILLING-001: Subscription Management
-As an organization admin
-I want to manage our subscription
-So that I can control our service level
+2. STORY-ORG-001 (Organization)
+   - Provides: Billing entity
+   - Required by: Subscription management
+   - Enhances: Account features
 
-**Acceptance Criteria:**
-1. Given I view billing
-   When I check plans
-   Then I should see:
-   - Available plans
-   - Current status
-   - Next payment
-   - Clear pricing
-   And understand options
+3. STORY-ADMIN-UI-001 (System Admin)
+   - Provides: Payment provider setup
+   - Required by: Payment configuration
+   - Enhances: Site management
 
-2. Given I change plans
-   When I confirm
-   Then I should:
-   - See cost changes
-   - Know when it starts
-   - Get confirmation
-   And service updates properly
+4. STORY-API-001 (API Structure)
+   - Provides: Payment webhook handling
+   - Required by: Payment processing
+   - Enhances: Payment reliability
 
-3. Given I have questions
-   When I need help
-   Then I should:
-   - Find clear info
-   - Know who to contact
-   - See FAQ answers
-   And get assistance
+## Epic: Payment Foundation
+As a site implementer
+I want a flexible payment system
+So that I can quickly enable subscriptions and payments
 
-### STORY-BILLING-002: Payment Setup
-As an organization admin
-I want to set up payments
-So that I can pay for service
+### STORY-BILLING-001: Payment Provider Setup
+As a system administrator
+I want to configure payment providers
+So that users can pay for services
 
 **Acceptance Criteria:**
-1. Given I add payment
-   When I choose method
+1. Given I set up payments
+   When I configure providers
+   Then I should be able to:
+   - Enable/disable providers (Stripe, Apple Pay, etc.)
+   - Set API keys securely
+   - Configure webhooks
+   And start accepting payments
+
+2. Given providers are configured
+   When I check status
    Then I should see:
-   - Credit/debit cards
-   - Digital wallets
-   - Other modern options
-   And pay securely
+   - Active providers
+   - Connection status
+   - Basic analytics
+   And monitor health
 
-2. Given I enter details
-   When I submit payment
-   Then I should:
-   - Use secure forms
-   - Get confirmation
-   - See it's active
-   And feel confident
-
-3. Given payment changes
-   When something's wrong
-   Then I should:
-   - Know what happened
-   - See how to fix it
-   - Get clear notices
-   And stay informed
-
-### STORY-BILLING-003: Payment History
+### STORY-BILLING-002: Payment Processing
 As an organization admin
-I want to see payment history
-So that I can track expenses
+I want to accept payments
+So that I can manage subscriptions
 
 **Acceptance Criteria:**
-1. Given I view history
-   When I check payments
-   Then I should see:
-   - Recent charges
-   - Payment status
-   - Clear amounts
-   And download receipts
+1. Given I enable billing
+   When users pay
+   Then they should:
+   - See available payment methods
+   - Use secure payment forms
+   - Get clear confirmations
+   And complete transactions safely
 
-2. Given I need records
-   When I export them
-   Then I should:
-   - Get clean PDFs
-   - See payment details
-   - Have what I need
-   And handle expenses
-
-3. Given payments process
+2. Given payments process
    When they complete
-   Then I should:
-   - Get notifications
-   - See updated history
-   - Access receipts
-   And stay organized
+   Then the system should:
+   - Update subscription status
+   - Send confirmations
+   - Generate receipts
+   And maintain records
 
 ### Technical Notes
 
-### Implementation
-- Stripe integration
-- Modern payment UI
-- Simple plan management
-- Basic notifications
-- Clear receipts
-- Essential security
-
 ### Core Requirements
-- Subscription handling
-- Payment processing
-- History tracking
-- Receipt generation
-- Status updates
-- Security measures
+- Payment provider integration
+  - Stripe (primary)
+  - Apple Pay (optional)
+  - Other providers (extensible)
+- Basic subscription management
+  - Plan configuration
+  - Status tracking
+  - Receipt generation
 
-System-wide Constraints:
-- PCI compliance
-- Secure handling
-- Clear pricing
-- Basic reporting
-- Data privacy
-
-Implementation Requirements:
-- Stripe setup
-- Payment flows
-- Plan management
-- Receipt system
-- Email notices
-- Security checks
+### Implementation Constraints
+- Must be PCI compliant
+- Must secure API keys
+- Must handle webhooks
+- Must generate receipts
+- Must support white-labeling
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here

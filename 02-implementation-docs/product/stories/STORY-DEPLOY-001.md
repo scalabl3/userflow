@@ -1,103 +1,97 @@
 # Deployment Stories
 
-## Epic: Development and Deployment
-As a developer
-I want reliable development and deployment
-So that I can build and ship confidently
+## Story Relationships
+1. STORY-API-001 (API Structure)
+   - Provides: API configuration
+   - Required by: Environment setup
+   - Enhances: Deployment reliability
 
-### STORY-DEPLOY-001: Local Development
+2. STORY-TESTING-001 (Testing)
+   - Provides: Test suites
+   - Required by: Deployment checks
+   - Enhances: Deployment confidence
+
+3. STORY-ADMIN-UI-001 (System Admin)
+   - Provides: Environment variables
+   - Required by: Configuration
+   - Enhances: Site management
+
+4. STORY-BILLING-001 (Billing)
+   - Provides: Payment configuration
+   - Required by: Production setup
+   - Enhances: Site functionality
+
+## Epic: Quick Site Launch
+As a site implementer
+I want a streamlined deployment process
+So that I can launch new sites quickly
+
+### STORY-DEPLOY-001: Quick Start
 As a developer
-I want a simple development setup
-So that I can start working quickly
+I want minimal setup steps
+So that I can start building immediately
 
 **Acceptance Criteria:**
-1. Given I clone the repo
-   When I follow setup steps
+1. Given I create a new site
+   When I clone the template
    Then I should:
-   - Run clear commands
-   - See helpful output
-   - Get working environment
-   And start developing
+   - Run npm/yarn install
+   - Copy .env.example
+   - Start development server
+   And begin customizing
 
 2. Given I'm developing
    When I make changes
    Then I should:
    - See live updates
-   - Get clear feedback
-   - Spot any issues
-   And work efficiently
+   - Get clear errors
+   - Have working APIs
+   And iterate quickly
 
-3. Given something fails
-   When I check the output
-   Then I should:
-   - See what went wrong
-   - Know how to fix it
-   - Find help docs
-   And resolve issues
-
-### STORY-DEPLOY-002: Production Deployment
+### STORY-DEPLOY-002: Easy Launch
 As a developer
-I want reliable deployment
-So that I can ship with confidence
+I want simple deployment
+So that I can go live confidently
 
 **Acceptance Criteria:**
 1. Given code is ready
-   When I deploy to production
+   When I deploy to Vercel
    Then I should:
-   - Use simple commands
-   - See deployment progress
-   - Get clear feedback
-   And ship confidently
+   - Connect repository
+   - Set environment variables
+   - Deploy automatically
+   And launch quickly
 
-2. Given deployment runs
-   When it completes
+2. Given site is live
+   When I verify
    Then I should:
-   - Know it succeeded
-   - See it's working
-   - Access the app
-   And verify changes
-
-3. Given deployment fails
-   When I check status
-   Then I should:
-   - See clear errors
-   - Know what failed
-   - Have next steps
-   And fix issues
+   - Test core features
+   - Check admin access
+   - Verify payments
+   And confirm success
 
 ### Technical Notes
 
-### Implementation
-- Simple npm scripts
-- Clear build process
-- Vercel deployment
-- Basic monitoring
-- Essential logging
-- Error handling
-
 ### Core Requirements
-- Development setup
-- Build process
-- Deploy pipeline
-- Status checks
-- Basic logging
-- Error feedback
+- Fast setup
+  - Standard package manager
+  - Example environment file
+  - Development server
+- Simple deployment
+  - Git-based deployment
+  - Environment variables
+  - Basic health checks
 
-System-wide Constraints:
-- Cross-platform dev
-- Secure deployment
-- Clear logging
-- Basic monitoring
-- Error tracking
-
-Implementation Requirements:
-- npm configuration
-- Build setup
-- Vercel config
-- Deploy process
-- Status checks
-- Error handling
+### Implementation Constraints
+- Must use npm/yarn
+- Must provide examples
+- Must document env vars
+- Must support Vercel
+- Must verify basics
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here
-# ===================================================== 
+# =====================================================
+
+Note: Focus is on quick setup and deployment for sites under 10K users.
+More complex deployment needs can be added as sites grow. 

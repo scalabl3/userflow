@@ -1,3 +1,13 @@
+# Class Functional Specification Template
+
+> Template Instructions:
+> 1. File Naming Convention: CLASS-[###]-[class-name]-spec.md
+>    Example: CLASS-001-base-entity-spec.md
+> 2. Directory Structure: 02-implementation-docs/product/class-functional-specs/
+> 3. Replace all placeholder text (indicated by [square brackets]) with your class-specific details
+> 4. Delete any sections that don't apply to your class
+> 5. Add additional sections as needed for your specific class
+
 # [CLASS_NAME]
 
 ## RELATIONSHIPS

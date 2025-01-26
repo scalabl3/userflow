@@ -1,99 +1,96 @@
 # Public Marketing Interface Stories
 
-## Epic: Public Site Template
-As a developer
-I want a base marketing interface structure
-So that I can build specific marketing sites upon it
+## Story Relationships
+1. STORY-AUTH-UI-001 (Auth UI)
+   - Provides: Authentication flows
+   - Required by: Sign up/login pages
+   - Enhances: User conversion
 
-### STORY-MARKETING-UI-001: Core Public Templates
+2. STORY-USER-001 (Authentication)
+   - Provides: Auth endpoints
+   - Required by: Registration forms
+   - Enhances: User signup
+
+3. STORY-BILLING-001 (Billing)
+   - Provides: Pricing information
+   - Required by: Plan display
+   - Optional: Based on site needs
+
+4. STORY-API-001 (API)
+   - Provides: Contact form endpoints
+   - Required by: Public forms
+   - Enhances: Lead capture
+
+## Epic: Marketing Site Foundation
+As a site implementer
+I want a simple marketing site foundation
+So that I can quickly launch branded sites
+
+### STORY-MARKETING-UI-001: Core Pages
+As a site builder
+I want essential marketing pages
+So that I can quickly set up a professional site
+
+**Acceptance Criteria:**
+1. Given I create a new site
+   When I use the templates
+   Then I should have:
+   - Home page layout
+   - About page structure
+   - Contact form setup
+   - Pricing page (optional)
+   And start customizing
+
+2. Given I customize pages
+   When I add content
+   Then I should have:
+   - Clear content areas
+   - Basic SEO setup
+   - Image optimization
+   And maintain performance
+
+### STORY-MARKETING-UI-002: Navigation
 As a site visitor
-I want consistent, functional page structures
-So that I can navigate and use the base application
+I want clear navigation
+So that I can find important information
 
 **Acceptance Criteria:**
 1. Given I visit the site
-   When I view the home page template
+   When I browse pages
    Then I should see:
-   - Content placeholder areas
-   - Navigation structure
-   - Call-to-action placement
-   - Responsive layout
-   And have clear path to authentication
+   - Simple main menu
+   - Sign up/login links
+   - Mobile-friendly nav
+   And find what I need
 
-2. Given I view other pages
-   When I visit about/contact templates
-   Then I should see:
-   - Consistent layout structure
-   - Content placeholder regions
-   - Standard component areas
-   - Form structures where needed
-   And maintain consistent navigation
+2. Given I want to convert
+   When I'm ready
+   Then I should:
+   - Find call-to-actions
+   - Access registration
+   - Contact support
+   And take action easily
 
-3. Given I want to authenticate
-   When I access auth pages
-   Then I should see:
-   - Standard form layouts
-   - Error handling structure
-   - Success flow structure
-   - Loading state placeholders
-   And be able to navigate the auth flow
-
-### STORY-MARKETING-UI-002: Template Customization
-As an application developer
-I want to customize the marketing templates
-So that I can create a unique site while maintaining core functionality
-
-**Acceptance Criteria:**
-1. Given I need to customize the design
-   When I modify templates
-   Then I should have:
-   - Clear style override points
-   - Component replacement options
-   - Layout adjustment capabilities
-   And maintain responsive behavior
-
-2. Given I need to add content
-   When I populate templates
-   Then I should have:
-   - Content placeholder API
-   - Image optimization tools
-   - SEO metadata support
-   And preserve performance
-
-## Technical Notes
+### Technical Notes
 
 ### Core Requirements
-- Base layout system
-- Navigation structure
-- Placeholder components
-- Form structures
-- Error handling patterns
-- Loading state patterns
-- Meta tag structure
-- Basic analytics support
+- Essential pages
+  - Home, About, Contact
+  - Pricing (optional)
+  - Registration flow
+- Basic components
+  - Navigation
+  - Forms
+  - CTAs
+  - Content blocks
 
-### Extension Points
-- Content placeholders
-- Style override system
-- Component replacement
-- Layout customization
-- Route configuration
-- Analytics hooks
+### Implementation Constraints
+- Must be mobile-first
+- Must be accessible
+- Must be SEO-ready
+- Must be customizable
+- Must load quickly
 
-### System-wide Constraints
-- Mobile-first layouts
-- Accessibility patterns
-- Performance baseline
-- Security fundamentals
-- Standard routes
-- Form validation
-- Error handling
-
-### Implementation Guidelines
-- Clear component boundaries
-- Standard layout patterns
-- Simple extension points
-- Placeholder management
-- Route organization
-- Basic SEO support
-- Performance baselines 
+# =====================================================
+# SCOPE BOUNDARY - Base Implementation Ends Here
+# ===================================================== 

@@ -1,132 +1,120 @@
 # Role and Permission Management Stories
 
-## Epic: Access Control
-As a team member
-I want clear access controls
-So that I can work securely with my team
+## Story Relationships
+1. STORY-USER-001 (Authentication)
+   - Provides: User identity
+   - Required by: Initial role assignment
+   - Creates: First Admin role
 
-### STORY-ROLE-001: Basic Role Management
+2. STORY-ORG-001 (Organization)
+   - Provides: Organization context
+   - Required by: Role assignments
+   - Controls: Role visibility
+
+3. STORY-BILLING-001 (Billing)
+   - Provides: Feature flags
+   - Required by: Role management
+   - Controls: Member invitations
+
+4. STORY-ADMIN-UI-001 (System Admin)
+   - Provides: System-wide role view
+   - Required by: Role monitoring
+   - Enhances: Platform management
+
+Note: Roles are always created with organizations, even when not visible.
+The organization creator is automatically assigned the Admin role and this
+cannot be changed. Other members can only be assigned Member or Viewer roles.
+
+## Epic: Role Management
 As an organization admin
-I want to manage member roles
-So that I can control who can do what
+I want to assign roles to members
+So that I can control access to organization features
+
+### STORY-ROLE-001: Role Assignment
+As an organization admin
+I want to assign Member or Viewer roles
+So that I can control what others can do
 
 **Acceptance Criteria:**
-1. Given I manage the organization
-   When I view roles
+1. Given organization features are enabled
+   When I invite members
    Then I should:
-   - See available roles
-   - Understand their purposes
-   - Know what they allow
-   And make informed decisions
-
-2. Given I assign roles
-   When I add team members
-   Then I should:
-   - Choose appropriate roles
-   - See what access they'll have
-   - Get clear confirmation
+   - Assign either Member or Viewer role
+   - See current role assignments
+   - Get confirmation of changes
    And maintain security
 
-3. Given roles are assigned
-   When I review the team
-   Then I should:
-   - See who has what roles
-   - Understand current access
-   - Spot any issues
-   And keep things organized
+2. Given I review members
+   When I view the member list
+   Then I should see:
+   - Each member's current role
+   - Last role change date
+   - Who made the change
+   And understand access
 
-### STORY-ROLE-002: Permission Understanding
+### STORY-ROLE-002: Role Enforcement
 As a team member
-I want to understand my permissions
-So that I know what I can and cannot do
+I want my role permissions enforced
+So that I can work appropriately
 
 **Acceptance Criteria:**
-1. Given I use the system
-   When I access features
+1. Given I am the Admin (creator)
+   When I use the system
    Then I should:
-   - Know what I can do
-   - See why something's restricted
-   - Understand my role
-   And work effectively
-
-2. Given my role changes
-   When I'm updated about it
-   Then I should:
-   - Know what's different
-   - Understand new capabilities
-   - See any new restrictions
-   And adapt accordingly
-
-3. Given I need more access
-   When I request it
-   Then I should:
-   - Know who to ask
-   - Understand the process
-   - Get clear feedback
-   And maintain security
-
-### STORY-ROLE-003: Admin Access Control
-As an organization admin
-I want to manage access safely
-So that I can protect our organization
-
-**Acceptance Criteria:**
-1. Given I manage access
-   When I make changes
-   Then I should:
-   - See what I'm changing
-   - Understand the impact
-   - Get confirmations
+   - Manage organization settings
+   - Manage member roles
+   - Access all features
    And maintain control
 
-2. Given someone's role changes
-   When I update their access
+2. Given I am a Member
+   When I use the system
    Then I should:
-   - Apply changes clearly
-   - Notify relevant people
-   - See the updates
-   And track changes
+   - View all content
+   - Create new content
+   - Edit unlocked content
+   And contribute effectively
 
-3. Given I review access
-   When I check the organization
+3. Given I am a Viewer
+   When I use the system
    Then I should:
-   - See current roles
-   - Spot potential issues
-   - Make needed adjustments
-   And keep things secure
+   - View all content
+   - Not see edit options
+   - Not see management options
+   And maintain read-only access
 
 ### Technical Notes
 
-### Role Implementation
-- Basic role types (Admin, Member, etc.)
-- Simple permission sets (CRUD)
-- Clear role assignments
-- Basic audit logging
-- Essential access control
-- Role change tracking
-
 ### Core Requirements
-- Standard role definitions
-- Basic permission management
-- Simple role assignment
-- Access logging
-- Clear role boundaries
+- Fixed Role Types
+  ```typescript
+  enum Role {
+    ADMIN,    // Organization creator only
+    MEMBER,   // Can create/edit content
+    VIEWER    // Read-only access
+  }
+  ```
 
-System-wide Constraints:
-- Simple role hierarchy
-- Basic permission model
-- Clear access boundaries
-- Standard audit requirements
-- Essential security controls
+- Role Assignment
+  - Admin role fixed to creator
+  - Members can be Member or Viewer
+  - Log all role changes
 
-Implementation Requirements:
-- Basic role CRUD
-- Simple permission checks
-- Essential audit logging
-- Clear access control
-- Standard role types
-- Basic member management
+- Access Control
+  - Simple role checks
+  - Fixed permissions per role
+  - Clear boundaries
+
+### Implementation Constraints
+- Must assign Admin to creator
+- Must protect Admin role
+- Must log role changes
+- Must enforce role permissions
+- Must support feature flags
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here
-# ===================================================== 
+# =====================================================
+
+Note: Content locking is handled at the content level, not through roles.
+Organization features may be hidden based on subscription/settings, but roles
+are always maintained in the data model. 

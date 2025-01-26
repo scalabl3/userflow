@@ -1,133 +1,135 @@
 # Organization Management Stories
 
-## Epic: Organization Setup and Management
-As a system user
-I want flexible organization support
-So that I can either operate individually or as part of a larger organization based on my needs
+## Story Relationships
+1. STORY-USER-001 (Authentication)
+   - Provides: User identity and registration
+   - Required by: Initial org creation
+   - Creates: Default organization
 
-### STORY-ORG-001: Organization Features
-As a user
-I want to understand my organization options
-So that I can choose the right setup for my needs
+2. STORY-RBAC-001 (Role Management)
+   - Provides: Three fixed roles
+   - Required by: Initial admin assignment
+   - Enhances: Access control
 
-**Acceptance Criteria:**
-1. Given I am using the system
-   When I review available features
+3. STORY-BILLING-001 (Billing)
+   - Provides: Account feature flags
+   - Required by: Organization visibility
+   - Controls: Collaboration features
+
+4. STORY-ADMIN-UI-001 (System Admin)
+   - Provides: System-wide management
+   - Required by: Organization oversight
+   - Controls: Feature availability
+
+## Epic: Organization Management
+As a user of the site
+I want to use organization features when they're available to my account
+So that I can collaborate with others effectively
+
+Note: Every user has an organization (visible or not) and is automatically assigned 
+as its Admin. Organization visibility and collaboration features depend on 
+subscription/system settings.
+
+## STORY-ORG-001: Organization Creation
+As a new user
+I want my data properly organized
+So that I can work effectively whether solo or in a team
+
+Acceptance Criteria:
+1. Given I register as a new user
+   When my account is created
+   Then the system should:
+   - Create my organization automatically
+   - Assign me as Admin
+   - Set visibility based on subscription/settings
+   And maintain data consistency
+
+2. Given I have a basic account
+   When organization features are disabled
    Then I should:
-   - Understand organization options
-   - See what's available to me
-   - Know how to make changes
-   And make informed decisions
+   - Still have my organization (not visible)
+   - Maintain Admin role
+   - Work in single-user mode
+   And keep data organized
 
-2. Given I use the system individually
-   When I access features
+3. Given organization features become available
+   When my subscription/settings allow
    Then I should:
-   - Have a consistent experience
-   - Access my personal workspace
-   - See relevant options
-   And focus on my work
+   - See my organization
+   - Configure organization details
+   - Access collaboration features
+   And start team workflows
 
-3. Given my needs change
-   When I want to modify my setup
+## STORY-ORG-002: Organization Configuration
+As an organization admin
+I want to manage organization settings
+So that I can enable team collaboration
+
+Acceptance Criteria:
+1. Given organization features are enabled
+   When I configure settings
    Then I should:
-   - See available options
-   - Understand the changes
-   - Keep my existing data
-   And have a smooth transition
+   - Set organization name and details
+   - See available features
+   - Configure team preferences
+   And prepare for collaboration
 
-### STORY-ORG-002: Organization Setup
-As a user
-I want to set up my organization
-So that I can work with my team effectively
-
-**Acceptance Criteria:**
-1. Given I'm getting started
-   When I choose my setup
+2. Given I manage the organization
+   When I update settings
    Then I should:
-   - See clear options
-   - Understand differences
-   - Make informed choices
-   And get started easily
+   - See changes immediately
+   - Get clear confirmations
+   - Maintain data consistency
+   And control the setup
 
-2. Given I create an organization
-   When I complete setup
+## STORY-ORG-003: Member Management
+As an organization admin
+I want to manage organization members
+So that I can control who has access
+
+Acceptance Criteria:
+1. Given organization features are enabled
+   When I invite someone
    Then I should:
-   - Have immediate access
-   - See next steps clearly
-   - Know how to proceed
-   And feel confident
+   - Assign role (Member or Viewer)
+   - Send invitation with role details
+   - See pending invites with roles
+   And track member status
 
-3. Given I'm the creator
-   When setup is complete
+2. Given I modify member access
+   When I update roles
    Then I should:
-   - Have proper access
-   - Know my responsibilities
-   - Understand my role
-   And be ready to proceed
-
-### STORY-ORG-003: Organization Management
-As an organization administrator
-I want to manage my organization
-So that it serves our team's needs
-
-**Acceptance Criteria:**
-1. Given I manage the organization
-   When I access settings
-   Then I should:
-   - See relevant options
-   - Make needed changes
-   - Get clear feedback
-   And maintain control
-
-2. Given I update settings
-   When changes are saved
-   Then I should:
-   - See immediate updates
-   - Get confirmations
-   - Know what changed
-   And trust the changes
-
-3. Given I manage members
-   When I make changes
-   Then I should:
-   - Control access easily
-   - See team status
-   - Manage permissions
-   And maintain security
+   - Change role between Member or Viewer
+   - See clear role descriptions:
+     * Admin: Full organization management (creator only)
+     * Member: Can create/edit unlocked content
+     * Viewer: Read-only access
+   - Notify affected members
+   - Cannot modify creator's Admin role
+   And maintain organization security
 
 ### Technical Notes
 
-### Organization Implementation
-- Shadow organization structure
-- Feature visibility control
-- Data structure consistency
-- Member management basics
-- Settings management
-- Access control fundamentals
-- Basic audit logging
-
 ### Core Requirements
-- Shadow org creation and management
-- Basic member operations
-- Essential settings control
-- Data isolation
-- Audit logging
-- Feature visibility
+- Automatic organization creation
+  - Created with user registration
+  - Admin role assigned to creator
+  - Visibility based on subscription
+- Organization management
+  - Basic settings and configuration
+  - Feature availability control
+  - Member management when enabled
+- Role management
+  - Fixed roles (Admin, Member, Viewer)
+  - Creator always Admin
+  - Role change auditing
 
-System-wide Constraints:
-- Consistent data structure (shadow/regular orgs)
-- Organization-based data isolation
-- Basic feature visibility control
-- Standard organization fields
-- Core member management
-
-Implementation Requirements:
-- Basic organization operations
-- Simple member management
-- Essential audit logging
-- Basic data isolation
-- Standard organization fields
-- Core access control
+### Implementation Constraints
+- Must create org with user
+- Must assign Admin to creator
+- Must control visibility
+- Must protect Admin role
+- Must audit role changes
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here

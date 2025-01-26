@@ -1,145 +1,102 @@
 # Authenticated Interface Stories
 
+## Story Relationships
+1. STORY-USER-001 (Authentication)
+   - Provides: User identity and access state
+   - Required by: All authenticated UI
+   - Enhances: Security UX
+
+2. STORY-SESSION-001 (Session Management)
+   - Provides: Session status and timeouts
+   - Required by: Navigation and state
+   - Enhances: User experience
+
+3. STORY-USER-002 (Profile)
+   - Provides: User profile data
+   - Required by: Account management UI
+   - Enhances: Personalization
+
+4. STORY-USER-003 (Security)
+   - Provides: Security settings and status
+   - Required by: Account security UI
+   - Enhances: User trust
+
+5. STORY-ORG-001 (Organization)
+   - Provides: Organization context
+   - Required by: Organization-aware UI
+   - Optional: Based on account features
+
 ## Epic: Application Interface
 As a user
 I want a clear, usable interface
-So that I can easily use the application
+So that I can access my features effectively
 
-### STORY-AUTH-UI-001: Main Application Layout
+### STORY-AUTH-UI-001: Main Layout
 As a logged-in user
 I want a consistent interface
-So that I can find and use features easily
+So that I can use features efficiently
 
 **Acceptance Criteria:**
 1. Given I am logged in
    When I use the application
    Then I should see:
-   - Clear navigation menu
-   - My account section
+   - Simple navigation menu
+   - Account section
    - Main content area
    - Important notifications
-   And know where things are
+   And find features easily
 
-2. Given I move between sections
-   When I click navigation items
+2. Given I use different sections
+   When I navigate
    Then I should:
-   - See what's loading
-   - Know where I am
-   - Have smooth transitions
+   - See loading states
+   - Know my location
+   - Have clear paths back
    And stay oriented
 
-3. Given I use the interface
-   When something goes wrong
-   Then I should:
-   - See clear error messages
-   - Know what happened
-   - Know what to do next
-   And stay productive
-
-### STORY-AUTH-UI-002: Account Management Area
+### STORY-AUTH-UI-002: Account Area
 As a logged-in user
 I want to manage my account
 So that I can control my settings
 
 **Acceptance Criteria:**
-1. Given I access my account
-   When I view my profile
-   Then I should:
-   - See my information
-   - Access my settings
-   - Find help easily
-   And feel in control
+1. Given I view my account
+   When I access settings
+   Then I should see:
+   - Profile information
+   - Security settings
+   - Organization status (if enabled)
+   And understand options
 
-2. Given I change settings
-   When I save updates
+2. Given I make changes
+   When I save settings
    Then I should:
-   - See clear feedback
+   - Get clear feedback
+   - See confirmation
    - Know what changed
-   - Get confirmations
    And trust the system
-
-3. Given I need help
-   When I look for guidance
-   Then I should:
-   - Find clear instructions
-   - Know what's possible
-   - See how to proceed
-   And feel supported
-
-### STORY-AUTH-UI-003: Navigation Experience
-As a logged-in user
-I want intuitive navigation
-So that I can work efficiently
-
-**Acceptance Criteria:**
-1. Given I use the application
-   When I need to find things
-   Then I should:
-   - See clear menu items
-   - Know where I am
-   - Find things easily
-   And work efficiently
-
-2. Given I'm working
-   When I switch tasks
-   Then I should:
-   - Move between areas easily
-   - Keep my work intact
-   - Know what's happening
-   And stay productive
-
-3. Given I'm on mobile
-   When I use the application
-   Then I should:
-   - Have a usable menu
-   - Access all features
-   - Navigate easily
-   And work effectively
-
-4. Given I have admin permissions
-   When I use the navigation
-   Then I should:
-   - See admin access option
-   - Access admin interface
-   - Return easily
-   And maintain context
 
 ### Technical Notes
 
-### Interface Implementation
-- Clean layout structure
-- Simple navigation
-- Basic error handling
-- Essential loading states
-- Clear feedback system
-- Mobile responsiveness
-- Permission-based admin access
-
 ### Core Requirements
-- Main layout components
-- Navigation system
-- Account section
+- Essential layout
+  - Navigation menu
+  - Account section
+  - Content area
+  - Notifications
+- Mobile responsive
+  - Basic adaptivity
+  - Touch-friendly
 - Error handling
-- Loading indicators
-- Responsive design
-- Admin access control
+  - Clear messages
+  - Basic recovery
 
-System-wide Constraints:
-- Clean component structure
-- Simple state management
-- Basic error boundaries
-- Essential responsiveness
-- Core accessibility
-- Permission checks
-
-Implementation Requirements:
-- Layout framework
-- Navigation setup
-- Account area
-- Error system
-- Loading states
-- Mobile support
-- Admin routing
+### Implementation Constraints
+- Must be accessible
+- Must be mobile-friendly
+- Must handle errors clearly
+- Must preserve basic state
+- Must be white-label ready
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here
