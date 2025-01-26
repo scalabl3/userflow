@@ -1,4 +1,4 @@
-# DCA Create Template
+# DCA (Data-Class-API) Create Template
 
 ```markdown
 CREATE_DCA: [ComponentName]
@@ -27,21 +27,20 @@ Constraints: Confirm features NOT included
 
 ## Plan
 Files to create in 02-impl/specs/:
-- [name].model.spec.md: Core data structure
+- [name].data-model.spec.md: Core data structure
 - [name].class.spec.md: Essential behavior
 - [name].api.spec.md: Basic CRUD endpoints
 
 ## Template Reference
 Each spec should follow these templates:
-- data-model.template.md: 01-meta/01-templates/data-model.template.md
-- class-spec.template.md: 01-meta/01-templates/class-spec.template.md
-- api-spec.template.md: 01-meta/01-templates/api-spec.template.md
+- Data Model Spec: 01-meta/01-templates/spec.data-model.template.md
+- Class Spec: 01-meta/01-templates/spec.class.template.md
+- API Spec: 01-meta/01-templates/spec.api.template.md
 
-Note: All specs use simple list formats instead of tables for better readability. For example:
+Note: All specs use simple list formats for better readability. For example:
 - Properties: name (type) - required, unique, default: description
 - Methods: name (args) - returns: description
 - Endpoints: method path - purpose: description
-
 ```
 
 Example:
