@@ -3,153 +3,68 @@
 ## Summary of Relationships
 
 ### Is-A Relationships
-- WatchFlow is-a BuildFlow (with incremental build capabilities)
-- IncrementalBundler is-a Bundler (with caching)
-- TypeScriptBundler is-a Bundler (with TS-specific features)
+- BuildTask is-a BaseEntity
+  - CompileTask is-a BuildTask
+  - TestTask is-a BuildTask
+  - LintTask is-a BuildTask
+- BuildConfig is-a BaseEntity
+  - ProjectConfig is-a BuildConfig
+  - TaskConfig is-a BuildConfig
 
 ### Has-A Relationships
-- BuildFlow has-many BuildStage
-- BuildStage has-one Validator
-- Bundler has-many Plugin
-- WatchFlow has-many FSWatcher
-- AnalysisReporter has-many Analyzer
-
-### Action Relationships
-- BuildStage executed-by BuildFlow
-- Bundle created-by Bundler
-- Changes monitored-by WatchFlow
-- Metrics tracked-by AnalysisReporter
-
-### Ownership Relationships
-- BuildStage owned-by BuildFlow
-- Plugin owned-by Bundler
-- FSWatcher owned-by WatchFlow
-- Cache owned-by IncrementalCache
-
-### Scoping Relationships
-- BuildStage scoped-to BuildFlow
-- Plugin scoped-to Bundler
-- FSWatcher scoped-to WatchFlow
-- Analysis scoped-to BuildFlow
+- BuildPipeline has-many BuildTasks
+- BuildTask has-one TaskConfig
+- Project has-one ProjectConfig
+- BuildTask has-many Dependencies
 
 ## Class Hierarchy
 
-### BuildFlow (Root)
-- Orchestrates the entire build process
-- Manages build stages and validation
+### BuildTask
 ```typescript
-BuildFlow
-├── stages: Map<string, BuildStage>
-├── validator: BuildValidator
-├── reporter: AnalysisReporter
-└── cache: IncrementalCache
+BuildTask
+├── name: String
+├── status: TaskStatus
+├── config: TaskConfig
+└── dependencies: Dependency[]
 ```
 
-### BuildStage
-- Represents a single build phase
-- Handles execution and validation
+### BuildConfig
 ```typescript
-BuildStage
-├── name: string
-├── deps: string[]
-├── execute(): Promise<void>
-└── validate(): Promise<boolean>
+BuildConfig
+├── name: String
+├── settings: Map<String, Any>
+└── environment: Environment
 ```
 
-### Bundler
-- Manages output generation
-- Handles different format builds
+### BuildPipeline
 ```typescript
-Bundler
-├── config: OutputConfig
-├── plugins: Plugin[]
-├── bundle(): Promise<void>
-└── validate(): Promise<boolean>
+BuildPipeline
+├── name: String
+├── tasks: BuildTask[]
+├── config: ProjectConfig
+└── status: PipelineStatus
 ```
 
-### WatchFlow
-- Manages development mode
-- Handles incremental builds
-```typescript
-WatchFlow
-├── watchers: Map<string, FSWatcher>
-├── cache: IncrementalCache
-└── handleChange(path: string): Promise<void>
-```
-
-### AnalysisReporter
-- Handles build analytics
-- Manages reporting and thresholds
-```typescript
-AnalysisReporter
-├── analyzers: Analyzer[]
-├── generateReport(): Promise<void>
-└── validateThresholds(): Promise<boolean>
-```
-
-## Access Control Flow
-1. BuildFlow validates stage dependencies
-2. BuildStage validates execution context
-3. Bundler validates output configuration
-4. WatchFlow validates change scope
-5. AnalysisReporter validates thresholds
-
-## Data Isolation
-- Each BuildStage operates independently
-- Bundler maintains format-specific isolation
-- WatchFlow isolates change detection
-- Cache maintains stage-specific data
-- Analysis maintains metric isolation
+## Build Flow
+1. Configuration validation
+2. Dependency resolution
+3. Task execution
+4. Artifact collection
 
 ## Key Constraints
-1. Stages must execute in dependency order
-2. Validation must pass before stage completion
-3. Watch mode maintains data consistency
-4. Analysis thresholds must be met
-5. Cache invalidation must be accurate
+1. Tasks must declare dependencies
+2. Artifacts must be reproducible
+3. Pipelines must be deterministic
+4. Task isolation required
 
 ## Key Concepts
 
-### Build Flow Pattern
-1. Single Direction Flow (Pattern):
-   - One-way stage progression
-   - Clear validation points
-   - Example: "clean → compile → bundle"
-
-2. Incremental Processing (Pattern):
-   - Smart caching
-   - Change detection
-   - Example: "only rebuild affected files"
-
-### Validation Pattern
-1. Stage Validation (Type):
-   - Pre-execution validation
-   - Post-execution validation
-   - Example: "validate dependencies before execution"
-
-2. Output Validation (Type):
-   - Format validation
-   - Size validation
-   - Example: "ensure bundle size within limits"
-
-This separation enables:
-- Clear responsibility boundaries
-- Predictable execution flow
-- Efficient development cycles
-- Reliable build outputs
-- Maintainable codebase
+### Task Types
+1. CompileTask: Source compilation
+2. TestTask: Test execution
+3. LintTask: Code analysis
 
 This specification provides:
-1. Clear class relationships
-2. Well-defined boundaries
-3. Explicit validation points
-4. Consistent patterns
-5. Scalable architecture
-
-## Version History
-```markdown
-VERSION: 1.0
-DATE: 2024-01-07
-AUTHOR: C3C
-CHANGES: Initial hierarchy definition for build system
-``` 
+1. Clear build process structure
+2. Reliable dependency management
+3. Reproducible builds
