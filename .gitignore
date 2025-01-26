@@ -1,5 +1,6 @@
 # Project-specific ignores
 00-AI-Insights-NoGit/
+.specstory/
 
 # OS-specific files
 .DS_Store
