@@ -31,6 +31,17 @@ Files to create in 02-impl/specs/:
 - [name].class.spec.md: Essential behavior
 - [name].api.spec.md: Basic CRUD endpoints
 
+## Template Reference
+Each spec should follow these templates:
+- data-model.template.md: 01-meta/01-templates/data-model.template.md
+- class-spec.template.md: 01-meta/01-templates/class-spec.template.md
+- api-spec.template.md: 01-meta/01-templates/api-spec.template.md
+
+Note: All specs use simple list formats instead of tables for better readability. For example:
+- Properties: name (type) - required, unique, default: description
+- Methods: name (args) - returns: description
+- Endpoints: method path - purpose: description
+
 Proceed with implementation? (Y/N)
 ```
 
