@@ -13,44 +13,30 @@ Generated file should be placed in: `02-impl/specs/comment.data-model.spec.md`
 
 ### Required Properties
 - id: string
-  - Purpose: Unique identifier for the comment
-  - Constraints: UUID v4
+  - Purpose: Unique identifier
+  - Constraints: UUID
 - content: string
-  - Purpose: The text content of the comment
-  - Constraints: Non-empty, max 1000 chars
-- authorId: string
-  - Purpose: Reference to the user who created the comment
-  - Constraints: Valid user ID
+  - Purpose: Comment text content
+  - Constraints: Non-empty string
 - contentItemId: string
-  - Purpose: Reference to the content item being commented on
-  - Constraints: Valid content item ID
+  - Purpose: Reference to parent content
+  - Constraints: Valid ID
 - createdAt: Date
-  - Purpose: Timestamp of comment creation
-  - Constraints: Valid ISO date
+  - Purpose: Creation timestamp
+  - Constraints: Valid date
 
-### Optional Properties  
-- updatedAt: Date
-  - Purpose: Timestamp of last update
-  - Default: null
+### Optional Properties
+None
 
 ## Relationships
-- Author: [@model:User]
-  - Nature: many-to-one
-  - Purpose: Links comment to its creator
 - ContentItem: [@model:Content]
   - Nature: many-to-one
-  - Purpose: Links comment to its parent content
+  - Purpose: Links comment to parent content
 
 ## Core Validation
-- Content length validation
+- Content validation
   - Applies to: content
-  - Logic: Must be between 1-1000 characters
-- Author validation
-  - Applies to: authorId
-  - Logic: Must reference existing user
-- Content item validation
-  - Applies to: contentItemId
-  - Logic: Must reference existing content item
+  - Logic: Must not be empty
 
 ## DTOs
 
@@ -59,14 +45,13 @@ Generated file should be placed in: `02-impl/specs/comment.data-model.spec.md`
 {
   content: string;
   contentItemId: string;
-  // authorId added by system
 }
 ```
 
 ### UpdateDTO
 ```typescript
 {
-  content?: string;
+  content: string;
 }
 ```
 
