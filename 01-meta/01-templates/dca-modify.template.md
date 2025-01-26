@@ -3,51 +3,52 @@
 ```markdown
 MODIFY_DCA: [ComponentName]
 SCALE: [X]K
-OPERATION: [ADD/CHANGE/REMOVE feature]
+OPERATION: [ADD/REMOVE specific feature]
 
-PURPOSE:
-[One clear sentence]
+CORE_CHANGE:
+[One sentence describing the essential change]
 
-CHANGES:
-- [change1]
-- [change2]
+MUST_MODIFY:
+- [specific_change]
+- [specific_change]
 
-DEPENDENCIES:
-- [@type:Name]
+EXPLICITLY_NOT_INCLUDED:
+- New auth/roles (unless specified)
+- New peripheral features
+- Changes to existing constraints
 ```
 
 Expected Response:
 ```markdown
-## Impact
-- Breaking changes
-- Data migration needs
-- API version impact
+## Verification
+Scale: Confirm still within [X]K limit
+Impact: List only affected components
+Constraints: Confirm no scope creep
 
 ## Plan
 Files to modify in 02-impl/specs/:
-- [name].model.spec.ts: [brief changes]
-- [name].class.spec.ts: [brief changes]
-- [name].api.spec.ts: [brief changes]
-
-Migration steps:
-[Brief bullet points]
+- [name].model.spec.md: [specific data changes]
+- [name].class.spec.md: [specific behavior changes]
+- [name].api.spec.md: [specific endpoint changes]
 
 Proceed with changes? (Y/N)
 ```
 
 Example:
 ```markdown
-MODIFY_DCA: User
+MODIFY_DCA: Comment
 SCALE: 10K
-OPERATION: ADD password reset
+OPERATION: ADD edit timestamp
 
-PURPOSE:
-Add secure password reset via email
+CORE_CHANGE:
+Track when comments are edited
 
-CHANGES:
-- Add reset token handling
-- Add reset endpoints
+MUST_MODIFY:
+- Add lastEdited timestamp
+- Update edit endpoint response
 
-DEPENDENCIES:
-- @class:EmailService
+EXPLICITLY_NOT_INCLUDED:
+- Edit history
+- User notifications
+- Admin features
 ``` 

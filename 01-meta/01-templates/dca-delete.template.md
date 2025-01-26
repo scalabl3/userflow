@@ -4,51 +4,53 @@
 DELETE_DCA: [ComponentName]
 SCALE: [X]K
 
-PURPOSE:
-[One clear sentence]
+REASON:
+[One sentence explaining why]
 
-DEPENDENCIES:
-- [@type:Name]
+MUST_HANDLE:
+- [specific_cleanup]
+- [specific_cleanup]
 
-DATA:
-- [preservation need]
-- [cleanup need]
+EXPLICITLY_NOT_INCLUDED:
+- Complex data migrations
+- New features in dependent components
+- Replacement functionality
 ```
 
 Expected Response:
 ```markdown
-## Impact
-- Direct dependencies
-- Indirect dependencies
-- Client systems affected
+## Verification
+Dependencies: List only directly affected components
+Data: Confirm minimal cleanup approach
+Constraints: Verify no new features needed
 
 ## Plan
 Files to remove from 02-impl/specs/:
-- [name].model.spec.ts
-- [name].class.spec.ts
-- [name].api.spec.ts
+- [name].model.spec.md
+- [name].class.spec.md
+- [name].api.spec.md
 
-Steps:
-1. [deprecation]
-2. [data handling]
-3. [removal sequence]
+Simple cleanup steps:
+1. [basic_step]
+2. [basic_step]
 
 Proceed with deletion? (Y/N)
 ```
 
 Example:
 ```markdown
-DELETE_DCA: SocialLogin
+DELETE_DCA: Comment
 SCALE: 10K
 
-PURPOSE:
-Remove unused social login feature
+REASON:
+Removing comment feature entirely
 
-DEPENDENCIES:
-- @class:User
-- @api:Auth
+MUST_HANDLE:
+- Delete comment data
+- Remove UI elements
 
-DATA:
-- Export social connections
-- Remove OAuth configs
+EXPLICITLY_NOT_INCLUDED:
+- Data archiving
+- User notifications
+- Alternative features
 ``` 

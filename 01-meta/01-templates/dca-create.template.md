@@ -4,57 +4,52 @@
 CREATE_DCA: [ComponentName]
 SCALE: [X]K
 
-PURPOSE:
-[One clear sentence]
+CORE_FUNCTIONALITY:
+[One sentence describing the essential function]
 
-REQUIREMENTS:
-- [req1]
-- [req2]
+MUST_HAVE:
+- [core_requirement]
+- [core_requirement]
 
-SECURITY:
-- [sec1]
-- [sec2]
-
-DEPENDENCIES:
-- [@type:Name]
+EXPLICITLY_NOT_INCLUDED:
+- Authentication/roles (unless specified)
+- Rate limiting
+- Audit logging
+- Moderation features
 ```
 
 Expected Response:
 ```markdown
-## Analysis
-- Scale impact
-- Security needs
-- Dependencies
-- Risks
+## Verification
+Scale: Confirm within [X]K limit
+Dependencies: List only existing components needed
+Constraints: Confirm features NOT included
 
 ## Plan
 Files to create in 02-impl/specs/:
-- [name].model.spec.ts
-- [name].class.spec.ts
-- [name].api.spec.ts
-
-Key implementations:
-[Brief bullet points of core features]
+- [name].model.spec.md: Core data structure
+- [name].class.spec.md: Essential behavior
+- [name].api.spec.md: Basic CRUD endpoints
 
 Proceed with implementation? (Y/N)
 ```
 
 Example:
 ```markdown
-CREATE_DCA: User
+CREATE_DCA: Comment
 SCALE: 10K
 
-PURPOSE:
-Handle user authentication and profiles
+CORE_FUNCTIONALITY:
+Allow users to add text comments to content
 
-REQUIREMENTS:
-- Email/password auth
-- Profile management
+MUST_HAVE:
+- Create/read comment
+- Edit own comment
+- Delete own comment
 
-SECURITY:
-- Password hashing
+EXPLICITLY_NOT_INCLUDED:
+- Authentication/roles
 - Rate limiting
-
-DEPENDENCIES:
-- None
+- Moderation features
+- Reporting system
 ``` 
