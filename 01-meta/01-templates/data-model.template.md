@@ -11,36 +11,30 @@ Generated file should be placed in: `02-impl/specs/[name].model.spec.ts`
 - Related Models: [@model:RelatedModel1, @model:RelatedModel2]
 
 ## Properties
-| Name | Type | Required | Unique | Default | Description |
-|------|------|----------|---------|---------|-------------|
-| id   | UUID | Yes      | Yes     | uuid()  | Primary key |
-| [propertyName] | [type] | [Y/N] | [Y/N] | [value] | [description] |
+Properties listed as: name (type) - required, unique, default: description
+- id (UUID) - required, unique, default=uuid(): Primary key
+- [propertyName] ([type]) - required=[Y/N], unique=[Y/N], default=[value]: [description]
 
 ## Relationships
-| Model | Type | Through | Description | Constraints |
-|-------|------|---------|-------------|-------------|
-| @model:Model | [hasOne/hasMany/belongsTo] | [@model:Junction] | [description] | [limits/rules] |
+Relationships listed as: Model (type, through) - description - constraints
+- @model:Model ([hasOne/hasMany/belongsTo], [@model:Junction]) - [description] - [limits/rules]
 
 ## Indexes
-| Name | Fields | Type | Description |
-|------|--------|------|-------------|
-| [name]_idx | [fields] | [type] | [description] |
+Indexes listed as: name (fields, type) - description
+- [name]_idx ([fields], [type]) - [description]
 
 ## Validation Rules
-| Field | Rule | Message |
-|-------|------|---------|
-| [field] | [rule] | [message] |
+Rules listed as: field - rule: message
+- [field] - [rule]: [message]
 
 ## DTOs
 ### CreateDTO
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| [field] | [type] | [Y/N] | [description] |
+Fields listed as: field (type) - required: description
+- [field] ([type]) - required=[Y/N]: [description]
 
 ### UpdateDTO
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| [field] | [type] | [Y/N] | [description] |
+Fields listed as: field (type) - required: description
+- [field] ([type]) - required=[Y/N]: [description]
 
 ## Constraints
 - Data limits

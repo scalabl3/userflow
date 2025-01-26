@@ -12,9 +12,8 @@ Generated file should be placed in: `02-impl/specs/[name].class.spec.ts`
 
 ## Constructor
 ### Parameters
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| [param] | [type] | [Y/N] | [description] |
+Parameters listed as: name (type) - required: description
+- [param] ([type]) - required=[Y/N]: [description]
 
 ### Initialization
 - Required setup steps
@@ -22,9 +21,8 @@ Generated file should be placed in: `02-impl/specs/[name].class.spec.ts`
 - Validation rules
 
 ## Properties
-| Name | Type | Access | Mutable | Description |
-|------|------|--------|---------|-------------|
-| [name] | [type] | [public/private/protected] | [Y/N] | [description] |
+Properties listed as: name (type, access, mutable) - description
+- [name] ([type], [public/private/protected], mutable=[Y/N]) - [description]
 
 ## Methods
 
@@ -33,18 +31,16 @@ Generated file should be placed in: `02-impl/specs/[name].class.spec.ts`
 - Purpose: [clear description]
 
 #### Parameters
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| [param] | [type] | [Y/N] | [description] |
+Parameters listed as: name (type) - required: description
+- [param] ([type]) - required=[Y/N]: [description]
 
 #### Returns
 - Type: [return type]
 - Description: [what's returned]
 
 #### Errors
-| Error | Condition | HTTP Code |
-|-------|-----------|-----------|
-| [ErrorType] | [when it occurs] | [code] |
+Errors listed as: error (condition) - code
+- [ErrorType] ([when it occurs]) - [code]
 
 #### Behavior
 1. Preconditions
@@ -58,9 +54,8 @@ Generated file should be placed in: `02-impl/specs/[name].class.spec.ts`
 - State changes
 
 ## Error Handling
-| Scenario | Action | Recovery |
-|----------|--------|----------|
-| [scenario] | [action] | [recovery] |
+Scenarios listed as: scenario - action - recovery
+- [scenario] - [action] - [recovery]
 
 ## Implementation Constraints
 - Performance requirements

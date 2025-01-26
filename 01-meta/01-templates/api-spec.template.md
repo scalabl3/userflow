@@ -53,14 +53,12 @@ interface Response {
 ```
 
 #### Status Codes
-| Code | Condition |
-|------|-----------|
-| [code] | [when returned] |
+Status codes listed as: code - condition
+- [code] - [when returned]
 
 #### Error Responses
-| Code | Error | Condition |
-|------|-------|-----------|
-| [code] | [error] | [when occurs] |
+Errors listed as: code (error) - condition
+- [code] ([error]) - [when occurs]
 
 #### Behavior
 1. Validation steps
@@ -74,9 +72,8 @@ interface Response {
 - State changes
 
 ## Error Handling
-| Scenario | Action | Response |
-|----------|--------|----------|
-| [scenario] | [action] | [response] |
+Scenarios listed as: scenario - action - response
+- [scenario] - [action] - [response]
 
 ## Implementation Constraints
 - Performance requirements
