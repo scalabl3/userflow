@@ -1,7 +1,7 @@
 # API Specification Template
 
 ## Output Location
-Generated file should be placed in: `02-impl/specs/[name].api.spec.ts`
+Generated file should be placed in: `02-impl/specs/[name].api.spec.md`
 
 ## API Group: [PascalCase]
 

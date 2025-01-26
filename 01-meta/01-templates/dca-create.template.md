@@ -42,7 +42,6 @@ Note: All specs use simple list formats instead of tables for better readability
 - Methods: name (args) - returns: description
 - Endpoints: method path - purpose: description
 
-Proceed with implementation? (Y/N)
 ```
 
 Example:

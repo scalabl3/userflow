@@ -1,7 +1,7 @@
 # Data Model Specification Template
 
 ## Output Location
-Generated file should be placed in: `02-impl/specs/[name].model.spec.ts`
+Generated file should be placed in: `02-impl/specs/[name].model.spec.md`
 
 ## Model Name: [PascalCase]
 

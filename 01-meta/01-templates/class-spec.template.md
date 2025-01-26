@@ -1,7 +1,7 @@
 # Class Specification Template
 
 ## Output Location
-Generated file should be placed in: `02-impl/specs/[name].class.spec.ts`
+Generated file should be placed in: `02-impl/specs/[name].class.spec.md`
 
 ## Class Name: [PascalCase]
 
