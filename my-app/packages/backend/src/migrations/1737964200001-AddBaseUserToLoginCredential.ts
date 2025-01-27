@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner, TableColumn, TableForeignKey } from 'typeorm';
 
-export class AddBaseUserToLoginCredential20241005130000 implements MigrationInterface {
+export class AddBaseUserToLoginCredential1737964200001 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.addColumn(
             'login_credential',

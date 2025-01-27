@@ -1,12 +1,40 @@
-import { Entity, Column, OneToMany } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, BeforeInsert } from 'typeorm';
 import { BaseUser } from './BaseUser';
-import { Profile } from './Profile'; // Assuming Profile will be implemented later
+import { Organization } from './Organization';
 
 @Entity()
 export class User extends BaseUser {
-    @Column({ type: 'jsonb', nullable: true })
-    preferences?: Record<string, any>;
+    @ManyToOne(() => Organization)
+    organization!: Organization;
+   
+    @Column({ nullable: true })
+    organizationId!: string;
 
-    @OneToMany(() => Profile, profile => profile.user)
-    profiles!: Profile[];
+    // Profile will be implemented later
+    @Column({ nullable: true })
+    profileId!: string;
+
+    @Column('simple-json', { 
+        nullable: true
+    })
+    preferences!: {
+        theme?: 'light' | 'dark';
+        notifications?: {
+            email?: boolean;
+            push?: boolean;
+        };
+    };
+
+    @BeforeInsert()
+    setDefaultPreferences() {
+        if (!this.preferences) {
+            this.preferences = {
+                theme: 'light',
+                notifications: {
+                    email: true,
+                    push: true
+                }
+            };
+        }
+    }
 }

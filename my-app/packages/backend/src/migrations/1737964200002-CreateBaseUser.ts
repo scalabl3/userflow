@@ -1,10 +1,10 @@
 import { MigrationInterface, QueryRunner, Table, TableForeignKey } from 'typeorm';
 
-export class CreateLoginCredential20241004154000 implements MigrationInterface {
+export class CreateBaseUser1737964200002 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({
-                name: 'login_credential',
+                name: 'base_user',
                 columns: [
                     {
                         name: 'id',
@@ -15,27 +15,40 @@ export class CreateLoginCredential20241004154000 implements MigrationInterface {
                         default: 'uuid_generate_v4()',
                     },
                     {
-                        name: 'identifier',
+                        name: 'firstname',
                         type: 'varchar',
                         isNullable: false,
                     },
                     {
-                        name: 'loginProviderId',
+                        name: 'lastname',
+                        type: 'varchar',
+                        isNullable: false,
+                    },
+                    {
+                        name: 'displayname',
+                        type: 'varchar',
+                        isNullable: false,
+                    },
+                    {
+                        name: 'contactEmail',
+                        type: 'varchar',
+                        isNullable: false,
+                        isUnique: true,
+                    },
+                    {
+                        name: 'state',
+                        type: 'varchar',
+                        enum: ['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED'],
+                        default: `'PENDING'`,
+                        isNullable: false,
+                    },
+                    {
+                        name: 'primaryLoginCredentialId',
                         type: 'uuid',
-                        isNullable: false,
-                    },
-                    {
-                        name: 'credentials',
-                        type: 'varchar',
                         isNullable: true,
                     },
                     {
-                        name: 'credentialType',
-                        type: 'varchar',
-                        isNullable: false,
-                    },
-                    {
-                        name: 'expiresAt',
+                        name: 'lastLoginAt',
                         type: 'datetime',
                         isNullable: true,
                     },
@@ -58,34 +71,29 @@ export class CreateLoginCredential20241004154000 implements MigrationInterface {
                         default: 'CURRENT_TIMESTAMP',
                     },
                 ],
-                uniques: [
-                    {
-                        columnNames: ['identifier', 'loginProviderId']
-                    }
-                ]
             }),
             true
         );
 
         await queryRunner.createForeignKey(
-            'login_credential',
+            'base_user',
             new TableForeignKey({
-                columnNames: ['loginProviderId'],
+                columnNames: ['primaryLoginCredentialId'],
                 referencedColumnNames: ['id'],
-                referencedTableName: 'login_provider',
-                onDelete: 'CASCADE',
+                referencedTableName: 'login_credential',
+                onDelete: 'SET NULL',
             })
         );
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        const table = await queryRunner.getTable('login_credential');
-        if (table) {
-            const foreignKey = table.foreignKeys.find(fk => fk.columnNames.indexOf('loginProviderId') !== -1);
-            if (foreignKey) {
-                await queryRunner.dropForeignKey('login_credential', foreignKey);
-            }
+        const table = await queryRunner.getTable('base_user');
+        const foreignKey = table!.foreignKeys.find(
+            fk => fk.columnNames.indexOf('primaryLoginCredentialId') !== -1
+        );
+        if (foreignKey) {
+            await queryRunner.dropForeignKey('base_user', foreignKey);
         }
-        await queryRunner.dropTable('login_credential');
+        await queryRunner.dropTable('base_user');
     }
 }
