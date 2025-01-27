@@ -28,9 +28,6 @@ export class BaseUser {
     @Column({ type: 'varchar' })
     lastname!: string;
 
-    @Column({ type: 'varchar' })
-    displayname!: string;
-
     @Column({ type: 'varchar', unique: true })
     contactEmail!: string;
 

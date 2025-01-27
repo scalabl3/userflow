@@ -21,14 +21,12 @@ describe('BaseUser', () => {
     it('should set basic properties', () => {
         baseUser.firstname = 'John';
         baseUser.lastname = 'Doe';
-        baseUser.displayname = 'John Doe';
         baseUser.contactEmail = 'john@example.com';
         baseUser.state = UserState.ACTIVE;
         baseUser.isEnabled = true;
 
         expect(baseUser.firstname).toBe('John');
         expect(baseUser.lastname).toBe('Doe');
-        expect(baseUser.displayname).toBe('John Doe');
         expect(baseUser.contactEmail).toBe('john@example.com');
         expect(baseUser.state).toBe(UserState.ACTIVE);
         expect(baseUser.isEnabled).toBe(true);

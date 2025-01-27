@@ -25,7 +25,12 @@ export class CreateOrganization1737964200005 implements MigrationInterface {
                         name: 'visible',
                         type: 'boolean',
                         isNullable: false,
-                        default: true,
+                        default: false,
+                    },
+                    {
+                        name: 'adminUser',
+                        type: 'uuid',
+                        isNullable: false,
                     },
                     {
                         name: 'createdAt',
@@ -38,11 +43,6 @@ export class CreateOrganization1737964200005 implements MigrationInterface {
                         type: 'datetime',
                         isNullable: false,
                         default: 'CURRENT_TIMESTAMP',
-                    },
-                    {
-                        name: 'adminUser',
-                        type: 'uuid',
-                        isNullable: false,
                     },
                 ],
             }),

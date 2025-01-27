@@ -1,9 +1,25 @@
 import { IsOptional, IsString, IsUUID, IsObject } from 'class-validator';
 
 export class CreateUserDto {
-    @IsOptional()
+    // Base user fields
+    @IsString()
+    firstname!: string;
+
+    @IsString()
+    lastname!: string;
+
+    @IsString()
+    contactEmail!: string;
+
+    // User fields
+    @IsString()
+    username!: string;
+
+    @IsString()
+    displayname!: string;
+
     @IsUUID()
-    organizationId?: string;
+    organizationId!: string;
 
     @IsOptional()
     @IsObject()
@@ -14,17 +30,4 @@ export class CreateUserDto {
             push?: boolean;
         };
     };
-
-    // Base user fields that can be set on creation
-    @IsString()
-    firstname!: string;
-
-    @IsString()
-    lastname!: string;
-
-    @IsString()
-    displayname!: string;
-
-    @IsString()
-    contactEmail!: string;
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, HttpCode, HttpStatus, Query, NotFoundException } from '@nestjs/common';
 import { UserService } from '../services/UserService';
 import { CreateUserDto } from '@my-app/shared/dist/dtos/User/CreateUserDto';
 import { UpdateUserDto } from '@my-app/shared/dist/dtos/User/UpdateUserDto';
@@ -23,8 +23,14 @@ export class UserController {
     }
 
     @Get()
-    async findAll(): Promise<ResponseUserDto[]> {
-        const users = await this.userService.findAll();
+    async findAll(@Query('username') username?: string): Promise<ResponseUserDto[]> {
+        let users;
+        if (username) {
+            const user = await this.userService.findByUsername(username);
+            users = user ? [user] : [];
+        } else {
+            users = await this.userService.findAll();
+        }
         return users.map(user => plainToClass(ResponseUserDto, {
             ...user,
             preferences: user.preferences || {
@@ -37,6 +43,21 @@ export class UserController {
     @Get(':id')
     async findOne(@Param('id') id: string): Promise<ResponseUserDto> {
         const user = await this.userService.findOne(id);
+        return plainToClass(ResponseUserDto, {
+            ...user,
+            preferences: user.preferences || {
+                theme: 'light',
+                notifications: { email: true, push: true }
+            }
+        }, { excludeExtraneousValues: true });
+    }
+
+    @Get('username/:username')
+    async findByUsername(@Param('username') username: string): Promise<ResponseUserDto> {
+        const user = await this.userService.findByUsername(username);
+        if (!user) {
+            throw new NotFoundException(`User with username ${username} not found`);
+        }
         return plainToClass(ResponseUserDto, {
             ...user,
             preferences: user.preferences || {

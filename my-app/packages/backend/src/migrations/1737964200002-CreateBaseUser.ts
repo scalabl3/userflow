@@ -25,11 +25,6 @@ export class CreateBaseUser1737964200002 implements MigrationInterface {
                         isNullable: false,
                     },
                     {
-                        name: 'displayname',
-                        type: 'varchar',
-                        isNullable: false,
-                    },
-                    {
                         name: 'contactEmail',
                         type: 'varchar',
                         isNullable: false,

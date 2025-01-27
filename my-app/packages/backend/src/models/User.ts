@@ -6,20 +6,8 @@ export class User extends BaseUser {
     @Column({ type: 'varchar', unique: true })
     username!: string;
 
-    @Column({ type: 'varchar', unique: true })
-    email!: string;
-
-    @Column({ type: 'boolean', default: false })
-    isEmailVerified!: boolean;
-
-    @Column({ type: 'varchar', nullable: true })
-    phoneNumber?: string;
-
-    @Column({ type: 'boolean', default: false })
-    isPhoneVerified!: boolean;
-
-    @Column({ type: 'boolean', default: true })
-    isActive!: boolean;
+    @Column({ type: 'varchar' })
+    displayname!: string;
 
     @Column({ type: 'uuid' })
     organizationId!: string;
