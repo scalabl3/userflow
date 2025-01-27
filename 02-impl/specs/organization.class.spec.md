@@ -1,102 +1,92 @@
 # Organization
 
 ## Related Specifications
-- **Models:** OrganizationModel, UserModel
+- **Models:** OrganizationModel
 - **APIs:** OrganizationAPI
 
 ## Constructor
 ```typescript
 constructor(
-  organizationRepository: OrganizationRepository,
-  userService: UserService
+  organizationRepository: OrganizationRepository
 )
 ```
 
-## Properties
+Properties
 
 organizationRepository
 - **Type:** OrganizationRepository
-- **Purpose:** Manages organization data persistence
+- **Purpose:** Handles organization data persistence
 - **Access:** private
 
-userService
-- **Type:** UserService
-- **Purpose:** Handles user-related operations and validation
-- **Access:** private
+id
+- **Type:** UUID
+- **Purpose:** Unique identifier for organization
+- **Access:** readonly
 
 name
 - **Type:** string
 - **Purpose:** Organization display name
 - **Access:** public
 
-visibility
+visible
 - **Type:** boolean
-- **Purpose:** Controls organization public visibility
+- **Purpose:** Organization visibility flag
 - **Access:** public
 
-uuid
-- **Type:** string
-- **Purpose:** Unique identifier for the organization
-- **Access:** public readonly
-
-adminUserUuid
-- **Type:** string
-- **Purpose:** UUID of the admin user
-- **Access:** public readonly
-
 createdAt
-- **Type:** Date
-- **Purpose:** Timestamp of organization creation
-- **Access:** public readonly
+- **Type:** DateTime
+- **Purpose:** Creation timestamp
+- **Access:** readonly
 
 modifiedAt
-- **Type:** Date
-- **Purpose:** Timestamp of last modification
-- **Access:** public readonly
+- **Type:** DateTime
+- **Purpose:** Last modification timestamp
+- **Access:** readonly
 
-## Core Methods
+adminUser
+- **Type:** UUID
+- **Purpose:** Reference to admin user
+- **Access:** readonly
+
+Core Methods
 
 create
-- **Purpose:** Creates a new organization
-- **Parameters:** name: string, adminUserUuid: string, visibility?: boolean
+- **Purpose:** Creates new organization
+- **Parameters:** name: string, adminUser: UUID, visible: boolean
 - **Returns:** Promise<Organization>
-- **Errors:** ValidationError, UserNotFoundError
+- **Errors:** ValidationError
 
 get
-- **Purpose:** Retrieves organization by UUID
-- **Parameters:** uuid: string
+- **Purpose:** Retrieves organization by ID
+- **Parameters:** id: UUID
 - **Returns:** Promise<Organization>
 - **Errors:** NotFoundError
 
 update
 - **Purpose:** Updates organization details
-- **Parameters:** uuid: string, updateData: Partial<OrganizationUpdateData>
+- **Parameters:** id: UUID, data: OrganizationUpdateData
 - **Returns:** Promise<Organization>
-- **Errors:** ValidationError, NotFoundError, UnauthorizedError
+- **Errors:** ValidationError, NotFoundError
 
 delete
-- **Purpose:** Deletes an organization
-- **Parameters:** uuid: string
+- **Purpose:** Removes organization
+- **Parameters:** id: UUID
 - **Returns:** Promise<void>
-- **Errors:** NotFoundError, UnauthorizedError
+- **Errors:** NotFoundError
 
-## Error Handling
+Error Handling
 
 ValidationError
-- **Trigger:** Invalid organization name or properties
-- **Handling:** Returns detailed validation errors
+- **Type:** Error
+- **Trigger Conditions:** Invalid organization data
+- **Handling Strategy:** Return validation details
+- **Error Message:** "Invalid organization data"
 
 NotFoundError
-- **Trigger:** Organization UUID not found
-- **Handling:** Returns 404 with error message
-
-UnauthorizedError
-- **Trigger:** Non-admin user attempting modification
-- **Handling:** Returns 403 with permission denied message
-
-UserNotFoundError
-- **Trigger:** Specified admin user UUID does not exist
-- **Handling:** Returns 404 with user not found message
+- **Type:** Error
+- **Trigger Conditions:** Organization not found
+- **Handling Strategy:** Return 404 status
+- **Error Message:** "Organization not found"
 
 =====================================================
 
@@ -105,4 +95,4 @@ SCOPE BOUNDARY - Base Implementation Ends Here
 =====================================================
 
 Note: Class follows generation rules for 5K user site scale.
-Complex features like organization hierarchies and multiple admins noted as future extensions.
+Complex features noted as future extensions.
