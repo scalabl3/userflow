@@ -1,57 +1,51 @@
-# Class Specification Template
-
-## Output Location
-Generated file should be placed in: `02-impl/specs/[name].class.spec.md`
-
-## Class Name: [PascalCase]
+# <class_name>
 
 ## Related Specifications
-- Models: [@model:Name]
-- APIs: [@api:Name]
+- Models: <model_references>
+- APIs: <api_references>
 
 ## Constructor
 ```typescript
 constructor(
-  [param]: [type]  // core dependencies only
+  <dependencies>
 )
 ```
 
 ## Properties
-- [name]: [type]
-  - Purpose: [brief description]
-  - Access: [public/private]
+
+### <property_name>
+- Type: <property_type>
+- Purpose: <property_purpose>
+- Access: <public|private|protected>
 
 ## Core Methods
 
 ### create
-- Purpose: Create new [resource]
-- Parameters: CreateDTO
-- Returns: [resource]
-- Errors: invalid input
+- Purpose: <create_purpose>
+- Parameters: <create_parameters>
+- Returns: <return_type>
+- Errors: <possible_errors>
 
 ### get
-- Purpose: Retrieve [resource]
-- Parameters: id
-- Returns: [resource]
-- Errors: not found
+- Purpose: <get_purpose>
+- Parameters: <get_parameters>
+- Returns: <return_type>
+- Errors: <possible_errors>
 
 ### update
-- Purpose: Update [resource]
-- Parameters: id, UpdateDTO
-- Returns: updated [resource]
-- Errors: invalid input, not found
+- Purpose: <update_purpose>
+- Parameters: <update_parameters>
+- Returns: <return_type>
+- Errors: <possible_errors>
 
 ### delete
-- Purpose: Remove [resource]
-- Parameters: id
-- Returns: success confirmation
-- Errors: not found
+- Purpose: <delete_purpose>
+- Parameters: <delete_parameters>
+- Returns: <return_type>
+- Errors: <possible_errors>
 
 ## Error Handling
-Basic errors handled:
-- Invalid input
-- Not found
-- Server error
+<list_of_handled_errors>
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here
