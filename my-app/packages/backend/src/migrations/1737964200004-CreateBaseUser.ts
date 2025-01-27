@@ -1,10 +1,10 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export class CreateLoginProvider1737964200004 implements MigrationInterface {
+export class CreateBaseUser1737964200004 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({
-                name: 'login_provider',
+                name: 'base_user',
                 columns: [
                     {
                         name: 'id',
@@ -15,16 +15,39 @@ export class CreateLoginProvider1737964200004 implements MigrationInterface {
                         default: 'uuid_generate_v4()',
                     },
                     {
-                        name: 'code',
-                        type: 'varchar',
-                        isUnique: true,
-                        isNullable: false,
-                    },
-                    {
-                        name: 'name',
+                        name: 'firstname',
                         type: 'varchar',
                         length: '255',
                         isNullable: false,
+                    },
+                    {
+                        name: 'lastname',
+                        type: 'varchar',
+                        length: '255',
+                        isNullable: false,
+                    },
+                    {
+                        name: 'contactEmail',
+                        type: 'varchar',
+                        length: '255',
+                        isNullable: false,
+                    },
+                    {
+                        name: 'state',
+                        type: 'varchar',
+                        length: '50',
+                        isNullable: false,
+                        default: "'PENDING'",
+                    },
+                    {
+                        name: 'primaryLoginCredentialId',
+                        type: 'uuid',
+                        isNullable: true,
+                    },
+                    {
+                        name: 'lastLoginAt',
+                        type: 'datetime',
+                        isNullable: true,
                     },
                     {
                         name: 'isEnabled',
@@ -51,6 +74,6 @@ export class CreateLoginProvider1737964200004 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropTable('login_provider');
+        await queryRunner.dropTable('base_user');
     }
 }

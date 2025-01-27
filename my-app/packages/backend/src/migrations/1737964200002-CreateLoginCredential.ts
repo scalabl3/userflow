@@ -1,7 +1,7 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey } from 'typeorm';
+import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 import { CredentialType, OAuthProvider } from '@my-app/shared';
 
-export class CreateLoginCredential1737964200003 implements MigrationInterface {
+export class CreateLoginCredential1737964200002 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({
@@ -126,26 +126,9 @@ export class CreateLoginCredential1737964200003 implements MigrationInterface {
             }),
             true
         );
-
-        await queryRunner.createForeignKey(
-            'login_credential',
-            new TableForeignKey({
-                columnNames: ['loginProviderId'],
-                referencedColumnNames: ['id'],
-                referencedTableName: 'login_provider',
-                onDelete: 'CASCADE',
-            })
-        );
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        const table = await queryRunner.getTable('login_credential');
-        if (table) {
-            const foreignKey = table.foreignKeys.find(fk => fk.columnNames.indexOf('loginProviderId') !== -1);
-            if (foreignKey) {
-                await queryRunner.dropForeignKey('login_credential', foreignKey);
-            }
-        }
         await queryRunner.dropTable('login_credential');
     }
 }
