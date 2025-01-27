@@ -5,3 +5,13 @@
 # OS-specific files
 .DS_Store
 .aider*
+
+# Environment files
+.env.*
+.env
+
+# Compiled output
+dist/
+
+# SQLite database files
+*.sqlite
