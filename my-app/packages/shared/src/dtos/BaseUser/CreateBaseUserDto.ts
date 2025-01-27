@@ -1,5 +1,5 @@
 import { IsString, IsEmail, IsEnum, IsUUID, IsOptional, IsBoolean } from 'class-validator';
-import { UserState } from '@backend/models/BaseUser';
+import { UserState } from '../../enums/UserState';
 
 export class CreateBaseUserDto {
     @IsString()

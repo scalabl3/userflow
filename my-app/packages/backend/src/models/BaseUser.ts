@@ -9,13 +9,7 @@ import {
     JoinColumn,
 } from 'typeorm';
 import { LoginCredential } from './LoginCredential';
-
-export enum UserState {
-    PENDING = 'PENDING',
-    ACTIVE = 'ACTIVE',
-    SUSPENDED = 'SUSPENDED',
-    DEACTIVATED = 'DEACTIVATED',
-}
+import { UserState } from '@my-app/shared/dist/enums/UserState';
 
 @Entity()
 export class BaseUser {
@@ -35,7 +29,7 @@ export class BaseUser {
     contactEmail!: string;
 
     @Column({
-        type: 'enum',
+        type: 'varchar',
         enum: UserState,
         default: UserState.PENDING,
     })

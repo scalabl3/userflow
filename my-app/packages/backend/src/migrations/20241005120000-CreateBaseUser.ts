@@ -37,7 +37,7 @@ export class CreateBaseUser20241005120000 implements MigrationInterface {
                     },
                     {
                         name: 'state',
-                        type: 'enum',
+                        type: 'varchar',
                         enum: ['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED'],
                         default: `'PENDING'`,
                         isNullable: false,
