@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrganizationModule } from './modules/OrganizationModule';
 import { AppDataSource } from './data-source';
+import { LoginCredentialModule } from './modules/LoginCredentialModule';
 import { LoginProviderModule } from './modules/LoginProviderModule';
 
 @Module({
@@ -13,6 +14,7 @@ import { LoginProviderModule } from './modules/LoginProviderModule';
     TypeOrmModule.forRoot(AppDataSource.options),
     OrganizationModule,
     LoginProviderModule,
+    LoginCredentialModule,
   ],
 })
 export class AppModule {}
