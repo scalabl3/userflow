@@ -6,6 +6,7 @@ import { AppDataSource } from './data-source';
 import { BaseUserModule } from './modules/BaseUserModule';
 import { LoginCredentialModule } from './modules/LoginCredentialModule';
 import { LoginProviderModule } from './modules/LoginProviderModule';
+import { UserModule } from './modules/UserModule';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { LoginProviderModule } from './modules/LoginProviderModule';
     LoginProviderModule,
     LoginCredentialModule,
     BaseUserModule,
+    UserModule,
   ],
 })
 export class AppModule {}

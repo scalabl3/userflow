@@ -3,6 +3,7 @@ import { Organization } from './models/Organization';
 import { LoginProvider } from './models/LoginProvider';
 import { LoginCredential } from './models/LoginCredential';
 import { BaseUser } from './models/BaseUser';
+import { User } from './models/User';
 import * as dotenv from 'dotenv';
 
 dotenv.config({
@@ -14,7 +15,7 @@ const isSqlite = process.env.DATABASE_TYPE === 'sqlite';
 const sqliteConfig: DataSourceOptions = {
   type: 'sqlite',
   database: process.env.DATABASE_NAME || ':memory:',
-  entities: [Organization, LoginProvider, LoginCredential, BaseUser],
+  entities: [Organization, LoginProvider, LoginCredential, BaseUser, User],
   migrations: [__dirname + '/migrations/*.ts'],
   synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
   logging: process.env.DATABASE_LOGGING === 'true',
