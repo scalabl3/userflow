@@ -8,9 +8,6 @@ export class CreateBaseUserDto {
     @IsString()
     lastname!: string;
 
-    @IsString()
-    displayname!: string;
-
     @IsEmail()
     contactEmail!: string;
 

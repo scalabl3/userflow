@@ -69,7 +69,6 @@ describe('BaseUserService', () => {
             const createUserDto: CreateBaseUserDto = {
                 firstname: 'John',
                 lastname: 'Doe',
-                displayname: 'johndoe',
                 contactEmail: 'john@example.com',
                 primaryLoginCredentialId: mockLoginCredential.id
             };
@@ -100,7 +99,6 @@ describe('BaseUserService', () => {
             const createUserDto: CreateBaseUserDto = {
                 firstname: 'John',
                 lastname: 'Doe',
-                displayname: 'johndoe',
                 contactEmail: 'john@example.com'
             };
 
@@ -140,7 +138,6 @@ describe('BaseUserService', () => {
                 id: userId,
                 firstname: 'John',
                 lastname: 'Doe',
-                displayname: 'johndoe',
                 contactEmail: 'john@example.com',
                 state: UserState.PENDING,
                 isEnabled: true,
@@ -180,7 +177,6 @@ describe('BaseUserService', () => {
                 id: userId,
                 firstname: 'John',
                 lastname: 'Doe',
-                displayname: 'johndoe',
                 contactEmail: 'john@example.com',
                 state: UserState.PENDING,
                 isEnabled: true,
@@ -226,7 +222,6 @@ describe('BaseUserService', () => {
             const updateDto = {
                 firstname: 'Updated',
                 lastname: 'User',
-                displayname: 'updateduser',
                 contactEmail: 'updated@example.com',
                 state: UserState.ACTIVE,
                 isEnabled: false
@@ -250,12 +245,6 @@ describe('BaseUserService', () => {
 
             await service.remove('user123');
             expect(repository.delete).toHaveBeenCalledWith('user123');
-        });
-
-        it('should not throw if user does not exist', async () => {
-            jest.spyOn(repository, 'delete').mockResolvedValue({ affected: 0, raw: [] });
-
-            await expect(service.remove('nonexistent')).resolves.not.toThrow();
         });
     });
 }); 

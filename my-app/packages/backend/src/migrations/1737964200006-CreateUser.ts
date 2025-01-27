@@ -14,9 +14,20 @@ export class CreateUser1737964200006 implements MigrationInterface {
                         default: 'uuid_generate_v4()',
                     },
                     {
+                        name: 'username',
+                        type: 'varchar',
+                        isNullable: false,
+                        isUnique: true,
+                    },
+                    {
+                        name: 'displayname',
+                        type: 'varchar',
+                        isNullable: false,
+                    },
+                    {
                         name: 'organizationId',
                         type: 'uuid',
-                        isNullable: true,
+                        isNullable: false,
                     },
                     {
                         name: 'profileId',

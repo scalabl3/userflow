@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './UserController';
 import { UserService } from '../services/UserService';
 import { CreateUserDto, UpdateUserDto, ResponseUserDto, UserState } from '@my-app/shared';
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, NotFoundException } from '@nestjs/common';
 import { User } from '../models/User';
 import { Organization } from '../models/Organization';
 import { plainToClass } from 'class-transformer';
@@ -23,6 +23,7 @@ describe('UserController', () => {
     mockUser.id = 'user123';
     mockUser.firstname = 'John';
     mockUser.lastname = 'Doe';
+    mockUser.username = 'johndoe';
     mockUser.displayname = 'John Doe';
     mockUser.contactEmail = 'john.doe@example.com';
     mockUser.organizationId = mockOrg.id;
@@ -52,6 +53,7 @@ describe('UserController', () => {
                         create: jest.fn(),
                         findAll: jest.fn(),
                         findOne: jest.fn(),
+                        findByUsername: jest.fn(),
                         update: jest.fn(),
                         remove: jest.fn(),
                     },
@@ -72,6 +74,7 @@ describe('UserController', () => {
             const createUserDto: CreateUserDto = {
                 firstname: 'John',
                 lastname: 'Doe',
+                username: 'johndoe',
                 displayname: 'John Doe',
                 contactEmail: 'john.doe@example.com',
                 organizationId: 'org123',
@@ -111,6 +114,24 @@ describe('UserController', () => {
             expect(service.findAll).toHaveBeenCalled();
             expect(result).toEqual([]);
         });
+
+        it('should find users by username query', async () => {
+            jest.spyOn(service, 'findByUsername').mockResolvedValue(mockUser);
+
+            const result = await controller.findAll('johndoe');
+
+            expect(service.findByUsername).toHaveBeenCalledWith('johndoe');
+            expect(result).toEqual([mockUserDto]);
+        });
+
+        it('should return empty array when username not found', async () => {
+            jest.spyOn(service, 'findByUsername').mockResolvedValue(null);
+
+            const result = await controller.findAll('nonexistent');
+
+            expect(service.findByUsername).toHaveBeenCalledWith('nonexistent');
+            expect(result).toEqual([]);
+        });
     });
 
     describe('findOne', () => {
@@ -121,6 +142,25 @@ describe('UserController', () => {
 
             expect(service.findOne).toHaveBeenCalledWith('user123');
             expect(result).toEqual(mockUserDto);
+        });
+    });
+
+    describe('findByUsername', () => {
+        it('should return a user by username', async () => {
+            jest.spyOn(service, 'findByUsername').mockResolvedValue(mockUser);
+
+            const result = await controller.findByUsername('johndoe');
+
+            expect(service.findByUsername).toHaveBeenCalledWith('johndoe');
+            expect(result).toEqual(mockUserDto);
+        });
+
+        it('should throw NotFoundException when username not found', async () => {
+            jest.spyOn(service, 'findByUsername').mockResolvedValue(null);
+
+            await expect(controller.findByUsername('nonexistent')).rejects.toThrow(
+                new NotFoundException('User with username nonexistent not found')
+            );
         });
     });
 
