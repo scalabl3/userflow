@@ -3,20 +3,20 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 @Entity()
 export class Organization {
     @PrimaryGeneratedColumn('uuid')
-    id: string;
+    id!: string;
 
     @Column({ type: 'varchar', length: 255, default: 'shadow', nullable: true })
-    name: string;
+    name!: string;
 
     @Column({ default: true })
-    visible: boolean;
+    visible!: boolean;
 
     @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    createdAt: Date;
+    createdAt!: Date;
 
     @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
-    modifiedAt: Date;
+    modifiedAt!: Date;
 
     @Column({ type: 'uuid' })
-    adminUser: string;
+    adminUser!: string;
 }
