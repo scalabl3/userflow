@@ -1,195 +1,190 @@
 # Test Coverage Documentation
 
-## Service Layer Tests
+## Test Coverage Documentation
 
-### LoginCredentialService Tests
+### Model Layer Tests
 
-1. **Basic Service**
-   - Verifies service is properly defined and injectable
+#### LoginCredential Model (92.85% coverage)
+- **Basic Properties**
+  - Instance creation with required fields
+  - Optional fields handling (credentials, expiresAt)
+  - Relationship handling (baseUser, loginProvider)
+  - Timestamps (createdAt, modifiedAt)
+  - Default values (isEnabled)
 
-2. **Find Operations**
-   - **Find All**
-     - Returns all login credentials with their associated providers
-   - **Find One**
-     - Retrieves a specific credential by ID with its provider
-     - Returns null for non-existent credentials
-   - **Find By Identifier And Provider**
-     - Finds credential using email/phone and provider ID combination
-     - Returns null when no match is found for the identifier-provider pair
+- **Credential Type Validation**
+  - Password credentials without expiration
+  - Access tokens with short expiration (1 hour)
+  - Refresh tokens with long expiration (30 days)
+  - Expiration date checks (past and future dates)
 
-3. **Create Operations**
-   - Creates credential with all fields specified
-   - Sets default enabled status when not specified
-   - **Credential Type Specific Tests**
-     - Creates access token with expiration date
-     - Creates refresh token with longer expiration date
-     - Creates password credential without expiration
+- **Identifier Validation**
+  - Email format validation
+  - Phone number format validation
+  - Username format validation
 
-4. **Update Operations**
-   - Updates only the fields that are provided
-   - Successfully updates all possible fields when provided
-   - Maintains existing values when fields are undefined
-   - Returns null when updating non-existent credential
+#### User Model (91.66% coverage)
+- **Basic Properties**
+  - Inheritance from BaseUser
+  - Organization relationship
+  - Profile ID handling
+  - Preferences with default values
 
-5. **Remove Operations**
-   - Successfully deletes existing credentials
-   - Returns false when no credential was deleted
-   - Handles undefined affected rows gracefully
+- **Business Logic**
+  - BeforeInsert hook for default preferences
+  - Theme preferences (light/dark)
+  - Notification preferences (email/push)
 
-### LoginProviderService Tests
+#### BaseUser Model (81.81% coverage)
+- **Basic Properties**
+  - Required fields (firstname, lastname, displayname, contactEmail)
+  - Optional fields (lastLoginAt)
+  - State management (PENDING, ACTIVE, SUSPENDED, DEACTIVATED)
+  - Enabled/disabled status
 
-1. **Basic Service**
-   - Verifies service is properly defined and injectable
+- **Relationships**
+  - Primary login credential handling
+  - Multiple login credentials management
 
-2. **Find Operations**
-   - Returns all login providers
-   - Retrieves specific provider by ID
-   - Returns null for non-existent providers
+### Service Layer Tests
 
-3. **Create Operations**
-   - Creates provider with required fields
-   - Sets default values appropriately
+#### LoginCredentialService (100% coverage)
+- **Basic Service**
+  - Service instantiation
+  - Repository injection
 
-4. **Update Operations**
-   - Updates provider information
-   - Returns null for non-existent provider
-   - Handles partial updates correctly
+- **Find Operations**
+  - Find all credentials
+  - Find by ID
+  - Find by identifier and provider
+  - Handle not found cases
 
-5. **Remove Operations**
-   - Deletes existing provider
-   - Handles non-existent provider deletion gracefully
+- **Create Operations**
+  - Create with required fields
+  - Create with optional fields
+  - Validate credential types
+  - Handle expiration dates
 
-### BaseUserService Tests
+- **Update Operations**
+  - Update all fields
+  - Update partial fields
+  - Handle undefined fields
+  - Validate updates
 
-1. **Basic Service**
-   - Verifies service is properly defined and injectable
+- **Remove Operations**
+  - Remove existing credential
+  - Handle non-existent credential
+  - Check affected rows
 
-2. **Create Operations**
-   - Creates user with required login credential
-   - Throws error if no login credential provided
-   - Sets up proper relationships with credentials
+#### LoginProviderService (100% coverage)
+- **Basic Service**
+  - Service instantiation
+  - Repository injection
 
-3. **Find Operations**
-   - **Find All**
-     - Returns all users with their credentials
-     - Returns empty array when no users exist
-   - **Find One**
-     - Retrieves user with login credentials
-     - Returns null for non-existent user
-     - Properly loads credential relationships
+- **Find Operations**
+  - Find all providers
+  - Find by ID
+  - Handle not found cases
 
-4. **Update Operations**
-   - Updates user state (PENDING → ACTIVE → SUSPENDED → DEACTIVATED)
-   - Prevents removal of primary login credential
-   - Returns null if user not found
-   - Successfully updates basic user fields
-     - firstname
-     - lastname
-     - displayname
-     - contactEmail
-     - state
-     - isEnabled
+- **Create Operations**
+  - Create provider with code/name
+  - Set enabled status
+  - Handle duplicates
 
-5. **Remove Operations**
-   - Successfully deletes user
-   - Handles non-existent user deletion
+- **Update Operations**
+  - Update name
+  - Update enabled status
+  - Handle not found
 
-### OrganizationService Tests
+- **Remove Operations**
+  - Remove existing provider
+  - Handle non-existent provider
 
-1. **Basic Service**
-   - Verifies service is properly defined and injectable
+#### BaseUserService (100% coverage)
+- **Basic Service**
+  - Service instantiation
+  - Repository injection
 
-2. **Create Operations**
-   - Creates organization with all fields
-   - Creates invisible organization
-   - Sets default visibility appropriately
+- **Find Operations**
+  - Find all users
+  - Find by ID with credentials
+  - Handle not found cases
 
-3. **Find Operations**
-   - **Find All**
-     - Returns all organizations
-     - Returns empty array when no organizations exist
-   - **Find One**
-     - Retrieves specific organization
-     - Returns null for non-existent organization
+- **Create Operations**
+  - Create with required fields
+  - Validate login credentials
+  - Set initial state
 
-4. **Update Operations**
-   - Updates organization details
-   - Handles partial updates
-   - Returns null for non-existent organization
+- **Update Operations**
+  - Update user details
+  - Update state
+  - Update primary credential
+  - Handle not found
 
-5. **Remove Operations**
-   - Deletes existing organization
-   - Handles non-existent organization deletion
-   - Returns appropriate status for deletion operation
+- **Remove Operations**
+  - Remove existing user
+  - Handle non-existent user
 
-## Controller Layer Tests
+### Controller Layer Tests
 
-### LoginCredentialController Tests
+#### LoginCredentialController (100% coverage)
+- **Basic Controller**
+  - Controller instantiation
+  - Service injection
 
-1. **Basic Controller**
-   - Verifies controller is properly defined and injectable
+- **Create Endpoint**
+  - Create with valid data
+  - Handle validation errors
+  - Return correct DTO
 
-2. **Create Endpoint**
-   - Successfully creates new login credentials
-   - Returns created credential with proper DTO transformation
-   - Handles service errors appropriately
+- **Find Operations**
+  - Get all credentials
+  - Get by ID
+  - Handle not found
+  - Return correct DTOs
 
-3. **Find Operations**
-   - **GET /login-credentials**
-     - Returns all credentials transformed to response DTOs
-     - Handles empty results correctly
-   - **GET /login-credentials/:id**
-     - Returns specific credential by ID
-     - Returns 404 when credential not found
-     - Transforms response to proper DTO format
+- **Update Endpoint**
+  - Update with valid data
+  - Handle validation errors
+  - Handle not found
+  - Return updated DTO
 
-4. **Update Endpoint**
-   - Successfully updates existing credentials
-   - Returns 404 for non-existent credentials
-   - Validates update DTO properly
-   - Returns updated credential in response DTO format
+- **Delete Endpoint**
+  - Delete existing credential
+  - Handle not found
+  - Return success status
 
-5. **Delete Endpoint**
-   - Successfully removes existing credentials
-   - Returns appropriate status codes (204 for success)
-   - Returns 404 for non-existent credentials
+#### LoginProviderController (100% coverage)
+- **Basic Controller**
+  - Controller instantiation
+  - Service injection
 
-### LoginProviderController Tests
+- **Create Endpoint**
+  - Create with valid data
+  - Handle validation errors
+  - Return correct DTO
 
-1. **Basic Controller**
-   - Verifies controller is properly defined and injectable
+- **Find Operations**
+  - Get all providers
+  - Get by ID
+  - Handle not found
+  - Return correct DTOs
 
-2. **Create Endpoint**
-   - Creates new login providers
-   - Validates required fields
-   - Returns created provider with proper DTO transformation
+- **Update Endpoint**
+  - Update with valid data
+  - Handle validation errors
+  - Handle not found
+  - Return updated DTO
 
-3. **Find Operations**
-   - **GET /login-providers**
-     - Returns all providers transformed to response DTOs
-     - Handles empty results correctly
-   - **GET /login-providers/:id**
-     - Returns specific provider by ID
-     - Returns 404 when provider not found
-     - Transforms response to proper DTO format
+- **Delete Endpoint**
+  - Delete existing provider
+  - Handle not found
+  - Return success status
 
-4. **Update Endpoint**
-   - Updates existing providers
-   - Returns 404 for non-existent providers
-   - Validates update DTO properly
-   - Returns updated provider in response DTO format
+### Coverage Summary
+- Overall Statement Coverage: 94.09%
+- Overall Branch Coverage: 100%
+- Overall Function Coverage: 73.58%
+- Overall Line Coverage: 94.23%
 
-5. **Delete Endpoint**
-   - Removes existing providers
-   - Returns appropriate status codes
-   - Returns 404 for non-existent providers
-
-## Coverage Summary
-
-All services maintain 100% coverage across:
-- Statements
-- Branches
-- Functions
-- Lines
-
-The only uncovered lines are TypeORM decorators, which are tested indirectly through integration tests. 
+Note: Lower function coverage in models is due to TypeORM decorators being counted as functions. These are tested indirectly through integration tests. 
