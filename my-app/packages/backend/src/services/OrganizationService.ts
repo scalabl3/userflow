@@ -18,7 +18,7 @@ export class OrganizationService implements IOrganizationService {
         return await this.organizationRepository.save(organization);
     }
 
-    async getOrganizationById(id: string): Promise<Organization | null> {
+    async getOrganizationById(id: string): Promise<Organization> {
         const organization = await this.organizationRepository.findOne({ where: { id } });
         if (!organization) {
             throw new NotFoundException(`Organization with id ${id} not found`);
@@ -26,7 +26,7 @@ export class OrganizationService implements IOrganizationService {
         return organization;
     }
 
-    async updateOrganization(id: string, updateOrganizationDto: UpdateOrganizationDto): Promise<Organization | null> {
+    async updateOrganization(id: string, updateOrganizationDto: UpdateOrganizationDto): Promise<Organization> {
         const organization = await this.getOrganizationById(id);
         Object.assign(organization, updateOrganizationDto);
         return await this.organizationRepository.save(organization);

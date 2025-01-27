@@ -10,6 +10,13 @@
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
+    "@nestjs/common": "11.0.5",
+    "@nestjs/core": "11.0.5",
+    "@nestjs/platform-express": "11.0.5",
+    "@nestjs/typeorm": "11.0.0",
+    "pg": "8.13.1",
+    "reflect-metadata": "0.2.2",
+    "typeorm": "0.3.20",
     "zod": "^3.22.0"
   },
   "devDependencies": {
@@ -22,4 +29,4 @@
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.0"
   }
-} 
+}

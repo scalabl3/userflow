@@ -1,5 +1,5 @@
-import { CreateOrganizationDto } from '../../shared/src/dtos/Organization/CreateOrganizationDto';
-import { UpdateOrganizationDto } from '../../shared/src/dtos/Organization/UpdateOrganizationDto';
+import { CreateOrganizationDto } from '@my-app/shared/src/dtos/Organization/CreateOrganizationDto';
+import { UpdateOrganizationDto } from '@my-app/shared/src/dtos/Organization/UpdateOrganizationDto';
 import { Organization } from '../models/Organization';
 
 /**
