@@ -1,9 +1,4 @@
-# Class Specification Template
-
-## Output Location
-Generated file should be placed in: `02-impl/specs/comment.class.spec.md`
-
-## Class Name: CommentService
+# CommentService
 
 ## Related Specifications
 - Models: [@model:Comment]
@@ -17,33 +12,35 @@ constructor(
 ```
 
 ## Properties
-- repository: CommentRepository
-  - Purpose: Data access layer
-  - Access: private
+
+### repository
+- Type: CommentRepository
+- Purpose: Data access for comments
+- Access: private
 
 ## Core Methods
 
 ### create
 - Purpose: Create new comment
-- Parameters: CreateDTO
+- Parameters: CreateCommentDTO
 - Returns: Comment
 - Errors: invalid input
 
 ### findById
-- Purpose: Get comment by id
+- Purpose: Get single comment
 - Parameters: id: string
-- Returns: Comment
+- Returns: Comment | null
 - Errors: not found
 
 ### findByContentItem
-- Purpose: Get content's comments
+- Purpose: List content's comments
 - Parameters: contentItemId: string
 - Returns: Comment[]
 - Errors: not found
 
 ### update
-- Purpose: Update comment text
-- Parameters: id: string, UpdateDTO
+- Purpose: Modify comment text
+- Parameters: id: string, UpdateCommentDTO
 - Returns: Comment
 - Errors: not found
 
@@ -54,14 +51,13 @@ constructor(
 - Errors: not found
 
 ## Error Handling
-Basic errors handled:
-- Invalid input
-- Not found
-- Server error
+- Invalid input validation
+- Not found checks
+- Server errors
 
 # =====================================================
 # SCOPE BOUNDARY - Base Implementation Ends Here
 # =====================================================
 
-Note: Model follows generation rules for 10K user site scale.
+Note: Class follows generation rules for 10K user site scale.
 Complex features noted as future extensions.
