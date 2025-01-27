@@ -5,8 +5,8 @@
     "start": "nest start",
     "start:dev": "cross-env NODE_ENV=development nest start --watch",
     "start:prod": "cross-env NODE_ENV=production node dist/main.js",
-    "migration:run": "typeorm migration:run",
-    "migration:generate": "typeorm migration:generate -n",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/data-source.ts",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/data-source.ts -n",
     "build": "nest build"
   },
   "dependencies": {
