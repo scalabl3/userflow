@@ -1,15 +1,30 @@
-import { IsString, Length, IsBoolean, IsOptional } from 'class-validator';
+import { IsString, IsUUID, IsEnum, IsOptional, IsBoolean, IsDate } from 'class-validator';
+
+export enum CredentialType {
+    PASSWORD = 'PASSWORD',
+    ACCESS_TOKEN = 'ACCESS_TOKEN',
+    REFRESH_TOKEN = 'REFRESH_TOKEN'
+}
 
 export class CreateLoginCredentialDto {
     @IsString()
-    @Length(1, 50)
-    username!: string;
+    identifier!: string;
+
+    @IsUUID()
+    loginProviderId!: string;
 
     @IsString()
-    @Length(8, 255)
-    password!: string;
+    @IsOptional()
+    credentials?: string;
+
+    @IsEnum(CredentialType)
+    credentialType!: CredentialType;
+
+    @IsDate()
+    @IsOptional()
+    expiresAt?: Date;
 
     @IsBoolean()
     @IsOptional()
-    isActive?: boolean;
+    isEnabled?: boolean = true;
 }
