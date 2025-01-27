@@ -1,13 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './UserController';
 import { UserService } from '../services/UserService';
-import { CreateUserDto } from '@my-app/shared/dist/dtos/User/CreateUserDto';
-import { UpdateUserDto } from '@my-app/shared/dist/dtos/User/UpdateUserDto';
-import { ResponseUserDto } from '@my-app/shared/dist/dtos/User/ResponseUserDto';
+import { CreateUserDto, UpdateUserDto, ResponseUserDto, UserState } from '@my-app/shared';
 import { HttpStatus } from '@nestjs/common';
 import { User } from '../models/User';
 import { Organization } from '../models/Organization';
-import { UserState } from '@my-app/shared/dist/enums/UserState';
+import { plainToClass } from 'class-transformer';
 
 describe('UserController', () => {
     let controller: UserController;
@@ -38,6 +36,11 @@ describe('UserController', () => {
     };
     mockUser.createdAt = new Date();
     mockUser.modifiedAt = new Date();
+
+    let mockUserDto = plainToClass(ResponseUserDto, {
+        ...mockUser,
+        preferences: mockUser.preferences
+    }, { excludeExtraneousValues: true });
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -86,19 +89,18 @@ describe('UserController', () => {
             const result = await controller.create(createUserDto);
 
             expect(service.create).toHaveBeenCalledWith(createUserDto);
-            expect(result).toEqual(mockUser);
+            expect(result).toEqual(mockUserDto);
         });
     });
 
     describe('findAll', () => {
         it('should return an array of users', async () => {
-            const users = [mockUser];
-            jest.spyOn(service, 'findAll').mockResolvedValue(users);
+            jest.spyOn(service, 'findAll').mockResolvedValue([mockUser]);
 
             const result = await controller.findAll();
 
             expect(service.findAll).toHaveBeenCalled();
-            expect(result).toEqual(users);
+            expect(result).toEqual([mockUserDto]);
         });
 
         it('should return empty array when no users exist', async () => {
@@ -118,7 +120,7 @@ describe('UserController', () => {
             const result = await controller.findOne('user123');
 
             expect(service.findOne).toHaveBeenCalledWith('user123');
-            expect(result).toEqual(mockUser);
+            expect(result).toEqual(mockUserDto);
         });
     });
 
@@ -133,12 +135,17 @@ describe('UserController', () => {
 
             const updatedUser = new User();
             Object.assign(updatedUser, mockUser, updateUserDto);
+            const updatedUserDto = plainToClass(ResponseUserDto, {
+                ...updatedUser,
+                preferences: updatedUser.preferences
+            }, { excludeExtraneousValues: true });
+
             jest.spyOn(service, 'update').mockResolvedValue(updatedUser);
 
             const result = await controller.update('user123', updateUserDto);
 
             expect(service.update).toHaveBeenCalledWith('user123', updateUserDto);
-            expect(result).toEqual(updatedUser);
+            expect(result).toEqual(updatedUserDto);
         });
     });
 

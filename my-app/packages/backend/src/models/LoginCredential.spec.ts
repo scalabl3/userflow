@@ -1,8 +1,7 @@
 import { LoginCredential } from './LoginCredential';
 import { LoginProvider } from './LoginProvider';
 import { BaseUser } from './BaseUser';
-import { UserState } from '@my-app/shared/dist/enums/UserState';
-import { CredentialType, OAuthProvider } from '@my-app/shared/dist/enums';
+import { UserState, CredentialType, OAuthProvider } from '@my-app/shared';
 
 describe('LoginCredential', () => {
     let loginCredential: LoginCredential;
@@ -10,6 +9,7 @@ describe('LoginCredential', () => {
     let loginProvider: LoginProvider;
 
     beforeEach(() => {
+        // Setup LoginProvider mock
         loginProvider = {
             id: 'provider123',
             code: 'email',
@@ -19,99 +19,134 @@ describe('LoginCredential', () => {
             modifiedAt: new Date()
         } as LoginProvider;
 
-        baseUser = new BaseUser();
-        baseUser.id = 'user123';
-        baseUser.firstname = 'John';
-        baseUser.lastname = 'Doe';
-        baseUser.displayname = 'John Doe';
-        baseUser.contactEmail = 'john@example.com';
-        baseUser.state = UserState.ACTIVE;
-        baseUser.isEnabled = true;
-        baseUser.createdAt = new Date();
-        baseUser.modifiedAt = new Date();
+        // Setup BaseUser mock
+        baseUser = {
+            id: 'user123',
+            firstname: 'John',
+            lastname: 'Doe',
+            displayname: 'John Doe',
+            contactEmail: 'john@example.com',
+            state: UserState.ACTIVE,
+            isEnabled: true,
+            createdAt: new Date(),
+            modifiedAt: new Date(),
+            loginCredentials: []
+        } as BaseUser;
 
+        // Setup base LoginCredential
         loginCredential = new LoginCredential();
         loginCredential.id = 'cred123';
         loginCredential.identifier = 'john@example.com';
         loginCredential.loginProviderId = loginProvider.id;
         loginCredential.loginProvider = loginProvider;
         loginCredential.credentialType = CredentialType.PASSWORD;
-        loginCredential.passwordHash = 'hashedpassword';
-        loginCredential.baseUserId = baseUser.id;
-        loginCredential.baseUser = baseUser;
         loginCredential.isEnabled = true;
         loginCredential.createdAt = new Date();
         loginCredential.modifiedAt = new Date();
     });
 
-    it('should create a valid login credential', () => {
-        expect(loginCredential).toBeDefined();
-        expect(loginCredential.identifier).toBe('john@example.com');
-        expect(loginCredential.loginProviderId).toBe(loginProvider.id);
-        expect(loginCredential.loginProvider).toBe(loginProvider);
-        expect(loginCredential.credentialType).toBe(CredentialType.PASSWORD);
-        expect(loginCredential.passwordHash).toBeDefined();
-        expect(loginCredential.baseUserId).toBe(baseUser.id);
-        expect(loginCredential.baseUser).toBe(baseUser);
-        expect(loginCredential.isEnabled).toBe(true);
-    });
-
-    describe('credential type validation', () => {
-        it('should accept password credentials', () => {
-            loginCredential.credentialType = CredentialType.PASSWORD;
-            loginCredential.passwordHash = 'hashedpassword';
+    describe('basic properties', () => {
+        it('should create a valid login credential with required fields', () => {
+            expect(loginCredential).toBeDefined();
+            expect(loginCredential.id).toBe('cred123');
+            expect(loginCredential.identifier).toBe('john@example.com');
+            expect(loginCredential.loginProviderId).toBe(loginProvider.id);
             expect(loginCredential.credentialType).toBe(CredentialType.PASSWORD);
-            expect(loginCredential.passwordHash).toBeDefined();
+            expect(loginCredential.isEnabled).toBe(true);
+            expect(loginCredential.createdAt).toBeInstanceOf(Date);
+            expect(loginCredential.modifiedAt).toBeInstanceOf(Date);
         });
 
-        it('should accept OAuth credentials', () => {
-            loginCredential.credentialType = CredentialType.OAUTH;
-            loginCredential.provider = OAuthProvider.GOOGLE;
-            loginCredential.accessToken = 'google_token';
-            expect(loginCredential.credentialType).toBe(CredentialType.OAUTH);
-            expect(loginCredential.provider).toBe(OAuthProvider.GOOGLE);
-            expect(loginCredential.accessToken).toBeDefined();
-        });
+        it('should handle SQLite compatible datetime fields', () => {
+            const now = new Date();
+            loginCredential.createdAt = now;
+            loginCredential.modifiedAt = now;
+            loginCredential.accessTokenExpiresAt = now;
+            loginCredential.refreshTokenExpiresAt = now;
 
-        it('should handle Apple-specific OAuth fields', () => {
-            loginCredential.credentialType = CredentialType.OAUTH;
-            loginCredential.provider = OAuthProvider.APPLE;
-            loginCredential.accessToken = 'apple_token';
-            loginCredential.identityToken = 'apple_identity_token';
-            loginCredential.authorizationCode = 'apple_auth_code';
-            loginCredential.realUserStatus = 'REAL';
-            loginCredential.nonce = 'random_nonce';
-
-            expect(loginCredential.credentialType).toBe(CredentialType.OAUTH);
-            expect(loginCredential.provider).toBe(OAuthProvider.APPLE);
-            expect(loginCredential.accessToken).toBeDefined();
-            expect(loginCredential.identityToken).toBeDefined();
-            expect(loginCredential.authorizationCode).toBeDefined();
-            expect(loginCredential.realUserStatus).toBeDefined();
-            expect(loginCredential.nonce).toBeDefined();
+            expect(loginCredential.createdAt).toBeInstanceOf(Date);
+            expect(loginCredential.modifiedAt).toBeInstanceOf(Date);
+            expect(loginCredential.accessTokenExpiresAt).toBeInstanceOf(Date);
+            expect(loginCredential.refreshTokenExpiresAt).toBeInstanceOf(Date);
         });
     });
 
-    describe('user relationship', () => {
-        it('should link to a base user', () => {
-            expect(loginCredential.baseUser).toBeDefined();
+    describe('credential types', () => {
+        describe('PASSWORD type', () => {
+            beforeEach(() => {
+                loginCredential.credentialType = CredentialType.PASSWORD;
+                loginCredential.passwordHash = 'hashedpassword123';
+            });
+
+            it('should store password hash', () => {
+                expect(loginCredential.credentialType).toBe(CredentialType.PASSWORD);
+                expect(loginCredential.passwordHash).toBe('hashedpassword123');
+                expect(loginCredential.provider).toBeUndefined();
+                expect(loginCredential.accessToken).toBeUndefined();
+            });
+        });
+
+        describe('OAUTH type', () => {
+            beforeEach(() => {
+                loginCredential.credentialType = CredentialType.OAUTH;
+                loginCredential.provider = OAuthProvider.GOOGLE;
+                loginCredential.accessToken = 'google_access_token';
+                loginCredential.accessTokenExpiresAt = new Date();
+                loginCredential.refreshToken = 'google_refresh_token';
+                loginCredential.refreshTokenExpiresAt = new Date();
+                loginCredential.scope = 'email profile';
+                loginCredential.rawProfile = { email: 'john@gmail.com', name: 'John Doe' };
+            });
+
+            it('should store OAuth fields', () => {
+                expect(loginCredential.credentialType).toBe(CredentialType.OAUTH);
+                expect(loginCredential.provider).toBe(OAuthProvider.GOOGLE);
+                expect(loginCredential.accessToken).toBeDefined();
+                expect(loginCredential.accessTokenExpiresAt).toBeInstanceOf(Date);
+                expect(loginCredential.refreshToken).toBeDefined();
+                expect(loginCredential.refreshTokenExpiresAt).toBeInstanceOf(Date);
+                expect(loginCredential.scope).toBe('email profile');
+                expect(loginCredential.rawProfile).toEqual({ email: 'john@gmail.com', name: 'John Doe' });
+            });
+
+            it('should handle Apple-specific OAuth fields', () => {
+                loginCredential.provider = OAuthProvider.APPLE;
+                loginCredential.identityToken = 'apple_identity_token';
+                loginCredential.authorizationCode = 'apple_auth_code';
+                loginCredential.realUserStatus = 'REAL';
+                loginCredential.nonce = 'random_nonce';
+
+                expect(loginCredential.provider).toBe(OAuthProvider.APPLE);
+                expect(loginCredential.identityToken).toBe('apple_identity_token');
+                expect(loginCredential.authorizationCode).toBe('apple_auth_code');
+                expect(loginCredential.realUserStatus).toBe('REAL');
+                expect(loginCredential.nonce).toBe('random_nonce');
+            });
+        });
+    });
+
+    describe('relationships', () => {
+        it('should maintain bidirectional relationship with BaseUser', () => {
+            loginCredential.baseUser = baseUser;
+            loginCredential.baseUserId = baseUser.id;
+            baseUser.loginCredentials = [loginCredential];
+
             expect(loginCredential.baseUser).toBe(baseUser);
             expect(loginCredential.baseUserId).toBe(baseUser.id);
+            expect(baseUser.loginCredentials).toContain(loginCredential);
         });
 
-        it('should allow null base user', () => {
-            loginCredential.baseUser = undefined;
-            loginCredential.baseUserId = undefined;
-            expect(loginCredential.baseUser).toBeUndefined();
-            expect(loginCredential.baseUserId).toBeUndefined();
-        });
-    });
-
-    describe('provider relationship', () => {
-        it('should link to a login provider', () => {
-            expect(loginCredential.loginProvider).toBeDefined();
+        it('should maintain relationship with LoginProvider', () => {
             expect(loginCredential.loginProvider).toBe(loginProvider);
             expect(loginCredential.loginProviderId).toBe(loginProvider.id);
+        });
+
+        it('should handle null BaseUser relationship', () => {
+            loginCredential.baseUser = undefined;
+            loginCredential.baseUserId = undefined;
+
+            expect(loginCredential.baseUser).toBeUndefined();
+            expect(loginCredential.baseUserId).toBeUndefined();
         });
     });
 }); 

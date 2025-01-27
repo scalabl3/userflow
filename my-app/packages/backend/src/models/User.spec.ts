@@ -1,6 +1,6 @@
 import { User } from './User';
 import { Organization } from './Organization';
-import { UserState } from '@my-app/shared/dist/enums/UserState';
+import { UserState } from '@my-app/shared';
 
 describe('User', () => {
     let user: User;
@@ -28,6 +28,8 @@ describe('User', () => {
                 push: true
             }
         };
+        user.createdAt = new Date();
+        user.modifiedAt = new Date();
     });
 
     it('should create an instance', () => {

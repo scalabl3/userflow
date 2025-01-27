@@ -1,11 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column } from 'typeorm';
 import { BaseUser } from './BaseUser';
 
 @Entity()
 export class User extends BaseUser {
-    @PrimaryGeneratedColumn('uuid')
-    id!: string;
-
     @Column({ type: 'varchar', unique: true })
     username!: string;
 
@@ -35,12 +32,6 @@ export class User extends BaseUser {
             push?: boolean;
         };
     };
-
-    @CreateDateColumn()
-    createdAt!: Date;
-
-    @UpdateDateColumn()
-    modifiedAt!: Date;
 
     setDefaultPreferences() {
         if (!this.preferences) {

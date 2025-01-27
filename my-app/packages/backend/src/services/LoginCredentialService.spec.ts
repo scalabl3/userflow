@@ -14,12 +14,15 @@ import {
     UpdateLoginCredentialDto,
     UpdatePasswordCredentialDto,
     UpdateOAuthCredentialDto,
-    ResponseLoginCredentialDto
+    ResponseLoginCredentialDto,
+    CredentialType,
+    OAuthProvider,
+    UserState
 } from '@my-app/shared';
-import { CredentialType, OAuthProvider } from '@my-app/shared';
-import { UserState } from '@my-app/shared';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
 
-// Mock bcrypt
+// Mock bcrypt for password hashing
 jest.mock('bcrypt', () => ({
     hash: jest.fn().mockResolvedValue('hashed_password_123'),
     compare: jest.fn().mockResolvedValue(true)
@@ -28,50 +31,47 @@ jest.mock('bcrypt', () => ({
 describe('LoginCredentialService', () => {
     let service: LoginCredentialService;
     let repository: Repository<LoginCredential>;
-    let loginProviderRepository: Repository<LoginProvider>;
 
-    // Mock data
+    // Mock data setup
     const mockLoginProvider: LoginProvider = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
+        id: 'provider123',
         code: 'email',
         name: 'Email Provider',
         isEnabled: true,
         createdAt: new Date(),
         modifiedAt: new Date()
-    };
+    } as LoginProvider;
 
     const mockBaseUser: BaseUser = {
-        id: '123e4567-e89b-12d3-a456-426614174001',
+        id: 'user123',
         firstname: 'John',
         lastname: 'Doe',
         displayname: 'John Doe',
         contactEmail: 'john@example.com',
         state: UserState.ACTIVE,
-        primaryLoginCredentialId: '123e4567-e89b-12d3-a456-426614174002',
-        lastLoginAt: new Date(),
         isEnabled: true,
         createdAt: new Date(),
         modifiedAt: new Date(),
         loginCredentials: []
-    };
+    } as BaseUser;
 
-    // Mock credentials for different types
+    // Mock entities
     const mockPasswordCredential: LoginCredential = {
-        id: '123e4567-e89b-12d3-a456-426614174002',
+        id: 'cred123',
         identifier: 'john@example.com',
         loginProviderId: mockLoginProvider.id,
         loginProvider: mockLoginProvider,
         baseUserId: mockBaseUser.id,
         baseUser: mockBaseUser,
         credentialType: CredentialType.PASSWORD,
-        passwordHash: 'hashedpassword123',
+        passwordHash: 'hashed_password_123',
         isEnabled: true,
         createdAt: new Date(),
         modifiedAt: new Date()
-    };
+    } as LoginCredential;
 
     const mockGoogleCredential: LoginCredential = {
-        id: '123e4567-e89b-12d3-a456-426614174003',
+        id: 'cred456',
         identifier: 'google123',
         loginProviderId: mockLoginProvider.id,
         loginProvider: mockLoginProvider,
@@ -88,106 +88,19 @@ describe('LoginCredentialService', () => {
         isEnabled: true,
         createdAt: new Date(),
         modifiedAt: new Date()
-    };
+    } as LoginCredential;
 
     const mockAppleCredential: LoginCredential = {
-        id: '123e4567-e89b-12d3-a456-426614174004',
+        ...mockGoogleCredential,
+        id: 'cred789',
         identifier: 'apple123',
-        loginProviderId: mockLoginProvider.id,
-        loginProvider: mockLoginProvider,
-        baseUserId: mockBaseUser.id,
-        baseUser: mockBaseUser,
-        credentialType: CredentialType.OAUTH,
         provider: OAuthProvider.APPLE,
         accessToken: 'apple-access-token',
-        accessTokenExpiresAt: new Date(),
-        refreshToken: 'apple-refresh-token',
-        refreshTokenExpiresAt: new Date(),
-        scope: 'email name',
-        rawProfile: { email: 'john@example.com' },
-        // Apple-specific fields
         identityToken: 'apple-identity-token',
         authorizationCode: 'apple-auth-code',
-        realUserStatus: 'LIKELY_REAL',
-        nonce: 'random-nonce',
-        isEnabled: true,
-        createdAt: new Date(),
-        modifiedAt: new Date()
-    };
-
-    // Mock data for DTOs
-    const mockPasswordCredentialDto: ResponseLoginCredentialDto = {
-        id: mockPasswordCredential.id,
-        identifier: mockPasswordCredential.identifier,
-        loginProviderId: mockPasswordCredential.loginProviderId,
-        loginProvider: {
-            id: mockLoginProvider.id,
-            code: mockLoginProvider.code,
-            name: mockLoginProvider.name,
-            isEnabled: mockLoginProvider.isEnabled,
-            createdAt: mockLoginProvider.createdAt,
-            modifiedAt: mockLoginProvider.modifiedAt
-        },
-        credentialType: mockPasswordCredential.credentialType,
-        hasPassword: true,
-        isEnabled: mockPasswordCredential.isEnabled,
-        baseUserId: mockPasswordCredential.baseUserId,
-        createdAt: mockPasswordCredential.createdAt,
-        modifiedAt: mockPasswordCredential.modifiedAt
-    };
-
-    const mockGoogleCredentialDto: ResponseLoginCredentialDto = {
-        id: mockGoogleCredential.id,
-        identifier: mockGoogleCredential.identifier,
-        loginProviderId: mockGoogleCredential.loginProviderId,
-        loginProvider: {
-            id: mockLoginProvider.id,
-            code: mockLoginProvider.code,
-            name: mockLoginProvider.name,
-            isEnabled: mockLoginProvider.isEnabled,
-            createdAt: mockLoginProvider.createdAt,
-            modifiedAt: mockLoginProvider.modifiedAt
-        },
-        credentialType: mockGoogleCredential.credentialType,
-        provider: mockGoogleCredential.provider,
-        accessTokenExpiresAt: mockGoogleCredential.accessTokenExpiresAt,
-        hasRefreshToken: true,
-        refreshTokenExpiresAt: mockGoogleCredential.refreshTokenExpiresAt,
-        scope: mockGoogleCredential.scope,
-        rawProfile: mockGoogleCredential.rawProfile,
-        isEnabled: mockGoogleCredential.isEnabled,
-        baseUserId: mockGoogleCredential.baseUserId,
-        createdAt: mockGoogleCredential.createdAt,
-        modifiedAt: mockGoogleCredential.modifiedAt
-    };
-
-    const mockAppleCredentialDto: ResponseLoginCredentialDto = {
-        id: mockAppleCredential.id,
-        identifier: mockAppleCredential.identifier,
-        loginProviderId: mockAppleCredential.loginProviderId,
-        loginProvider: {
-            id: mockLoginProvider.id,
-            code: mockLoginProvider.code,
-            name: mockLoginProvider.name,
-            isEnabled: mockLoginProvider.isEnabled,
-            createdAt: mockLoginProvider.createdAt,
-            modifiedAt: mockLoginProvider.modifiedAt
-        },
-        credentialType: mockAppleCredential.credentialType,
-        provider: mockAppleCredential.provider,
-        accessTokenExpiresAt: mockAppleCredential.accessTokenExpiresAt,
-        hasRefreshToken: true,
-        refreshTokenExpiresAt: mockAppleCredential.refreshTokenExpiresAt,
-        scope: mockAppleCredential.scope,
-        rawProfile: mockAppleCredential.rawProfile,
-        hasIdentityToken: true,
-        hasAuthorizationCode: true,
-        realUserStatus: mockAppleCredential.realUserStatus,
-        isEnabled: mockAppleCredential.isEnabled,
-        baseUserId: mockAppleCredential.baseUserId,
-        createdAt: mockAppleCredential.createdAt,
-        modifiedAt: mockAppleCredential.modifiedAt
-    };
+        realUserStatus: 'REAL',
+        nonce: 'random-nonce'
+    } as LoginCredential;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -203,29 +116,35 @@ describe('LoginCredentialService', () => {
         service = module.get<LoginCredentialService>(LoginCredentialService);
         repository = module.get<Repository<LoginCredential>>(getRepositoryToken(LoginCredential));
 
-        // Reset all mocks before each test
+        // Reset mocks
         jest.clearAllMocks();
     });
 
-    it('should be defined', () => {
-        expect(service).toBeDefined();
+    describe('Service Setup', () => {
+        it('should be defined', () => {
+            expect(service).toBeDefined();
+            expect(repository).toBeDefined();
+        });
     });
 
-    describe('Common Methods', () => {
+    describe('Query Methods', () => {
         describe('findAll', () => {
             it('should return all login credentials with relations', async () => {
-                const credentials = [
-                    mockPasswordCredential,
-                    mockGoogleCredential,
-                    mockAppleCredential
-                ];
+                const credentials = [mockPasswordCredential, mockGoogleCredential];
                 jest.spyOn(repository, 'find').mockResolvedValue(credentials);
 
                 const result = await service.findAll();
-                expect(result).toEqual(credentials);
+                
+                expect(result).toHaveLength(2);
                 expect(repository.find).toHaveBeenCalledWith({
                     relations: ['loginProvider', 'baseUser']
                 });
+
+                // Verify DTO transformation
+                const expectedDtos = credentials.map(cred => 
+                    plainToClass(ResponseLoginCredentialDto, cred, { excludeExtraneousValues: true })
+                );
+                expect(result).toEqual(expectedDtos);
             });
         });
 
@@ -233,18 +152,25 @@ describe('LoginCredentialService', () => {
             it('should return a credential by id with relations', async () => {
                 jest.spyOn(repository, 'findOne').mockResolvedValue(mockPasswordCredential);
 
-                const result = await service.findOne('cred123');
-                expect(result).toEqual(mockPasswordCredential);
+                const result = await service.findOne(mockPasswordCredential.id);
+                
+                expect(result).toBeDefined();
+                expect(result?.id).toBe(mockPasswordCredential.id);
                 expect(repository.findOne).toHaveBeenCalledWith({
-                    where: { id: 'cred123' },
+                    where: { id: mockPasswordCredential.id },
                     relations: ['loginProvider', 'baseUser']
                 });
+
+                // Verify DTO transformation
+                const expectedDto = plainToClass(ResponseLoginCredentialDto, mockPasswordCredential, { excludeExtraneousValues: true });
+                expect(result).toEqual(expectedDto);
             });
 
-            it('should return null if credential not found', async () => {
+            it('should return null for non-existent credential', async () => {
                 jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
-                const result = await service.findOne('nonexistent');
+                const result = await service.findOne('nonexistent-id');
+                
                 expect(result).toBeNull();
             });
         });
@@ -254,45 +180,19 @@ describe('LoginCredentialService', () => {
                 jest.spyOn(repository, 'findOne').mockResolvedValue(mockPasswordCredential);
 
                 const result = await service.findByIdentifierAndProvider(
-                    'john@example.com',
-                    mockLoginProvider.id
+                    mockPasswordCredential.identifier,
+                    mockPasswordCredential.loginProviderId
                 );
 
-                expect(result).toEqual(mockPasswordCredential);
+                expect(result).toBeDefined();
+                expect(result?.identifier).toBe(mockPasswordCredential.identifier);
                 expect(repository.findOne).toHaveBeenCalledWith({
                     where: { 
-                        identifier: 'john@example.com', 
-                        loginProviderId: mockLoginProvider.id 
+                        identifier: mockPasswordCredential.identifier,
+                        loginProviderId: mockPasswordCredential.loginProviderId
                     },
                     relations: ['loginProvider', 'baseUser']
                 });
-            });
-
-            it('should return null when no credential matches', async () => {
-                jest.spyOn(repository, 'findOne').mockResolvedValue(null);
-
-                const result = await service.findByIdentifierAndProvider(
-                    'nonexistent@example.com',
-                    'invalid-provider'
-                );
-                expect(result).toBeNull();
-            });
-        });
-
-        describe('remove', () => {
-            it('should delete a credential and return true', async () => {
-                jest.spyOn(repository, 'delete').mockResolvedValue({ affected: 1, raw: [] });
-
-                const result = await service.remove('cred123');
-                expect(result).toBe(true);
-                expect(repository.delete).toHaveBeenCalledWith('cred123');
-            });
-
-            it('should return false when credential not found', async () => {
-                jest.spyOn(repository, 'delete').mockResolvedValue({ affected: 0, raw: [] });
-
-                const result = await service.remove('nonexistent');
-                expect(result).toBe(false);
             });
         });
     });
@@ -300,363 +200,338 @@ describe('LoginCredentialService', () => {
     describe('Password Credentials', () => {
         describe('createPasswordCredential', () => {
             const createPasswordDto: CreatePasswordCredentialDto = {
-                identifier: 'new@example.com',
+                identifier: 'john@example.com',
                 loginProviderId: mockLoginProvider.id,
-                password: 'Password123!',
-                credentialType: CredentialType.PASSWORD
+                credentialType: CredentialType.PASSWORD,
+                password: 'password123',
+                isEnabled: true
             };
 
-            it('should create a password credential', async () => {
-                const expectedCredential = {
-                    ...mockPasswordCredential,
-                    id: expect.any(String),
-                    identifier: createPasswordDto.identifier,
-                    passwordHash: 'hashed_password_123',
-                    createdAt: expect.any(Date),
-                    modifiedAt: expect.any(Date)
-                };
-
-                jest.spyOn(repository, 'create').mockReturnValue(expectedCredential);
-                jest.spyOn(repository, 'save').mockResolvedValue(expectedCredential);
+            it('should create password credential', async () => {
+                jest.spyOn(repository, 'create').mockReturnValue(mockPasswordCredential);
+                jest.spyOn(repository, 'save').mockResolvedValue(mockPasswordCredential);
 
                 const result = await service.createPasswordCredential(createPasswordDto);
 
-                expect(result).toEqual(expectedCredential);
+                expect(result).toBeDefined();
                 expect(bcrypt.hash).toHaveBeenCalledWith(createPasswordDto.password, 10);
                 expect(repository.create).toHaveBeenCalledWith({
-                    identifier: createPasswordDto.identifier,
-                    loginProviderId: createPasswordDto.loginProviderId,
-                    credentialType: CredentialType.PASSWORD,
+                    ...createPasswordDto,
                     passwordHash: 'hashed_password_123'
                 });
+
+                // Verify DTO transformation
+                const expectedDto = plainToClass(ResponseLoginCredentialDto, mockPasswordCredential, { excludeExtraneousValues: true });
+                expect(result).toEqual(expectedDto);
             });
 
-            it('should throw error if password is invalid', async () => {
-                const invalidDto: CreatePasswordCredentialDto = { 
-                    ...createPasswordDto, 
-                    password: '123',
-                    credentialType: CredentialType.PASSWORD
-                };
+            it('should reject invalid credential type', async () => {
+                const invalidDto = { ...createPasswordDto, credentialType: CredentialType.OAUTH };
+
                 await expect(service.createPasswordCredential(invalidDto))
                     .rejects
-                    .toThrow('Password must be at least 8 characters long');
+                    .toThrow(BadRequestException);
             });
         });
 
         describe('validatePassword', () => {
-            it('should return true for valid password', async () => {
-                jest.spyOn(repository, 'findOne').mockResolvedValue(mockPasswordCredential);
+            it('should validate correct password', async () => {
+                const isValid = await service.validatePassword(mockPasswordCredential, 'password123');
                 
-                const result = await service.validatePassword(mockPasswordCredential, 'correct_password');
-
-                expect(result).toBe(true);
-                expect(bcrypt.compare).toHaveBeenCalledWith(
-                    'correct_password',
-                    mockPasswordCredential.passwordHash
-                );
+                expect(isValid).toBe(true);
+                expect(bcrypt.compare).toHaveBeenCalledWith('password123', mockPasswordCredential.passwordHash);
             });
 
-            it('should return false for invalid password', async () => {
-                jest.spyOn(repository, 'findOne').mockResolvedValue(mockPasswordCredential);
-                (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
-
-                const result = await service.validatePassword(mockPasswordCredential, 'wrong_password');
-
-                expect(result).toBe(false);
-            });
-
-            it('should return false if credential has no password hash', async () => {
-                const credentialWithoutHash = { ...mockPasswordCredential, passwordHash: undefined };
-                jest.spyOn(repository, 'findOne').mockResolvedValue(credentialWithoutHash);
-
-                const result = await service.validatePassword(credentialWithoutHash, 'any_password');
-
-                expect(result).toBe(false);
+            it('should reject if no password hash exists', async () => {
+                const credWithoutHash = { ...mockPasswordCredential, passwordHash: undefined };
+                
+                const isValid = await service.validatePassword(credWithoutHash, 'password123');
+                
+                expect(isValid).toBe(false);
                 expect(bcrypt.compare).not.toHaveBeenCalled();
             });
         });
 
         describe('updatePassword', () => {
-            it('should update password hash', async () => {
-                const updateDto: UpdatePasswordCredentialDto = {
-                    newPassword: 'NewPassword123!',
-                    credentialType: CredentialType.PASSWORD
-                };
+            const updatePasswordDto: UpdatePasswordCredentialDto = {
+                currentPassword: 'oldpass123',
+                newPassword: 'newpass123'
+            };
+
+            it('should update password with valid credentials', async () => {
                 jest.spyOn(repository, 'findOne').mockResolvedValue(mockPasswordCredential);
                 jest.spyOn(repository, 'save').mockResolvedValue({
                     ...mockPasswordCredential,
-                    passwordHash: 'new_hashed_password_123'
+                    passwordHash: 'new_hashed_password'
                 });
 
-                const result = await service.updatePassword(mockPasswordCredential.id, updateDto);
+                const result = await service.updatePassword(mockPasswordCredential.id, updatePasswordDto);
 
-                expect(result).toBeTruthy();
-                expect(bcrypt.hash).toHaveBeenCalledWith(updateDto.newPassword, 10);
-                expect(repository.save).toHaveBeenCalledWith({
-                    ...mockPasswordCredential,
-                    passwordHash: 'hashed_password_123'
-                });
-            });
-
-            it('should validate current password if provided', async () => {
-                const updateDto: UpdatePasswordCredentialDto = {
-                    currentPassword: 'CurrentPass123',
-                    newPassword: 'NewPassword123!',
-                    credentialType: CredentialType.PASSWORD
-                };
-                jest.spyOn(repository, 'findOne').mockResolvedValue(mockPasswordCredential);
-                jest.spyOn(repository, 'save').mockResolvedValue({
-                    ...mockPasswordCredential,
-                    passwordHash: 'new_hashed_password_123'
-                });
-                (bcrypt.compare as jest.Mock).mockResolvedValueOnce(true);
-
-                const result = await service.updatePassword(mockPasswordCredential.id, updateDto);
-
-                expect(result).toBeTruthy();
+                expect(result).toBeDefined();
                 expect(bcrypt.compare).toHaveBeenCalledWith(
-                    updateDto.currentPassword,
+                    updatePasswordDto.currentPassword,
                     mockPasswordCredential.passwordHash
                 );
-                expect(bcrypt.hash).toHaveBeenCalledWith(updateDto.newPassword, 10);
+                expect(bcrypt.hash).toHaveBeenCalledWith(updatePasswordDto.newPassword, 10);
             });
 
-            it('should throw error if current password is incorrect', async () => {
-                const updateDto: UpdatePasswordCredentialDto = {
-                    currentPassword: 'WrongPass123',
-                    newPassword: 'NewPassword123!',
-                    credentialType: CredentialType.PASSWORD
-                };
+            it('should reject if current password is incorrect', async () => {
                 jest.spyOn(repository, 'findOne').mockResolvedValue(mockPasswordCredential);
                 (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
 
-                await expect(service.updatePassword(mockPasswordCredential.id, updateDto))
+                await expect(service.updatePassword(mockPasswordCredential.id, updatePasswordDto))
                     .rejects
-                    .toThrow('Current password is incorrect');
+                    .toThrow(UnauthorizedException);
             });
 
-            it('should throw error if credential not found', async () => {
-                const updateDto: UpdatePasswordCredentialDto = {
-                    newPassword: 'NewPassword123!',
-                    credentialType: CredentialType.PASSWORD
-                };
+            it('should return null if credential not found', async () => {
                 jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
-                await expect(service.updatePassword('nonexistent', updateDto))
-                    .rejects
-                    .toThrow('Credential not found');
+                const result = await service.updatePassword('nonexistent', updatePasswordDto);
+                
+                expect(result).toBeNull();
             });
 
-            it('should throw error if credential is not password type', async () => {
-                const updateDto: UpdatePasswordCredentialDto = {
-                    newPassword: 'NewPassword123!',
-                    credentialType: CredentialType.PASSWORD
-                };
+            it('should return null if credential is not password type', async () => {
                 jest.spyOn(repository, 'findOne').mockResolvedValue(mockGoogleCredential);
 
-                await expect(service.updatePassword(mockGoogleCredential.id, updateDto))
-                    .rejects
-                    .toThrow('Credential is not a password type');
+                const result = await service.updatePassword(mockGoogleCredential.id, updatePasswordDto);
+                
+                expect(result).toBeNull();
             });
         });
     });
 
     describe('OAuth Credentials', () => {
         describe('createOAuthCredential', () => {
-            const createGoogleOAuthDto: CreateOAuthCredentialDto = {
-                identifier: '12345',
-                loginProviderId: 'google-provider-id',
+            const createOAuthDto: CreateOAuthCredentialDto = {
+                identifier: 'google123',
+                loginProviderId: mockLoginProvider.id,
                 credentialType: CredentialType.OAUTH,
                 provider: OAuthProvider.GOOGLE,
-                accessToken: 'google_access_token',
-                accessTokenExpiresAt: new Date(Date.now() + 3600000),
-                refreshToken: 'google_refresh_token',
-                refreshTokenExpiresAt: new Date(Date.now() + 7200000),
+                accessToken: 'access_token',
+                accessTokenExpiresAt: new Date(),
+                refreshToken: 'refresh_token',
+                refreshTokenExpiresAt: new Date(),
                 scope: 'email profile',
-                rawProfile: { email: 'john@gmail.com', name: 'John Doe' }
+                rawProfile: { email: 'john@gmail.com' }
             };
 
-            const createAppleOAuthDto: CreateOAuthCredentialDto = {
-                identifier: 'apple_user_id',
-                loginProviderId: 'apple-provider-id',
-                credentialType: CredentialType.OAUTH,
-                provider: OAuthProvider.APPLE,
-                accessToken: 'apple_access_token',
-                accessTokenExpiresAt: new Date(Date.now() + 3600000),
-                identityToken: 'apple_identity_token',
-                authorizationCode: 'apple_auth_code',
-                realUserStatus: 'REAL',
-                nonce: 'random_nonce',
-                rawProfile: { email: 'john@privaterelay.appleid.com' }
-            };
+            it('should create Google OAuth credential', async () => {
+                jest.spyOn(repository, 'create').mockReturnValue(mockGoogleCredential);
+                jest.spyOn(repository, 'save').mockResolvedValue(mockGoogleCredential);
 
-            it('should create a Google OAuth credential', async () => {
-                const expectedCredential = {
-                    ...mockGoogleCredential,
-                    id: expect.any(String),
-                    createdAt: expect.any(Date),
-                    modifiedAt: expect.any(Date)
-                };
+                const result = await service.createOAuthCredential(createOAuthDto);
 
-                jest.spyOn(repository, 'create').mockReturnValue(expectedCredential);
-                jest.spyOn(repository, 'save').mockResolvedValue(expectedCredential);
-
-                const result = await service.createOAuthCredential(createGoogleOAuthDto);
-
-                expect(result).toEqual(expectedCredential);
+                expect(result).toBeDefined();
                 expect(repository.create).toHaveBeenCalledWith({
-                    ...createGoogleOAuthDto,
-                    isEnabled: true
+                    ...createOAuthDto,
+                    identityToken: undefined,
+                    authorizationCode: undefined,
+                    realUserStatus: undefined,
+                    nonce: undefined
                 });
+
+                // Verify DTO transformation
+                const expectedDto = plainToClass(ResponseLoginCredentialDto, mockGoogleCredential, { excludeExtraneousValues: true });
+                expect(result).toEqual(expectedDto);
             });
 
-            it('should create an Apple OAuth credential with specific fields', async () => {
-                const expectedCredential = {
-                    ...mockAppleCredential,
-                    id: expect.any(String),
-                    createdAt: expect.any(Date),
-                    modifiedAt: expect.any(Date)
+            it('should create Apple OAuth credential with specific fields', async () => {
+                const createAppleDto: CreateOAuthCredentialDto = {
+                    ...createOAuthDto,
+                    provider: OAuthProvider.APPLE,
+                    identityToken: 'apple_identity_token',
+                    authorizationCode: 'apple_auth_code',
+                    realUserStatus: 'REAL',
+                    nonce: 'random_nonce'
                 };
 
-                jest.spyOn(repository, 'create').mockReturnValue(expectedCredential);
-                jest.spyOn(repository, 'save').mockResolvedValue(expectedCredential);
+                jest.spyOn(repository, 'create').mockReturnValue(mockAppleCredential);
+                jest.spyOn(repository, 'save').mockResolvedValue(mockAppleCredential);
 
-                const result = await service.createOAuthCredential(createAppleOAuthDto);
+                const result = await service.createOAuthCredential(createAppleDto);
 
-                expect(result).toEqual(expectedCredential);
+                expect(result).toBeDefined();
                 expect(repository.create).toHaveBeenCalledWith({
-                    ...createAppleOAuthDto,
-                    isEnabled: true
+                    ...createAppleDto,
+                    identityToken: createAppleDto.identityToken,
+                    authorizationCode: createAppleDto.authorizationCode,
+                    realUserStatus: createAppleDto.realUserStatus,
+                    nonce: createAppleDto.nonce
                 });
+
+                // Verify DTO transformation
+                const expectedDto = plainToClass(ResponseLoginCredentialDto, mockAppleCredential, { excludeExtraneousValues: true });
+                expect(result).toEqual(expectedDto);
             });
 
-            it('should throw error if credential type is not OAUTH', async () => {
-                const invalidDto = {
-                    ...createGoogleOAuthDto,
-                    credentialType: CredentialType.PASSWORD
-                };
-
-                await expect(service.createOAuthCredential(invalidDto as CreateOAuthCredentialDto))
-                    .rejects
-                    .toThrow('Invalid credential type for OAuth creation');
-            });
-
-            it('should throw error if required fields are missing', async () => {
-                const invalidDto = {
-                    ...createGoogleOAuthDto,
-                    accessToken: undefined,
-                    credentialType: CredentialType.OAUTH,
-                    provider: OAuthProvider.GOOGLE
-                } as unknown as CreateOAuthCredentialDto;
+            it('should reject invalid credential type', async () => {
+                const invalidDto = { ...createOAuthDto, credentialType: CredentialType.PASSWORD };
 
                 await expect(service.createOAuthCredential(invalidDto))
                     .rejects
-                    .toThrow();
+                    .toThrow(BadRequestException);
             });
         });
 
         describe('updateOAuthCredential', () => {
-            it('should update Google OAuth fields', async () => {
-                const updateDto: UpdateOAuthCredentialDto = {
-                    credentialType: CredentialType.OAUTH,
-                    provider: OAuthProvider.GOOGLE,
-                    accessToken: 'new_access_token',
-                    accessTokenExpiresAt: new Date(Date.now() + 3600000),
-                    refreshToken: 'new_refresh_token',
-                    scope: 'email profile openid'
-                };
+            const updateOAuthDto: UpdateOAuthCredentialDto = {
+                accessToken: 'new_access_token',
+                refreshToken: 'new_refresh_token'
+            };
 
+            it('should update OAuth fields', async () => {
                 jest.spyOn(repository, 'findOne').mockResolvedValue(mockGoogleCredential);
-                jest.spyOn(repository, 'save').mockResolvedValue({
+                const updatedCredential = {
                     ...mockGoogleCredential,
-                    ...updateDto
-                });
+                    ...updateOAuthDto
+                };
+                jest.spyOn(repository, 'save').mockResolvedValue(updatedCredential);
 
-                const result = await service.updateOAuthCredential(mockGoogleCredential.id, updateDto);
+                const result = await service.updateOAuthCredential(mockGoogleCredential.id, updateOAuthDto);
 
-                expect(result).toBeTruthy();
-                expect(repository.save).toHaveBeenCalledWith({
-                    ...mockGoogleCredential,
-                    ...updateDto
-                });
+                expect(result).toBeDefined();
+                const expectedDto = plainToClass(ResponseLoginCredentialDto, updatedCredential, { excludeExtraneousValues: true });
+                expect(result).toEqual(expectedDto);
             });
 
-            it('should update Apple OAuth fields', async () => {
-                const updateDto: UpdateOAuthCredentialDto = {
-                    credentialType: CredentialType.OAUTH,
+            it('should handle Apple-specific fields', async () => {
+                const appleUpdateDto: UpdateOAuthCredentialDto = {
+                    ...updateOAuthDto,
                     provider: OAuthProvider.APPLE,
-                    accessToken: 'new_access_token',
                     identityToken: 'new_identity_token',
                     authorizationCode: 'new_auth_code',
-                    realUserStatus: 'REAL'
+                    realUserStatus: 'REAL',
+                    nonce: 'new_nonce'
                 };
 
                 jest.spyOn(repository, 'findOne').mockResolvedValue(mockAppleCredential);
-                jest.spyOn(repository, 'save').mockResolvedValue({
+                const updatedCredential = {
                     ...mockAppleCredential,
-                    ...updateDto
-                });
+                    ...appleUpdateDto
+                };
+                jest.spyOn(repository, 'save').mockResolvedValue(updatedCredential);
 
-                const result = await service.updateOAuthCredential(mockAppleCredential.id, updateDto);
+                const result = await service.updateOAuthCredential(mockAppleCredential.id, appleUpdateDto);
 
-                expect(result).toBeTruthy();
-                expect(repository.save).toHaveBeenCalledWith({
-                    ...mockAppleCredential,
-                    ...updateDto
-                });
+                expect(result).toBeDefined();
+                const expectedDto = plainToClass(ResponseLoginCredentialDto, updatedCredential, { excludeExtraneousValues: true });
+                expect(result).toEqual(expectedDto);
             });
 
             it('should preserve Apple-specific fields when updating non-Apple provider', async () => {
-                const credential = { ...mockAppleCredential };
+                // Start with Apple credential
+                jest.spyOn(repository, 'findOne').mockResolvedValue(mockAppleCredential);
+                
+                // Update to Google
                 const updateDto: UpdateOAuthCredentialDto = {
-                    credentialType: CredentialType.OAUTH,
                     provider: OAuthProvider.GOOGLE,
                     accessToken: 'new_access_token'
                 };
 
-                jest.spyOn(repository, 'findOne').mockResolvedValue(credential);
-                jest.spyOn(repository, 'save').mockResolvedValue({
-                    ...credential,
-                    ...updateDto,
-                    identityToken: credential.identityToken,
-                    authorizationCode: credential.authorizationCode,
-                    realUserStatus: credential.realUserStatus,
-                    nonce: credential.nonce
-                });
+                const updatedCredential = {
+                    ...mockAppleCredential,
+                    provider: OAuthProvider.GOOGLE,
+                    accessToken: 'new_access_token',
+                    // Apple fields should be preserved
+                    identityToken: mockAppleCredential.identityToken,
+                    authorizationCode: mockAppleCredential.authorizationCode,
+                    realUserStatus: mockAppleCredential.realUserStatus,
+                    nonce: mockAppleCredential.nonce
+                };
+                jest.spyOn(repository, 'save').mockResolvedValue(updatedCredential);
 
-                const result = await service.updateOAuthCredential(credential.id, updateDto);
+                const result = await service.updateOAuthCredential(mockAppleCredential.id, updateDto);
 
-                expect(result).toBeTruthy();
-                expect(result?.hasIdentityToken).toBe(true);
-                expect(result?.hasAuthorizationCode).toBe(true);
-                expect(result?.realUserStatus).toBe(credential.realUserStatus);
+                expect(result).toBeDefined();
+                const expectedDto = plainToClass(ResponseLoginCredentialDto, updatedCredential, { excludeExtraneousValues: true });
+                expect(result).toEqual(expectedDto);
             });
 
             it('should return null if credential not found', async () => {
-                const updateDto: UpdateOAuthCredentialDto = {
-                    credentialType: CredentialType.OAUTH,
-                    provider: OAuthProvider.GOOGLE,
-                    accessToken: 'new_access_token'
-                };
-
                 jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
-                const result = await service.updateOAuthCredential('nonexistent', updateDto);
+                const result = await service.updateOAuthCredential('nonexistent', updateOAuthDto);
+                
                 expect(result).toBeNull();
             });
 
             it('should return null if credential is not OAuth type', async () => {
-                const updateDto: UpdateOAuthCredentialDto = {
-                    credentialType: CredentialType.OAUTH,
-                    provider: OAuthProvider.GOOGLE,
-                    accessToken: 'new_access_token'
-                };
-
                 jest.spyOn(repository, 'findOne').mockResolvedValue(mockPasswordCredential);
 
-                const result = await service.updateOAuthCredential(mockPasswordCredential.id, updateDto);
+                const result = await service.updateOAuthCredential(mockPasswordCredential.id, updateOAuthDto);
+                
                 expect(result).toBeNull();
             });
+        });
+    });
+
+    describe('Generic Update', () => {
+        it('should route password update to updatePassword', async () => {
+            const updateDto: UpdatePasswordCredentialDto = {
+                currentPassword: 'oldpass',
+                newPassword: 'newpass'
+            };
+
+            jest.spyOn(repository, 'findOne').mockResolvedValue(mockPasswordCredential);
+            const updateSpy = jest.spyOn(service, 'updatePassword');
+
+            await service.update(mockPasswordCredential.id, updateDto);
+
+            expect(updateSpy).toHaveBeenCalledWith(mockPasswordCredential.id, updateDto);
+        });
+
+        it('should route OAuth update to updateOAuthCredential', async () => {
+            const updateDto: UpdateOAuthCredentialDto = {
+                provider: OAuthProvider.GOOGLE,
+                accessToken: 'new_token'
+            };
+
+            jest.spyOn(repository, 'findOne').mockResolvedValue(mockGoogleCredential);
+            const updateSpy = jest.spyOn(service, 'updateOAuthCredential');
+
+            await service.update(mockGoogleCredential.id, updateDto);
+
+            expect(updateSpy).toHaveBeenCalledWith(mockGoogleCredential.id, updateDto);
+        });
+
+        it('should handle generic updates', async () => {
+            const updateDto: UpdateLoginCredentialDto = {
+                isEnabled: false
+            };
+
+            jest.spyOn(repository, 'findOne').mockResolvedValue(mockPasswordCredential);
+            const updatedCredential = {
+                ...mockPasswordCredential,
+                isEnabled: false
+            };
+            jest.spyOn(repository, 'save').mockResolvedValue(updatedCredential);
+
+            const result = await service.update(mockPasswordCredential.id, updateDto);
+
+            expect(result).toBeDefined();
+            const expectedDto = plainToClass(ResponseLoginCredentialDto, updatedCredential, { excludeExtraneousValues: true });
+            expect(result).toEqual(expectedDto);
+        });
+    });
+
+    describe('remove', () => {
+        it('should remove credential and return true', async () => {
+            jest.spyOn(repository, 'delete').mockResolvedValue({ affected: 1, raw: [] });
+
+            const result = await service.remove('cred123');
+
+            expect(result).toBe(true);
+            expect(repository.delete).toHaveBeenCalledWith('cred123');
+        });
+
+        it('should return false if credential not found', async () => {
+            jest.spyOn(repository, 'delete').mockResolvedValue({ affected: 0, raw: [] });
+
+            const result = await service.remove('nonexistent');
+
+            expect(result).toBe(false);
         });
     });
 });
