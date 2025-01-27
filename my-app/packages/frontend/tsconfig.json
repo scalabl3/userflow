@@ -2,7 +2,11 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "jsx": "preserve",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "module": "esnext",
     "moduleResolution": "node",
     "noEmit": true,
@@ -11,11 +15,22 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "allowJs": true,
+    "isolatedModules": true
   },
   "references": [
-    { "path": "../shared" }
+    {
+      "path": "../shared"
+    }
   ],
-  "include": ["src/**/*", "next-env.d.ts"],
-  "exclude": ["node_modules", ".next", "out"]
-} 
+  "include": [
+    "src/**/*",
+    "next-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out"
+  ]
+}
