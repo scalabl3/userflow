@@ -1,8 +1,13 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { OrganizationService } from '../services/OrganizationService';
-import { CreateOrganizationDto } from '@my-app/shared/src/dtos/Organization/CreateOrganizationDto';
-import { UpdateOrganizationDto } from '@my-app/shared/src/dtos/Organization/UpdateOrganizationDto';
+import { CreateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/CreateOrganizationDto';
+import { UpdateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/UpdateOrganizationDto';
 import { Organization } from '../models/Organization';
+
+interface ServiceError {
+    message: string;
+    status?: number;
+}
 
 @Controller('organizations')
 export class OrganizationController {
@@ -13,8 +18,16 @@ export class OrganizationController {
      * Retrieve a list of organizations
      */
     @Get()
-    async getAllOrganizations(): Promise<Organization[]> {
-        return this.organizationService.getAllOrganizations();
+    async findAll(): Promise<Organization[]> {
+        try {
+            return await this.organizationService.findAll();
+        } catch (error) {
+            const serviceError = error as ServiceError;
+            throw new HttpException(
+                serviceError.message || 'Internal server error',
+                serviceError.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     /**
@@ -22,11 +35,15 @@ export class OrganizationController {
      * Create a new organization
      */
     @Post()
-    async createOrganization(@Body() createOrganizationDto: CreateOrganizationDto): Promise<Organization> {
+    async create(@Body() createOrganizationDto: CreateOrganizationDto): Promise<Organization> {
         try {
-            return await this.organizationService.createOrganization(createOrganizationDto);
+            return await this.organizationService.create(createOrganizationDto);
         } catch (error) {
-            throw new HttpException('Failed to create organization', HttpStatus.INTERNAL_SERVER_ERROR);
+            const serviceError = error as ServiceError;
+            throw new HttpException(
+                serviceError.message || 'Internal server error',
+                serviceError.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -35,11 +52,19 @@ export class OrganizationController {
      * Retrieve a single organization by ID
      */
     @Get(':id')
-    async getOrganizationById(@Param('id') id: string): Promise<Organization> {
+    async findOne(@Param('id') id: string): Promise<Organization> {
         try {
-            return await this.organizationService.getOrganizationById(id);
+            const organization = await this.organizationService.findOne(id);
+            if (!organization) {
+                throw new HttpException('Organization not found', HttpStatus.NOT_FOUND);
+            }
+            return organization;
         } catch (error) {
-            throw new HttpException(error.message, error.status || HttpStatus.INTERNAL_SERVER_ERROR);
+            const serviceError = error as ServiceError;
+            throw new HttpException(
+                serviceError.message || 'Internal server error',
+                serviceError.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -48,14 +73,19 @@ export class OrganizationController {
      * Update an existing organization
      */
     @Put(':id')
-    async updateOrganization(
-        @Param('id') id: string,
-        @Body() updateOrganizationDto: UpdateOrganizationDto,
-    ): Promise<Organization> {
+    async update(@Param('id') id: string, @Body() updateOrganizationDto: UpdateOrganizationDto): Promise<Organization> {
         try {
-            return await this.organizationService.updateOrganization(id, updateOrganizationDto);
+            const organization = await this.organizationService.update(id, updateOrganizationDto);
+            if (!organization) {
+                throw new HttpException('Organization not found', HttpStatus.NOT_FOUND);
+            }
+            return organization;
         } catch (error) {
-            throw new HttpException(error.message, error.status || HttpStatus.INTERNAL_SERVER_ERROR);
+            const serviceError = error as ServiceError;
+            throw new HttpException(
+                serviceError.message || 'Internal server error',
+                serviceError.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -64,12 +94,19 @@ export class OrganizationController {
      * Delete an organization by ID
      */
     @Delete(':id')
-    async deleteOrganization(@Param('id') id: string): Promise<{ success: boolean }> {
+    async remove(@Param('id') id: string): Promise<{ message: string }> {
         try {
-            await this.organizationService.deleteOrganization(id);
-            return { success: true };
+            const result = await this.organizationService.remove(id);
+            if (!result) {
+                throw new HttpException('Organization not found', HttpStatus.NOT_FOUND);
+            }
+            return { message: 'Organization deleted successfully' };
         } catch (error) {
-            throw new HttpException(error.message, error.status || HttpStatus.INTERNAL_SERVER_ERROR);
+            const serviceError = error as ServiceError;
+            throw new HttpException(
+                serviceError.message || 'Internal server error',
+                serviceError.status || HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 }
