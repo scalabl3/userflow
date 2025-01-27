@@ -13,7 +13,7 @@ describe('UserController', () => {
     let controller: UserController;
     let service: UserService;
 
-    const mockOrg = new Organization();
+    let mockOrg = new Organization();
     mockOrg.id = 'org123';
     mockOrg.name = 'Test Org';
     mockOrg.visible = true;
@@ -21,13 +21,12 @@ describe('UserController', () => {
     mockOrg.createdAt = new Date();
     mockOrg.modifiedAt = new Date();
 
-    const mockUser = new User();
+    let mockUser = new User();
     mockUser.id = 'user123';
     mockUser.firstname = 'John';
     mockUser.lastname = 'Doe';
     mockUser.displayname = 'John Doe';
     mockUser.contactEmail = 'john.doe@example.com';
-    mockUser.organization = mockOrg;
     mockUser.organizationId = mockOrg.id;
     mockUser.state = UserState.ACTIVE;
     mockUser.preferences = {

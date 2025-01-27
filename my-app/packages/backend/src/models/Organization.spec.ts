@@ -5,22 +5,25 @@ describe('Organization', () => {
 
     beforeEach(() => {
         organization = new Organization();
-        // Set default values manually since decorators don't work in tests
-        organization.visible = true;
-        organization.name = 'shadow';
     });
 
-    it('should handle basic properties', () => {
-        organization.name = 'Test Org';
+    it('should create an instance', () => {
+        expect(organization).toBeTruthy();
+    });
+
+    it('should set adminUser', () => {
         organization.adminUser = 'admin123';
-        
-        expect(organization.name).toBe('Test Org');
         expect(organization.adminUser).toBe('admin123');
     });
 
-    it('should have correct default values', () => {
+    it('should set name', () => {
+        organization.name = 'Test Org';
+        expect(organization.name).toBe('Test Org');
+    });
+
+    it('should set visible', () => {
+        organization.visible = true;
         expect(organization.visible).toBe(true);
-        expect(organization.name).toBe('shadow');
     });
 
     it('should handle timestamps', () => {

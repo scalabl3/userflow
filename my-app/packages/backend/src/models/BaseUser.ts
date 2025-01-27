@@ -9,7 +9,13 @@ import {
     JoinColumn,
 } from 'typeorm';
 import { LoginCredential } from './LoginCredential';
-import { UserState } from '@my-app/shared/dist/enums/UserState';
+
+export enum UserState {
+    PENDING = 'PENDING',
+    ACTIVE = 'ACTIVE',
+    SUSPENDED = 'SUSPENDED',
+    DEACTIVATED = 'DEACTIVATED'
+}
 
 @Entity()
 export class BaseUser {
@@ -31,14 +37,14 @@ export class BaseUser {
     @Column({
         type: 'varchar',
         enum: UserState,
-        default: UserState.PENDING,
+        default: UserState.PENDING
     })
     state!: UserState;
 
     @Column({ type: 'uuid', nullable: true })
     primaryLoginCredentialId?: string;
 
-    @ManyToOne(() => LoginCredential, { nullable: true, onDelete: 'SET NULL' })
+    @ManyToOne(() => LoginCredential, { nullable: true })
     @JoinColumn({ name: 'primaryLoginCredentialId' })
     primaryLoginCredential?: LoginCredential;
 

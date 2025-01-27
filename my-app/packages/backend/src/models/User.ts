@@ -1,23 +1,34 @@
-import { Entity, Column, ManyToOne, JoinColumn, BeforeInsert } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { BaseUser } from './BaseUser';
-import { Organization } from './Organization';
 
 @Entity()
 export class User extends BaseUser {
-    @ManyToOne(() => Organization)
-    organization!: Organization;
-   
-    @Column({ nullable: true })
+    @PrimaryGeneratedColumn('uuid')
+    id!: string;
+
+    @Column({ type: 'varchar', unique: true })
+    username!: string;
+
+    @Column({ type: 'varchar', unique: true })
+    email!: string;
+
+    @Column({ type: 'boolean', default: false })
+    isEmailVerified!: boolean;
+
+    @Column({ type: 'varchar', nullable: true })
+    phoneNumber?: string;
+
+    @Column({ type: 'boolean', default: false })
+    isPhoneVerified!: boolean;
+
+    @Column({ type: 'boolean', default: true })
+    isActive!: boolean;
+
+    @Column({ type: 'uuid' })
     organizationId!: string;
 
-    // Profile will be implemented later
-    @Column({ nullable: true })
-    profileId!: string;
-
-    @Column('simple-json', { 
-        nullable: true
-    })
-    preferences!: {
+    @Column('simple-json', { nullable: true })
+    preferences?: {
         theme?: 'light' | 'dark';
         notifications?: {
             email?: boolean;
@@ -25,7 +36,12 @@ export class User extends BaseUser {
         };
     };
 
-    @BeforeInsert()
+    @CreateDateColumn()
+    createdAt!: Date;
+
+    @UpdateDateColumn()
+    modifiedAt!: Date;
+
     setDefaultPreferences() {
         if (!this.preferences) {
             this.preferences = {

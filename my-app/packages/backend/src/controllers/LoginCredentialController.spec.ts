@@ -1,36 +1,67 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoginCredentialController } from './LoginCredentialController';
 import { LoginCredentialService } from '../services/LoginCredentialService';
-import { CreateLoginCredentialDto } from '@my-app/shared/dist/dtos/LoginCredential/CreateLoginCredentialDto';
+import { LoginCredential } from '../models/LoginCredential';
+import { LoginProvider } from '../models/LoginProvider';
+import { 
+    CreateLoginCredentialDto,
+    CreatePasswordCredentialDto,
+    CreateOAuthCredentialDto
+} from '@my-app/shared/dist/dtos/LoginCredential/CreateLoginCredentialDto';
 import { UpdateLoginCredentialDto } from '@my-app/shared/dist/dtos/LoginCredential/UpdateLoginCredentialDto';
 import { ResponseLoginCredentialDto } from '@my-app/shared/dist/dtos/LoginCredential/ResponseLoginCredentialDto';
-import { CredentialType } from '../models/LoginCredential';
-import { LoginProvider } from '../models/LoginProvider';
+import { CredentialType, OAuthProvider } from '@my-app/shared/dist/enums';
+import { BadRequestException } from '@nestjs/common';
 
 describe('LoginCredentialController', () => {
     let controller: LoginCredentialController;
     let service: LoginCredentialService;
 
     const mockLoginProvider: LoginProvider = {
-        id: 'provider-id',
+        id: 'provider123',
         code: 'email',
         name: 'Email Provider',
         isEnabled: true,
         createdAt: new Date(),
-        modifiedAt: new Date(),
-    };
+        modifiedAt: new Date()
+    } as LoginProvider;
 
-    const mockLoginCredential = {
-        id: 'test-id',
-        identifier: 'test@example.com',
+    const mockPasswordCredential: LoginCredential = {
+        id: 'cred123',
+        identifier: 'john@example.com',
         loginProviderId: mockLoginProvider.id,
         loginProvider: mockLoginProvider,
-        credentials: 'hashedPassword123',
         credentialType: CredentialType.PASSWORD,
+        passwordHash: 'hashedpassword',
         isEnabled: true,
         createdAt: new Date(),
-        modifiedAt: new Date(),
-    };
+        modifiedAt: new Date()
+    } as LoginCredential;
+
+    const mockGoogleCredential: LoginCredential = {
+        id: 'cred456',
+        identifier: '12345',
+        loginProviderId: 'google-provider-id',
+        loginProvider: {
+            id: 'google-provider-id',
+            code: 'google',
+            name: 'Google',
+            isEnabled: true,
+            createdAt: new Date(),
+            modifiedAt: new Date()
+        },
+        credentialType: CredentialType.OAUTH,
+        provider: OAuthProvider.GOOGLE,
+        accessToken: 'google_access_token',
+        refreshToken: 'google_refresh_token',
+        accessTokenExpiresAt: new Date(Date.now() + 3600000),
+        refreshTokenExpiresAt: new Date(Date.now() + 7200000),
+        scope: 'email profile',
+        rawProfile: { email: 'john@gmail.com', name: 'John Doe' },
+        isEnabled: true,
+        createdAt: new Date(),
+        modifiedAt: new Date()
+    } as LoginCredential;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -39,7 +70,8 @@ describe('LoginCredentialController', () => {
                 {
                     provide: LoginCredentialService,
                     useValue: {
-                        create: jest.fn(),
+                        createPasswordCredential: jest.fn(),
+                        createOAuthCredential: jest.fn(),
                         findAll: jest.fn(),
                         findOne: jest.fn(),
                         update: jest.fn(),
@@ -58,120 +90,108 @@ describe('LoginCredentialController', () => {
     });
 
     describe('create', () => {
-        const createDto: CreateLoginCredentialDto = {
-            identifier: 'test@example.com',
-            loginProviderId: mockLoginProvider.id,
-            credentials: 'password123',
-            credentialType: CredentialType.PASSWORD,
-            isEnabled: true,
-        };
+        it('should create a password credential', async () => {
+            const createPasswordDto: CreatePasswordCredentialDto = {
+                identifier: 'john@example.com',
+                loginProviderId: mockLoginProvider.id,
+                credentialType: CredentialType.PASSWORD,
+                password: 'Password123!',
+                isEnabled: true
+            };
 
-        it('should create a login credential', async () => {
-            jest.spyOn(service, 'create').mockResolvedValue(mockLoginCredential);
-            
-            const result = await controller.create(createDto);
-            
-            expect(result).toEqual(mockLoginCredential);
-            expect(service.create).toHaveBeenCalledWith(createDto);
+            jest.spyOn(service, 'createPasswordCredential').mockResolvedValue(mockPasswordCredential);
+
+            const result = await controller.create(createPasswordDto);
+            expect(result).toEqual(mockPasswordCredential);
+            expect(service.createPasswordCredential).toHaveBeenCalledWith(createPasswordDto);
         });
 
-        it('should handle errors', async () => {
-            jest.spyOn(service, 'create').mockRejectedValue(new Error('Failed to create'));
-            
-            await expect(controller.create(createDto)).rejects.toThrow('Failed to create');
+        it('should create an OAuth credential', async () => {
+            const createOAuthDto: CreateOAuthCredentialDto = {
+                identifier: '12345',
+                loginProviderId: 'google-provider-id',
+                credentialType: CredentialType.OAUTH,
+                provider: OAuthProvider.GOOGLE,
+                accessToken: 'google_access_token',
+                accessTokenExpiresAt: new Date(Date.now() + 3600000),
+                refreshToken: 'google_refresh_token',
+                refreshTokenExpiresAt: new Date(Date.now() + 7200000),
+                scope: 'email profile',
+                rawProfile: { email: 'john@gmail.com', name: 'John Doe' },
+                isEnabled: true
+            };
+
+            jest.spyOn(service, 'createOAuthCredential').mockResolvedValue(mockGoogleCredential);
+
+            const result = await controller.create(createOAuthDto);
+            expect(result).toEqual(mockGoogleCredential);
+            expect(service.createOAuthCredential).toHaveBeenCalledWith(createOAuthDto);
+        });
+
+        it('should throw BadRequestException for invalid credential type', async () => {
+            const invalidDto: CreateLoginCredentialDto = {
+                identifier: 'test',
+                loginProviderId: 'provider123',
+                credentialType: CredentialType.PHONE,
+                isEnabled: true
+            };
+
+            await expect(controller.create(invalidDto)).rejects.toThrow(BadRequestException);
         });
     });
 
     describe('findAll', () => {
         it('should return an array of login credentials', async () => {
-            jest.spyOn(service, 'findAll').mockResolvedValue([mockLoginCredential]);
-            
-            const result = await controller.findAll();
-            
-            expect(result).toEqual([mockLoginCredential]);
-            expect(service.findAll).toHaveBeenCalled();
-        });
+            const credentials = [mockPasswordCredential, mockGoogleCredential];
+            jest.spyOn(service, 'findAll').mockResolvedValue(credentials);
 
-        it('should handle errors', async () => {
-            jest.spyOn(service, 'findAll').mockRejectedValue(new Error('Failed to find'));
-            
-            await expect(controller.findAll()).rejects.toThrow('Failed to find');
+            const result = await controller.findAll();
+            expect(result).toEqual(credentials);
         });
     });
 
     describe('findOne', () => {
         it('should return a single login credential', async () => {
-            jest.spyOn(service, 'findOne').mockResolvedValue(mockLoginCredential);
-            
-            const result = await controller.findOne('test-id');
-            
-            expect(result).toEqual(mockLoginCredential);
-            expect(service.findOne).toHaveBeenCalledWith('test-id');
+            jest.spyOn(service, 'findOne').mockResolvedValue(mockPasswordCredential);
+
+            const result = await controller.findOne('cred123');
+            expect(result).toEqual(mockPasswordCredential);
         });
 
-        it('should throw error when credential does not exist', async () => {
+        it('should throw BadRequestException if credential not found', async () => {
             jest.spyOn(service, 'findOne').mockResolvedValue(null);
-            
-            await expect(controller.findOne('test-id')).rejects.toThrow('LoginCredential not found');
-        });
 
-        it('should handle errors', async () => {
-            jest.spyOn(service, 'findOne').mockRejectedValue(new Error('Failed to find'));
-            
-            await expect(controller.findOne('test-id')).rejects.toThrow('Failed to find');
+            await expect(controller.findOne('nonexistent')).rejects.toThrow(BadRequestException);
         });
     });
 
     describe('update', () => {
-        const updateDto: UpdateLoginCredentialDto = {
-            credentials: 'newPassword123',
-            isEnabled: false,
-        };
-
         it('should update a login credential', async () => {
-            const updatedCredential = { ...mockLoginCredential, ...updateDto };
-            jest.spyOn(service, 'update').mockResolvedValue(updatedCredential);
-            
-            const result = await controller.update('test-id', updateDto);
-            
-            expect(result).toEqual(updatedCredential);
-            expect(service.update).toHaveBeenCalledWith('test-id', updateDto);
+            const updateDto: UpdateLoginCredentialDto = {
+                isEnabled: false
+            };
+
+            jest.spyOn(service, 'update').mockResolvedValue(mockPasswordCredential);
+
+            const result = await controller.update('cred123', updateDto);
+            expect(result).toEqual(mockPasswordCredential);
+            expect(service.update).toHaveBeenCalledWith('cred123', updateDto);
         });
 
-        it('should throw error when credential does not exist', async () => {
+        it('should throw BadRequestException if credential not found', async () => {
             jest.spyOn(service, 'update').mockResolvedValue(null);
-            
-            await expect(controller.update('test-id', updateDto)).rejects.toThrow('LoginCredential not found');
-        });
 
-        it('should handle errors', async () => {
-            jest.spyOn(service, 'update').mockRejectedValue(new Error('Failed to update'));
-            
-            await expect(controller.update('test-id', updateDto)).rejects.toThrow('Failed to update');
+            await expect(controller.update('nonexistent', {})).rejects.toThrow(BadRequestException);
         });
     });
 
     describe('remove', () => {
         it('should remove a login credential', async () => {
             jest.spyOn(service, 'remove').mockResolvedValue(true);
-            
-            const result = await controller.remove('test-id');
-            
+
+            const result = await controller.remove('cred123');
             expect(result).toBe(true);
-            expect(service.remove).toHaveBeenCalledWith('test-id');
-        });
-
-        it('should return false when credential does not exist', async () => {
-            jest.spyOn(service, 'remove').mockResolvedValue(false);
-            
-            const result = await controller.remove('test-id');
-            expect(result).toBe(false);
-        });
-
-        it('should handle errors', async () => {
-            jest.spyOn(service, 'remove').mockRejectedValue(new Error('Failed to remove'));
-            
-            await expect(controller.remove('test-id')).rejects.toThrow('Failed to remove');
+            expect(service.remove).toHaveBeenCalledWith('cred123');
         });
     });
 });

@@ -1,6 +1,7 @@
 import { CreateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/CreateOrganizationDto';
 import { UpdateOrganizationDto } from '@my-app/shared/src/dtos/Organization/UpdateOrganizationDto';
 import { Organization } from '../models/Organization';
+import { User } from '../models/User';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -55,7 +56,8 @@ describe('OrganizationService', () => {
         id: 'org123',
         name: 'Test Organization',
         visible: true,
-        adminUser: 'admin-user-id',
+        adminUser: 'user123',
+        users: [],
         createdAt: new Date(),
         modifiedAt: new Date()
     };
@@ -66,6 +68,10 @@ describe('OrganizationService', () => {
                 OrganizationService,
                 {
                     provide: getRepositoryToken(Organization),
+                    useFactory: mockRepository,
+                },
+                {
+                    provide: getRepositoryToken(User),
                     useFactory: mockRepository,
                 },
             ],

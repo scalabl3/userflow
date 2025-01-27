@@ -10,27 +10,38 @@ describe('User', () => {
         organization = new Organization();
         organization.id = 'org123';
         organization.name = 'Test Org';
-        organization.visible = true;
         organization.adminUser = 'admin123';
-        organization.createdAt = new Date();
-        organization.modifiedAt = new Date();
+        organization.visible = true;
 
         user = new User();
         user.id = 'user123';
         user.firstname = 'John';
         user.lastname = 'Doe';
         user.displayname = 'John Doe';
-        user.contactEmail = 'john.doe@example.com';
-        user.state = UserState.ACTIVE;
-        user.organization = organization;
+        user.contactEmail = 'john@example.com';
         user.organizationId = organization.id;
-        user.createdAt = new Date();
-        user.modifiedAt = new Date();
+        user.state = UserState.ACTIVE;
+        user.preferences = {
+            theme: 'light',
+            notifications: {
+                email: true,
+                push: true
+            }
+        };
     });
 
-    it('should create a user instance', () => {
-        expect(user).toBeDefined();
-        expect(user).toBeInstanceOf(User);
+    it('should create an instance', () => {
+        expect(user).toBeTruthy();
+    });
+
+    it('should set basic properties', () => {
+        expect(user.id).toBe('user123');
+        expect(user.firstname).toBe('John');
+        expect(user.lastname).toBe('Doe');
+        expect(user.displayname).toBe('John Doe');
+        expect(user.contactEmail).toBe('john@example.com');
+        expect(user.organizationId).toBe(organization.id);
+        expect(user.state).toBe(UserState.ACTIVE);
     });
 
     it('should inherit from BaseUser', () => {
@@ -44,16 +55,9 @@ describe('User', () => {
         expect(user.modifiedAt).toBeDefined();
     });
 
-    it('should have organization relationship', () => {
-        expect(user.organization).toBeDefined();
-        expect(user.organization).toBe(organization);
+    it('should have organization reference', () => {
+        expect(user.organizationId).toBeDefined();
         expect(user.organizationId).toBe(organization.id);
-    });
-
-    it('should allow null profileId', () => {
-        expect(user.profileId).toBeUndefined();
-        user.profileId = 'profile123';
-        expect(user.profileId).toBe('profile123');
     });
 
     describe('preferences', () => {

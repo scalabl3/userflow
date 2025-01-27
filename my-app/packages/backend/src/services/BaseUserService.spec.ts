@@ -7,7 +7,8 @@ import { CreateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/CreateBaseU
 import { UserState } from '@my-app/shared/dist/enums/UserState';
 import { BadRequestException } from '@nestjs/common';
 import { LoginProvider } from '../models/LoginProvider';
-import { LoginCredential, CredentialType } from '../models/LoginCredential';
+import { LoginCredential } from '../models/LoginCredential';
+import { CredentialType, OAuthProvider } from '@my-app/shared';
 import { mockRepository } from '../test/setup';
 
 describe('BaseUserService', () => {

@@ -7,32 +7,14 @@ import { NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from '@my-app/shared/dist/dtos/User/CreateUserDto';
 import { UpdateUserDto } from '@my-app/shared/dist/dtos/User/UpdateUserDto';
 import { Organization } from '../models/Organization';
+import { UserState } from '@my-app/shared/dist/enums/UserState';
 
 describe('UserService', () => {
     let service: UserService;
     let repository: Repository<User>;
 
-    const mockUser = new User();
-    const mockOrg = new Organization();
-    mockOrg.id = 'org123';
-    mockOrg.name = 'Test Org';
-
-    mockUser.id = 'user123';
-    mockUser.firstname = 'John';
-    mockUser.lastname = 'Doe';
-    mockUser.displayname = 'John Doe';
-    mockUser.contactEmail = 'john.doe@example.com';
-    mockUser.organization = mockOrg;
-    mockUser.organizationId = mockOrg.id;
-    mockUser.preferences = {
-        theme: 'light',
-        notifications: {
-            email: true,
-            push: true
-        }
-    };
-    mockUser.createdAt = new Date();
-    mockUser.modifiedAt = new Date();
+    let mockOrg: Organization;
+    let mockUser: User;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -53,6 +35,29 @@ describe('UserService', () => {
 
         service = module.get<UserService>(UserService);
         repository = module.get<Repository<User>>(getRepositoryToken(User));
+
+        mockOrg = new Organization();
+        mockOrg.id = 'org123';
+        mockOrg.name = 'Test Org';
+        mockOrg.visible = true;
+
+        mockUser = new User();
+        mockUser.id = 'user123';
+        mockUser.firstname = 'John';
+        mockUser.lastname = 'Doe';
+        mockUser.displayname = 'John Doe';
+        mockUser.contactEmail = 'john@example.com';
+        mockUser.organizationId = mockOrg.id;
+        mockUser.state = UserState.ACTIVE;
+        mockUser.preferences = {
+            theme: 'light',
+            notifications: {
+                email: true,
+                push: true
+            }
+        };
+        mockUser.createdAt = new Date();
+        mockUser.modifiedAt = new Date();
     });
 
     it('should be defined', () => {

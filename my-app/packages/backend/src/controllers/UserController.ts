@@ -3,6 +3,7 @@ import { UserService } from '../services/UserService';
 import { CreateUserDto } from '@my-app/shared/dist/dtos/User/CreateUserDto';
 import { UpdateUserDto } from '@my-app/shared/dist/dtos/User/UpdateUserDto';
 import { ResponseUserDto } from '@my-app/shared/dist/dtos/User/ResponseUserDto';
+import { plainToClass } from 'class-transformer';
 
 @Controller('users')
 export class UserController {
@@ -11,17 +12,38 @@ export class UserController {
     @Post()
     @HttpCode(HttpStatus.CREATED)
     async create(@Body() createUserDto: CreateUserDto): Promise<ResponseUserDto> {
-        return this.userService.create(createUserDto);
+        const user = await this.userService.create(createUserDto);
+        return plainToClass(ResponseUserDto, {
+            ...user,
+            preferences: user.preferences || {
+                theme: 'light',
+                notifications: { email: true, push: true }
+            }
+        }, { excludeExtraneousValues: true });
     }
 
     @Get()
     async findAll(): Promise<ResponseUserDto[]> {
-        return this.userService.findAll();
+        const users = await this.userService.findAll();
+        return users.map(user => plainToClass(ResponseUserDto, {
+            ...user,
+            preferences: user.preferences || {
+                theme: 'light',
+                notifications: { email: true, push: true }
+            }
+        }, { excludeExtraneousValues: true }));
     }
 
     @Get(':id')
     async findOne(@Param('id') id: string): Promise<ResponseUserDto> {
-        return this.userService.findOne(id);
+        const user = await this.userService.findOne(id);
+        return plainToClass(ResponseUserDto, {
+            ...user,
+            preferences: user.preferences || {
+                theme: 'light',
+                notifications: { email: true, push: true }
+            }
+        }, { excludeExtraneousValues: true });
     }
 
     @Put(':id')
@@ -29,7 +51,14 @@ export class UserController {
         @Param('id') id: string,
         @Body() updateUserDto: UpdateUserDto
     ): Promise<ResponseUserDto> {
-        return this.userService.update(id, updateUserDto);
+        const user = await this.userService.update(id, updateUserDto);
+        return plainToClass(ResponseUserDto, {
+            ...user,
+            preferences: user.preferences || {
+                theme: 'light',
+                notifications: { email: true, push: true }
+            }
+        }, { excludeExtraneousValues: true });
     }
 
     @Delete(':id')
