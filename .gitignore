@@ -15,3 +15,6 @@ dist/
 
 # SQLite database files
 *.sqlite
+
+00-AI-Init/
+01-meta/
