@@ -11,10 +11,10 @@ export class Organization {
     @Column({ default: true })
     visible: boolean;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     createdAt: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
     modifiedAt: Date;
 
     @Column({ type: 'uuid' })
