@@ -1,0 +1,6 @@
+export enum UserState {
+    PENDING = 'PENDING',
+    ACTIVE = 'ACTIVE',
+    SUSPENDED = 'SUSPENDED',
+    DEACTIVATED = 'DEACTIVATED'
+} 

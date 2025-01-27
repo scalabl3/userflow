@@ -6,12 +6,12 @@ export class LoginProvider {
     id!: string;
 
     @Column({ type: 'varchar', unique: true })
-    code!: string;
+    code!: string;  // e.g., "email", "google", "phone"
 
-    @Column({ type: 'varchar', length: 255 })
-    name!: string;
+    @Column({ type: 'varchar' })
+    name!: string;  // Display name
 
-    @Column({ default: true })
+    @Column({ type: 'boolean', default: true })
     isEnabled!: boolean;
 
     @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
@@ -19,4 +19,4 @@ export class LoginProvider {
 
     @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
     modifiedAt!: Date;
-}
+} 
