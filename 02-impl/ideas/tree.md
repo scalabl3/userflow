@@ -1,0 +1,1 @@
+tree my-app/packages -I node_modules -I dist
