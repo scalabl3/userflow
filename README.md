@@ -10,8 +10,8 @@ A fully AI-generated monorepo implementation with complete MVC architecture, cre
    - Full test coverage and documentation
 
 2. **AI Tools & Models Used**
-   - Cursor IDE + Claude Sonnet 3.5:2024-1022
-   - Aider Architect + GPT4 and o1-mini
+   - `Cursor IDE` + `Claude Sonnet 3.5:2024-1022`
+   - `Aider` Architect + `GPT4`, `o1-mini`, `Claude Sonnet`
    - Coordinated development between Composer and Aider
 
 3. **Development Timeline**
