@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrganizationModule } from './modules/OrganizationModule';
 import { AppDataSource } from './data-source';
+import { LoginProviderModule } from './modules/LoginProviderModule';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { AppDataSource } from './data-source';
     }),
     TypeOrmModule.forRoot(AppDataSource.options),
     OrganizationModule,
+    LoginProviderModule,
   ],
 })
 export class AppModule {}
