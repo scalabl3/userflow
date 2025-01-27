@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BaseUser } from '../models/BaseUser';
@@ -13,9 +13,13 @@ export class BaseUserService {
     ) {}
 
     async create(createBaseUserDto: CreateBaseUserDto): Promise<BaseUser> {
+        if (!createBaseUserDto.primaryLoginCredentialId) {
+            throw new BadRequestException('A user must have at least one login credential');
+        }
+
         const baseUser = this.baseUserRepository.create(createBaseUserDto);
         const savedUser = await this.baseUserRepository.save(baseUser);
-        return savedUser;
+        return this.findOne(savedUser.id) as Promise<BaseUser>;
     }
 
     async findAll(): Promise<BaseUser[]> {
@@ -38,6 +42,18 @@ export class BaseUserService {
     }
 
     async update(id: string, updateBaseUserDto: UpdateBaseUserDto): Promise<BaseUser | null> {
+        const existingUser = await this.findOne(id);
+        if (!existingUser) {
+            return null;
+        }
+
+        // Only check primaryLoginCredentialId if it's included in the update
+        if ('primaryLoginCredentialId' in updateBaseUserDto) {
+            if (updateBaseUserDto.primaryLoginCredentialId === null || updateBaseUserDto.primaryLoginCredentialId === undefined) {
+                throw new BadRequestException('A user must maintain at least one login credential');
+            }
+        }
+
         await this.baseUserRepository.update(id, updateBaseUserDto);
         return this.findOne(id);
     }
