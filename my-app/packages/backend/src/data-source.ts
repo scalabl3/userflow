@@ -2,6 +2,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { Organization } from './models/Organization';
 import { LoginProvider } from './models/LoginProvider';
 import { LoginCredential } from './models/LoginCredential';
+import { BaseUser } from './models/BaseUser';
 import * as dotenv from 'dotenv';
 
 dotenv.config({
@@ -13,7 +14,7 @@ const isSqlite = process.env.DATABASE_TYPE === 'sqlite';
 const sqliteConfig: DataSourceOptions = {
   type: 'sqlite',
   database: process.env.DATABASE_NAME || ':memory:',
-  entities: [Organization, LoginProvider, LoginCredential],
+  entities: [Organization, LoginProvider, LoginCredential, BaseUser],
   migrations: [__dirname + '/migrations/*.ts'],
   synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
   logging: process.env.DATABASE_LOGGING === 'true',
@@ -26,7 +27,7 @@ const postgresConfig: DataSourceOptions = {
   username: process.env.DATABASE_USERNAME || 'postgres',
   password: process.env.DATABASE_PASSWORD || 'postgres',
   database: process.env.DATABASE_NAME || 'my_app',
-  entities: [Organization, LoginProvider, LoginCredential],
+  entities: [Organization, LoginProvider, LoginCredential, BaseUser],
   migrations: [__dirname + '/migrations/*.ts'],
   synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
   logging: process.env.DATABASE_LOGGING === 'true',
