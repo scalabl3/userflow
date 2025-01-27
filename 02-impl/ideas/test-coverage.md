@@ -1,190 +1,83 @@
-# Test Coverage Documentation
+# Test Coverage Overview
 
-## Test Coverage Documentation
+## Model Layer: Building Our Foundation
 
-### Model Layer Tests
+### The LoginCredential Model (92.85% coverage)
+We've thoroughly tested our credential management system, ensuring it handles all aspects of user authentication:
+- We verify that credentials are created correctly with all required information, while gracefully handling optional fields like expiration dates
+- For security, we've tested different types of credentials:
+  * Password credentials that don't expire
+  * Short-lived access tokens (1 hour lifetime)
+  * Long-lived refresh tokens (30 day lifetime)
+- We validate various identifier formats, supporting email addresses, phone numbers, and usernames
+- The system properly tracks creation and modification timestamps
+- By default, credentials are enabled when created
 
-#### LoginCredential Model (92.85% coverage)
-- **Basic Properties**
-  - Instance creation with required fields
-  - Optional fields handling (credentials, expiresAt)
-  - Relationship handling (baseUser, loginProvider)
-  - Timestamps (createdAt, modifiedAt)
-  - Default values (isEnabled)
+### The User Model (91.66% coverage)
+Our User model builds on the BaseUser foundation and adds organization-specific features:
+- We ensure users are properly connected to their organizations
+- Profile linking is validated through the profileId system
+- User preferences are handled intelligently:
+  * New users get sensible defaults (light theme, notifications enabled)
+  * Users can customize their theme and notification settings
+  * The system gracefully handles missing preferences
 
-- **Credential Type Validation**
-  - Password credentials without expiration
-  - Access tokens with short expiration (1 hour)
-  - Refresh tokens with long expiration (30 days)
-  - Expiration date checks (past and future dates)
+### The BaseUser Model (81.81% coverage)
+This foundational model manages core user attributes:
+- Essential information like names and contact details are validated
+- User state transitions are tracked (Pending → Active → Suspended → Deactivated)
+- The system maintains a record of the user's last login
+- Each user can have multiple login credentials, with one designated as primary
 
-- **Identifier Validation**
-  - Email format validation
-  - Phone number format validation
-  - Username format validation
+## Service Layer: Implementing Business Logic
 
-#### User Model (91.66% coverage)
-- **Basic Properties**
-  - Inheritance from BaseUser
-  - Organization relationship
-  - Profile ID handling
-  - Preferences with default values
+### LoginCredentialService (100% coverage)
+Our credential service ensures secure and reliable authentication:
+- Credentials can be created, found, updated, and removed safely
+- We handle edge cases like:
+  * Finding credentials by both ID and provider
+  * Updating partial information
+  * Validating credential types
+  * Managing expiration dates
+- The service gracefully handles missing credentials
 
-- **Business Logic**
-  - BeforeInsert hook for default preferences
-  - Theme preferences (light/dark)
-  - Notification preferences (email/push)
+### LoginProviderService (100% coverage)
+This service manages authentication providers:
+- Providers can be enabled or disabled as needed
+- Each provider has a unique code and friendly name
+- The service prevents duplicate providers
+- Updates and removals are handled safely
 
-#### BaseUser Model (81.81% coverage)
-- **Basic Properties**
-  - Required fields (firstname, lastname, displayname, contactEmail)
-  - Optional fields (lastLoginAt)
-  - State management (PENDING, ACTIVE, SUSPENDED, DEACTIVATED)
-  - Enabled/disabled status
+### BaseUserService (100% coverage)
+The core user management service:
+- Creates users with proper validation of credentials
+- Manages user states throughout their lifecycle
+- Handles primary credential changes
+- Ensures users are never left without login credentials
 
-- **Relationships**
-  - Primary login credential handling
-  - Multiple login credentials management
+## Controller Layer: Managing API Interactions
 
-### Service Layer Tests
+### LoginCredentialController (100% coverage)
+Our API endpoints for credential management:
+- Create new credentials with proper validation
+- Retrieve single or multiple credentials
+- Update credential information safely
+- Remove credentials when needed
+- All operations return appropriate DTOs and status codes
 
-#### LoginCredentialService (100% coverage)
-- **Basic Service**
-  - Service instantiation
-  - Repository injection
+### LoginProviderController (100% coverage)
+Provider management through the API:
+- Set up new authentication providers
+- List available providers
+- Update provider settings
+- Disable or remove providers
+- Proper error handling and response formatting
 
-- **Find Operations**
-  - Find all credentials
-  - Find by ID
-  - Find by identifier and provider
-  - Handle not found cases
+## Overall Health Check
+Our test suite shows robust coverage:
+- 94.09% of all statements are tested
+- 100% of code branches are verified
+- 73.58% of functions are covered (note: TypeORM decorators affect this metric)
+- 94.23% of code lines are tested
 
-- **Create Operations**
-  - Create with required fields
-  - Create with optional fields
-  - Validate credential types
-  - Handle expiration dates
-
-- **Update Operations**
-  - Update all fields
-  - Update partial fields
-  - Handle undefined fields
-  - Validate updates
-
-- **Remove Operations**
-  - Remove existing credential
-  - Handle non-existent credential
-  - Check affected rows
-
-#### LoginProviderService (100% coverage)
-- **Basic Service**
-  - Service instantiation
-  - Repository injection
-
-- **Find Operations**
-  - Find all providers
-  - Find by ID
-  - Handle not found cases
-
-- **Create Operations**
-  - Create provider with code/name
-  - Set enabled status
-  - Handle duplicates
-
-- **Update Operations**
-  - Update name
-  - Update enabled status
-  - Handle not found
-
-- **Remove Operations**
-  - Remove existing provider
-  - Handle non-existent provider
-
-#### BaseUserService (100% coverage)
-- **Basic Service**
-  - Service instantiation
-  - Repository injection
-
-- **Find Operations**
-  - Find all users
-  - Find by ID with credentials
-  - Handle not found cases
-
-- **Create Operations**
-  - Create with required fields
-  - Validate login credentials
-  - Set initial state
-
-- **Update Operations**
-  - Update user details
-  - Update state
-  - Update primary credential
-  - Handle not found
-
-- **Remove Operations**
-  - Remove existing user
-  - Handle non-existent user
-
-### Controller Layer Tests
-
-#### LoginCredentialController (100% coverage)
-- **Basic Controller**
-  - Controller instantiation
-  - Service injection
-
-- **Create Endpoint**
-  - Create with valid data
-  - Handle validation errors
-  - Return correct DTO
-
-- **Find Operations**
-  - Get all credentials
-  - Get by ID
-  - Handle not found
-  - Return correct DTOs
-
-- **Update Endpoint**
-  - Update with valid data
-  - Handle validation errors
-  - Handle not found
-  - Return updated DTO
-
-- **Delete Endpoint**
-  - Delete existing credential
-  - Handle not found
-  - Return success status
-
-#### LoginProviderController (100% coverage)
-- **Basic Controller**
-  - Controller instantiation
-  - Service injection
-
-- **Create Endpoint**
-  - Create with valid data
-  - Handle validation errors
-  - Return correct DTO
-
-- **Find Operations**
-  - Get all providers
-  - Get by ID
-  - Handle not found
-  - Return correct DTOs
-
-- **Update Endpoint**
-  - Update with valid data
-  - Handle validation errors
-  - Handle not found
-  - Return updated DTO
-
-- **Delete Endpoint**
-  - Delete existing provider
-  - Handle not found
-  - Return success status
-
-### Coverage Summary
-- Overall Statement Coverage: 94.09%
-- Overall Branch Coverage: 100%
-- Overall Function Coverage: 73.58%
-- Overall Line Coverage: 94.23%
-
-Note: Lower function coverage in models is due to TypeORM decorators being counted as functions. These are tested indirectly through integration tests. 
+A note about our coverage: While some TypeORM decorators show as untested functions, they're actually verified through our integration tests. These decorators are crucial for our database interactions but don't require direct unit testing. 
