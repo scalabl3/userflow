@@ -6,4 +6,9 @@ export const CreateUserDto = z.object({
   password: z.string().min(8),
 });
 
-export type CreateUserDto = z.infer<typeof CreateUserDto>; 
+export type CreateUserDto = z.infer<typeof CreateUserDto>;
+
+// Export LoginProvider DTOs
+export * from './LoginProvider/CreateLoginProviderDto';
+export * from './LoginProvider/UpdateLoginProviderDto';
+export * from './LoginProvider/ResponseLoginProviderDto';
