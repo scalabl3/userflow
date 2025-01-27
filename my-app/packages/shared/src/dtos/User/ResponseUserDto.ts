@@ -1,20 +1,20 @@
-import { IsString, IsUUID } from 'class-validator';
+import { Expose } from 'class-transformer';
+import { ResponseBaseUserDto } from '../BaseUser/ResponseBaseUserDto';
 
-export class ResponseUserDto {
-    @IsUUID()
-    id!: string;
+export class ResponseUserDto extends ResponseBaseUserDto {
+    @Expose()
+    organizationId!: string;
 
-    @IsString()
-    firstname!: string;
+    @Expose()
+    preferences!: {
+        theme?: 'light' | 'dark';
+        notifications?: {
+            email?: boolean;
+            push?: boolean;
+        };
+    };
 
-    @IsString()
-    lastname!: string;
-
-    @IsString()
-    displayname!: string;
-
-    @IsString()
-    contactEmail!: string;
-
-    preferences?: Record<string, any>;
+    // Profile ID will be exposed when Profile entity is implemented
+    @Expose()
+    profileId?: string;
 }

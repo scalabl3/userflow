@@ -1,6 +1,21 @@
-import { IsString, IsUUID, IsOptional } from 'class-validator';
+import { IsOptional, IsString, IsUUID, IsObject } from 'class-validator';
 
 export class CreateUserDto {
+    @IsOptional()
+    @IsUUID()
+    organizationId?: string;
+
+    @IsOptional()
+    @IsObject()
+    preferences?: {
+        theme?: 'light' | 'dark';
+        notifications?: {
+            email?: boolean;
+            push?: boolean;
+        };
+    };
+
+    // Base user fields that can be set on creation
     @IsString()
     firstname!: string;
 
@@ -12,7 +27,4 @@ export class CreateUserDto {
 
     @IsString()
     contactEmail!: string;
-
-    @IsOptional()
-    preferences?: Record<string, any>;
 }

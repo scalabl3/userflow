@@ -1,6 +1,20 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsOptional, IsString, IsUUID, IsObject } from 'class-validator';
 
 export class UpdateUserDto {
+    @IsOptional()
+    @IsUUID()
+    organizationId?: string;
+
+    @IsOptional()
+    @IsObject()
+    preferences?: {
+        theme?: 'light' | 'dark';
+        notifications?: {
+            email?: boolean;
+            push?: boolean;
+        };
+    };
+
     @IsOptional()
     @IsString()
     firstname?: string;
@@ -16,7 +30,4 @@ export class UpdateUserDto {
     @IsOptional()
     @IsString()
     contactEmail?: string;
-
-    @IsOptional()
-    preferences?: Record<string, any>;
 }
