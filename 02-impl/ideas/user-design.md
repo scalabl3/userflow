@@ -15,7 +15,7 @@ The user authentication system supports multiple login methods per user while ma
   - `createdAt`: datetime
   - `modifiedAt`: datetime
 
-### LoginCredential
+### LoginCredential (✓ Implemented)
 - Stores authentication credentials for each method
 - Fields:
   - Common fields:
@@ -54,7 +54,7 @@ The user authentication system supports multiple login methods per user while ma
   - For Apple: additional fields for Sign in with Apple requirements
   - For 2FA/MFA: can link multiple credentials to same user
 
-### Organization
+### Organization (✓ Implemented)
 - Fields:
   - `id`: UUID
   - `name`: string (default: 'shadow', nullable) - Organization display name
@@ -80,34 +80,29 @@ The user authentication system supports multiple login methods per user while ma
   - Organizations without users can be safely deleted
   - Future billing and subscription features will be added
 
-### BaseUser (Next)
+### BaseUser (✓ Implemented)
 - Core user identity and authentication
 - Fields:
   - `id`: UUID
   - `firstname`: string
   - `lastname`: string
-  - `displayname`: string
-  - `contactEmail`: string
+  - `contactEmail`: string (for notifications only)
   - `state`: enum (PENDING, ACTIVE, SUSPENDED, DEACTIVATED)
   - `primaryLoginCredentialId`: UUID (references LoginCredential)
   - `lastLoginAt`: datetime (nullable)
   - `isEnabled`: boolean
   - `createdAt`: datetime
   - `modifiedAt`: datetime
-- Will have:
-  - One-to-Many relationship with LoginCredential
+- Relationships:
+  - One-to-Many with LoginCredential
   - One user can have multiple credentials but only one per provider
 
-### User (Last)
-- Extends BaseUser with application-specific fields
+### User (✓ Implemented)
+- Extends BaseUser with profile and organization fields
 - Fields:
-  - `username`: string (unique)
-  - `email`: string (unique)
-  - `isEmailVerified`: boolean
-  - `phoneNumber`: string (nullable)
-  - `isPhoneVerified`: boolean
-  - `isActive`: boolean
-  - `organizationId`: UUID (required) - User's single organization
+  - `username`: string (unique) - Public identifier
+  - `displayname`: string - User's display name
+  - `organizationId`: UUID (required) - User's organization
   - `profileId`: UUID (nullable)
   - `preferences`: JSON (nullable)
     - theme: 'light' | 'dark'
@@ -119,7 +114,7 @@ The user authentication system supports multiple login methods per user while ma
 - Constraints:
   - User must have exactly one organization
   - Multiple users can belong to the same organization
-  - Username and email must be unique
+  - Username must be unique
   - Profile is optional but unique per user
 
 ## Authentication Flow
