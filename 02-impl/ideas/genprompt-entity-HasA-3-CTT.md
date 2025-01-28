@@ -1,13 +1,18 @@
-# Entity Generation Guide - Part 3: Controller, controller Tests, model Tests (CTT)
-
+# Entity Generation Guide - Has-A Relationship - Part 3: Controller, Controller Tests, Model Tests (CTT)
 
 ## Aider Prompt Template
 
 ### AI Role
-You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this third phase is to generate the controller layer and comprehensive tests. Focus on API design, request handling, and thorough testing. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
+You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this third phase is to generate the controller layer and comprehensive tests for an entity that has a Has-A relationship with another entity. Focus on API design, relationship handling, and thorough testing. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
+
+##### Semantic Examples: 
+- `OwnerEntityName` has-a `EntityName`
+- User has-a Preferences
+- User.preferences = new Preferences();
 
 ### Instructions for Placeholder Replacement
-- Replace `<EntityName>` with the actual entity name in PascalCase
+- Replace `<EntityName>` with the actual entity name in PascalCase (e.g., BillingCredential)
+- Replace `<OwnerEntityName>` with the containing entity name in PascalCase (e.g., BillingCredentialSet)
 - Ensure consistent casing across all files:
   - PascalCase for all TypeScript files
   - camelCase for properties and methods
@@ -22,12 +27,14 @@ You are a seasoned veteran software engineer that understands the problems cause
    - Request/Response handling
    - Error handling
    - OpenAPI documentation
+   - Relationship endpoints
 
 2. Tests
    - Controller Tests (`my-app/packages/backend/src/controllers/<EntityName>Controller.spec.ts`)
      - Endpoint tests
      - Error handling tests
      - Request validation tests
+     - Relationship operation tests
    - Model Tests (`my-app/packages/backend/src/models/<EntityName>.spec.ts`)
      - Validation tests
      - Constraint tests
@@ -44,20 +51,22 @@ You are a seasoned veteran software engineer that understands the problems cause
 - [ ] Controller tests cover all endpoints
 - [ ] Model tests cover all validations
 - [ ] Integration tests included
+- [ ] Relationship endpoints properly tested
+- [ ] Owner entity relationship properly tested
 
 ### File Generation Guidelines
 
 #### Controller Guidelines
-- Use `/api` prefix in routes
+- Use `/api/<entity-name>` base path
 - Include comprehensive OpenAPI/Swagger decorators
 - Implement proper validation pipes
 - Include proper auth guards
 - Transform responses consistently
 - Handle query parameters properly
-- Include specialized endpoints
+- Include relationship-specific endpoints
 - Follow consistent error response structure
 - Use proper HTTP status codes
-- Handle file uploads/downloads if needed
+- Handle relationship validation
 
 #### Controller Test Guidelines
 - Test all endpoints
@@ -66,20 +75,22 @@ You are a seasoned veteran software engineer that understands the problems cause
 - Test query parameters
 - Test response formats
 - Test error responses
+- Test relationship operations
 - Use proper request mocking
-- Test file handling if applicable
 - Include integration tests
+- Test owner entity interactions
 
 #### Model Test Guidelines
 - Test all validations
 - Test unique constraints
 - Test default values
-- Test relationships
+- Test relationship constraints
 - Test lifecycle hooks
 - Test custom methods
 - Use factory patterns
 - Test edge cases
-- Include proper cleanup 
+- Include proper cleanup
+- Test relationship validations
 
 ### Generic Stubs
 
@@ -107,6 +118,17 @@ export class <EntityName>Controller {
     })
     async create(@Body() dto: Create<EntityName>Dto): Promise<Response<EntityName>Dto> {
         return this.service.create(dto);
+    }
+
+    @Get('owner/:ownerId')
+    @ApiOperation({ summary: 'Get all <EntityName>s for an owner' })
+    @ApiResponse({ 
+        status: 200, 
+        description: 'List of <EntityName>s for the owner retrieved successfully.',
+        type: [Response<EntityName>Dto]
+    })
+    async findByOwnerId(@Param('ownerId') ownerId: string): Promise<Response<EntityName>Dto[]> {
+        return this.service.findByOwnerId(ownerId);
     }
 
     @Get(':id')
@@ -143,39 +165,6 @@ export class <EntityName>Controller {
     async delete(@Param('id') id: string): Promise<void> {
         await this.service.delete(id);
     }
-
-    @Get()
-    @ApiOperation({ summary: 'Get all <EntityName>s' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'List of <EntityName>s retrieved successfully.',
-        type: [Response<EntityName>Dto]
-    })
-    async findAll(): Promise<Response<EntityName>Dto[]> {
-        return this.service.findAll();
-    }
-
-    @Put(':id/enable')
-    @ApiOperation({ summary: 'Enable a <EntityName>' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'The <EntityName> has been successfully enabled.',
-        type: Response<EntityName>Dto
-    })
-    async enable(@Param('id') id: string): Promise<Response<EntityName>Dto> {
-        return this.service.enable(id);
-    }
-
-    @Put(':id/disable')
-    @ApiOperation({ summary: 'Disable a <EntityName>' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'The <EntityName> has been successfully disabled.',
-        type: Response<EntityName>Dto
-    })
-    async disable(@Param('id') id: string): Promise<Response<EntityName>Dto> {
-        return this.service.disable(id);
-    }
 }
 ```
 
@@ -194,11 +183,9 @@ describe('<EntityName>Controller', () => {
     const mockService = {
         create: jest.fn(),
         findById: jest.fn(),
+        findByOwnerId: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
-        findAll: jest.fn(),
-        enable: jest.fn(),
-        disable: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -224,13 +211,13 @@ describe('<EntityName>Controller', () => {
         it('should create a new entity successfully', async () => {
             const createDto: Create<EntityName>Dto = {
                 name: 'Test Name',
-                isEnabled: true,
+                ownerId: 'test-owner-id',
             };
 
             const expectedResponse: Response<EntityName>Dto = {
                 id: 'test-id',
                 name: 'Test Name',
-                isEnabled: true,
+                ownerId: 'test-owner-id',
                 createdAt: new Date(),
                 modifiedAt: new Date(),
             };
@@ -244,36 +231,27 @@ describe('<EntityName>Controller', () => {
         });
     });
 
-    describe('findById', () => {
-        it('should find entity by id successfully', async () => {
-            const id = 'test-id';
-            const expectedResponse: Response<EntityName>Dto = {
-                id,
+    describe('findByOwnerId', () => {
+        it('should find entities by owner id successfully', async () => {
+            const ownerId = 'test-owner-id';
+            const expectedResponse: Response<EntityName>Dto[] = [{
+                id: 'test-id',
                 name: 'Test Name',
-                isEnabled: true,
+                ownerId,
                 createdAt: new Date(),
                 modifiedAt: new Date(),
-            };
+            }];
 
-            mockService.findById.mockResolvedValue(expectedResponse);
+            mockService.findByOwnerId.mockResolvedValue(expectedResponse);
 
-            const result = await controller.findById(id);
+            const result = await controller.findByOwnerId(ownerId);
 
             expect(result).toBe(expectedResponse);
-            expect(service.findById).toHaveBeenCalledWith(id);
-        });
-
-        it('should throw error when entity not found', async () => {
-            const id = 'non-existent-id';
-            mockService.findById.mockRejectedValue(
-                new EntityNotFoundError(<EntityName>, `<EntityName> with id ${id} not found`)
-            );
-
-            await expect(controller.findById(id)).rejects.toThrow(EntityNotFoundError);
+            expect(service.findByOwnerId).toHaveBeenCalledWith(ownerId);
         });
     });
 
-    // Additional test cases for update, delete, findAll, etc.
+    // Additional test cases for findById, update, delete, etc.
 });
 ```
 
@@ -292,32 +270,30 @@ describe('<EntityName>', () => {
     describe('validation', () => {
         it('should validate with all required fields', async () => {
             entity.name = 'Test Name';
-            entity.isEnabled = true;
-
-            const errors = await validate(entity);
-            expect(errors.length).toBe(0);
-        });
-
-        it('should fail validation without required name', async () => {
-            entity.isEnabled = true;
-
-            const errors = await validate(entity);
-            expect(errors.length).toBeGreaterThan(0);
-            expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-        });
-
-        it('should validate with optional fields', async () => {
-            entity.name = 'Test Name';
-            entity.isEnabled = true;
             entity.ownerId = '123e4567-e89b-12d3-a456-426614174000';
 
             const errors = await validate(entity);
             expect(errors.length).toBe(0);
         });
 
+        it('should fail validation without required name', async () => {
+            entity.ownerId = '123e4567-e89b-12d3-a456-426614174000';
+
+            const errors = await validate(entity);
+            expect(errors.length).toBeGreaterThan(0);
+            expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+        });
+
+        it('should fail validation without required ownerId', async () => {
+            entity.name = 'Test Name';
+
+            const errors = await validate(entity);
+            expect(errors.length).toBeGreaterThan(0);
+            expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+        });
+
         it('should fail validation with invalid UUID for ownerId', async () => {
             entity.name = 'Test Name';
-            entity.isEnabled = true;
             entity.ownerId = 'invalid-uuid';
 
             const errors = await validate(entity);
@@ -327,4 +303,5 @@ describe('<EntityName>', () => {
     });
 
     // Additional test cases for relationships, custom methods, etc.
-}); 
+});
+``` 

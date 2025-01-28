@@ -1,13 +1,18 @@
-# Entity Generation Guide - Part 3: Controller, controller Tests, model Tests (CTT)
-
+# Entity Generation Guide - Is-A Relationship - Part 3: Controller, Controller Tests, Model Tests (CTT)
 
 ## Aider Prompt Template
 
 ### AI Role
-You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this third phase is to generate the controller layer and comprehensive tests. Focus on API design, request handling, and thorough testing. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
+You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this third phase is to generate the controller layer and comprehensive tests for an entity that has an Is-A relationship with another entity. Focus on API design, inheritance handling, and thorough testing. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
+
+##### Semantic Examples:
+- `EntityName` is-a `BaseEntityName`
+- AdminUser is-a User
+- class AdminUser extends User {}
 
 ### Instructions for Placeholder Replacement
-- Replace `<EntityName>` with the actual entity name in PascalCase
+- Replace `<EntityName>` with the actual entity name in PascalCase (e.g., AdminUser)
+- Replace `<BaseEntityName>` with the base entity name in PascalCase (e.g., User)
 - Ensure consistent casing across all files:
   - PascalCase for all TypeScript files
   - camelCase for properties and methods
@@ -22,16 +27,18 @@ You are a seasoned veteran software engineer that understands the problems cause
    - Request/Response handling
    - Error handling
    - OpenAPI documentation
+   - Inheritance-specific endpoints
 
 2. Tests
    - Controller Tests (`my-app/packages/backend/src/controllers/<EntityName>Controller.spec.ts`)
      - Endpoint tests
      - Error handling tests
      - Request validation tests
+     - Inheritance operation tests
    - Model Tests (`my-app/packages/backend/src/models/<EntityName>.spec.ts`)
      - Validation tests
      - Constraint tests
-     - Relationship tests
+     - Inheritance tests
 
 ### Verification Checklist
 - [ ] Controller uses /api prefix in routes
@@ -44,20 +51,22 @@ You are a seasoned veteran software engineer that understands the problems cause
 - [ ] Controller tests cover all endpoints
 - [ ] Model tests cover all validations
 - [ ] Integration tests included
+- [ ] Inheritance endpoints properly tested
+- [ ] Base entity functionality properly tested
 
 ### File Generation Guidelines
 
 #### Controller Guidelines
-- Use `/api` prefix in routes
+- Use `/api/<entity-name>` base path
 - Include comprehensive OpenAPI/Swagger decorators
 - Implement proper validation pipes
 - Include proper auth guards
 - Transform responses consistently
 - Handle query parameters properly
-- Include specialized endpoints
+- Include inheritance-specific endpoints
 - Follow consistent error response structure
 - Use proper HTTP status codes
-- Handle file uploads/downloads if needed
+- Handle inheritance validation
 
 #### Controller Test Guidelines
 - Test all endpoints
@@ -66,20 +75,22 @@ You are a seasoned veteran software engineer that understands the problems cause
 - Test query parameters
 - Test response formats
 - Test error responses
+- Test inheritance operations
 - Use proper request mocking
-- Test file handling if applicable
 - Include integration tests
+- Test base entity interactions
 
 #### Model Test Guidelines
 - Test all validations
 - Test unique constraints
 - Test default values
-- Test relationships
+- Test inheritance constraints
 - Test lifecycle hooks
 - Test custom methods
 - Use factory patterns
 - Test edge cases
-- Include proper cleanup 
+- Include proper cleanup
+- Test inheritance validations
 
 ### Generic Stubs
 
@@ -154,28 +165,6 @@ export class <EntityName>Controller {
     async findAll(): Promise<Response<EntityName>Dto[]> {
         return this.service.findAll();
     }
-
-    @Put(':id/enable')
-    @ApiOperation({ summary: 'Enable a <EntityName>' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'The <EntityName> has been successfully enabled.',
-        type: Response<EntityName>Dto
-    })
-    async enable(@Param('id') id: string): Promise<Response<EntityName>Dto> {
-        return this.service.enable(id);
-    }
-
-    @Put(':id/disable')
-    @ApiOperation({ summary: 'Disable a <EntityName>' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'The <EntityName> has been successfully disabled.',
-        type: Response<EntityName>Dto
-    })
-    async disable(@Param('id') id: string): Promise<Response<EntityName>Dto> {
-        return this.service.disable(id);
-    }
 }
 ```
 
@@ -197,8 +186,6 @@ describe('<EntityName>Controller', () => {
         update: jest.fn(),
         delete: jest.fn(),
         findAll: jest.fn(),
-        enable: jest.fn(),
-        disable: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -223,14 +210,14 @@ describe('<EntityName>Controller', () => {
     describe('create', () => {
         it('should create a new entity successfully', async () => {
             const createDto: Create<EntityName>Dto = {
-                name: 'Test Name',
-                isEnabled: true,
+                specialField: 'Test Special',
+                isSpecial: true,
             };
 
             const expectedResponse: Response<EntityName>Dto = {
                 id: 'test-id',
-                name: 'Test Name',
-                isEnabled: true,
+                specialField: 'Test Special',
+                isSpecial: true,
                 createdAt: new Date(),
                 modifiedAt: new Date(),
             };
@@ -249,8 +236,8 @@ describe('<EntityName>Controller', () => {
             const id = 'test-id';
             const expectedResponse: Response<EntityName>Dto = {
                 id,
-                name: 'Test Name',
-                isEnabled: true,
+                specialField: 'Test Special',
+                isSpecial: true,
                 createdAt: new Date(),
                 modifiedAt: new Date(),
             };
@@ -291,15 +278,15 @@ describe('<EntityName>', () => {
 
     describe('validation', () => {
         it('should validate with all required fields', async () => {
-            entity.name = 'Test Name';
-            entity.isEnabled = true;
+            entity.specialField = 'Test Special';
+            entity.isSpecial = true;
 
             const errors = await validate(entity);
             expect(errors.length).toBe(0);
         });
 
-        it('should fail validation without required name', async () => {
-            entity.isEnabled = true;
+        it('should fail validation without required specialField', async () => {
+            entity.isSpecial = true;
 
             const errors = await validate(entity);
             expect(errors.length).toBeGreaterThan(0);
@@ -307,24 +294,27 @@ describe('<EntityName>', () => {
         });
 
         it('should validate with optional fields', async () => {
-            entity.name = 'Test Name';
-            entity.isEnabled = true;
-            entity.ownerId = '123e4567-e89b-12d3-a456-426614174000';
+            entity.specialField = 'Test Special';
+            entity.isSpecial = true;
+            entity.additionalInfo = 'Additional Info';
 
             const errors = await validate(entity);
             expect(errors.length).toBe(0);
         });
 
-        it('should fail validation with invalid UUID for ownerId', async () => {
-            entity.name = 'Test Name';
-            entity.isEnabled = true;
-            entity.ownerId = 'invalid-uuid';
+        it('should inherit base entity validations', async () => {
+            // Test base entity validations are properly inherited
+            entity.specialField = 'Test Special';
+            entity.isSpecial = true;
+            
+            // Add base entity required fields here
+            // entity.baseField = 'Base Value';
 
             const errors = await validate(entity);
-            expect(errors.length).toBeGreaterThan(0);
-            expect(errors[0].constraints).toHaveProperty('isUuid');
+            expect(errors.length).toBe(0);
         });
     });
 
-    // Additional test cases for relationships, custom methods, etc.
-}); 
+    // Additional test cases for inheritance, custom methods, etc.
+});
+``` 

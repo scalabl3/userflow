@@ -1,23 +1,29 @@
-# Entity Generation Guide - Part 2: Service, update DTO, service Tests (SDT)
+# Entity Generation Guide - Has-A Relationship - Part 2: Service, Update DTO, Service Tests (SDT)
 
 ## Aider Prompt Template
 
 ### AI Role
-You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this second phase is to generate the service layer, update DTOs, and comprehensive service tests. Focus on business logic, data integrity, and proper error handling. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
+You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this second phase is to generate the service layer, update DTOs, and comprehensive service tests for an entity that has a Has-A relationship with another entity. Focus on relationship operations, data integrity, and proper error handling. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
+
+##### Semantic Examples: 
+- `OwnerEntityName` has-a `EntityName`
+- User has-a Preferences
+- User.preferences = new Preferences();
 
 ### Instructions for Placeholder Replacement
-- Replace `<EntityName>` with the actual entity name in PascalCase
+- Replace `<EntityName>` with the actual entity name in PascalCase (e.g., BillingCredential)
+- Replace `<OwnerEntityName>` with the containing entity name in PascalCase (e.g., BillingCredentialSet)
 - Ensure consistent casing across all files:
   - PascalCase for all TypeScript files
   - camelCase for properties and methods
 
 ### Entity Specification
-{entity model stub goes here}
+{entity model properties goes here}
 
 ### Files to Generate
 
 1. Service (`my-app/packages/backend/src/services/<EntityName>Service.ts`)
-   - CRUD operations
+   - CRUD operations with relationship handling
    - Business logic methods
    - Error handling
    - Transaction handling
@@ -27,6 +33,7 @@ You are a seasoned veteran software engineer that understands the problems cause
 
 3. Tests (`my-app/packages/backend/src/services/<EntityName>Service.spec.ts`)
    - CRUD operation tests
+   - Relationship operation tests
    - Business logic tests
    - Error handling tests
 
@@ -41,36 +48,39 @@ You are a seasoned veteran software engineer that understands the problems cause
 - [ ] Tests include error cases
 - [ ] Tests use proper mocking
 - [ ] Tests handle transactions correctly
+- [ ] Relationship operations are properly tested
+- [ ] Owner entity relationship is properly handled
 
 ### File Generation Guidelines
 
 #### Service Guidelines
-- Implement proper error handling for unique constraints
-- Include specialized methods (enable/disable, visibility)
-- Implement soft delete handling
-- Use TypeORM transactions where needed
+- Implement proper error handling for unique and foreign key constraints
+- Include specialized methods for relationship operations
+- Use TypeORM transactions for relationship operations
 - Implement proper logging
-- Include configuration validation
-- Use TypeORM query builder for complex queries
-- Implement pagination for list operations
+- Include relationship validation
+- Use TypeORM query builder for complex relationship queries
+- Implement proper owner entity validation
+- Handle cascading operations appropriately
 
 #### Update DTO Guidelines
 - Extend Partial<CreateDTO>
 - Include validation for partial updates
 - Include comprehensive OpenAPI docs
-- Handle nested object updates properly
+- Handle relationship field updates properly
 - Include proper validation messages
 
 #### Service Test Guidelines
-- Create test data factories
-- Implement proper mocks
-- Cover edge cases
+- Create test data factories for both entities
+- Implement proper mocks for relationships
+- Cover edge cases in relationships
 - Handle test transactions
 - Test error scenarios
 - Test business logic thoroughly
+- Test relationship operations
 - Implement proper cleanup
 - Use test database
-- Mock external services 
+- Mock external services
 
 ### Generic Stubs
 
@@ -80,9 +90,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { <EntityName> } from '../models/<EntityName>';
-import { Create<EntityName>Dto } from '@my-app/shared';
-import { Update<EntityName>Dto } from '@my-app/shared';
-import { Response<EntityName>Dto } from '@my-app/shared';
+import { <OwnerEntityName> } from '../models/<OwnerEntityName>';
+import { Create<EntityName>Dto, Update<EntityName>Dto, Response<EntityName>Dto } from '@my-app/shared';
 import { plainToInstance } from 'class-transformer';
 import { EntityNotFoundError, QueryFailedError } from 'typeorm';
 
@@ -93,39 +102,56 @@ export class <EntityName>Service {
     constructor(
         @InjectRepository(<EntityName>)
         private readonly repository: Repository<<EntityName>>,
+        @InjectRepository(<OwnerEntityName>)
+        private readonly ownerRepository: Repository<<OwnerEntityName>>,
         private readonly dataSource: DataSource,
     ) {}
 
     async create(dto: Create<EntityName>Dto): Promise<Response<EntityName>Dto> {
         this.logger.debug(`Creating <EntityName> with data: ${JSON.stringify(dto)}`);
         
-        const entity = this.repository.create(dto);
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
         
         try {
-            const saved = await this.repository.save(entity);
+            const owner = await queryRunner.manager.findOne(<OwnerEntityName>, {
+                where: { id: dto.ownerId }
+            });
+            
+            if (!owner) {
+                throw new EntityNotFoundError(<OwnerEntityName>, `<OwnerEntityName> with id ${dto.ownerId} not found`);
+            }
+            
+            const entity = this.repository.create(dto);
+            const saved = await queryRunner.manager.save(entity);
+            
+            await queryRunner.commitTransaction();
             return plainToInstance(Response<EntityName>Dto, saved, { excludeExtraneousValues: true });
+            
         } catch (error) {
+            await queryRunner.rollbackTransaction();
             if (error instanceof QueryFailedError) {
                 this.logger.error(`Failed to create <EntityName>: ${error.message}`);
                 throw new Error('Failed to create <EntityName> due to constraint violation');
             }
             throw error;
+        } finally {
+            await queryRunner.release();
         }
     }
 
-    async findById(id: string): Promise<Response<EntityName>Dto> {
-        this.logger.debug(`Finding <EntityName> by id: ${id}`);
+    async findByOwnerId(ownerId: string): Promise<Response<EntityName>Dto[]> {
+        this.logger.debug(`Finding <EntityName>s by owner id: ${ownerId}`);
         
-        const entity = await this.repository.findOne({ 
-            where: { id },
+        const entities = await this.repository.find({
+            where: { ownerId },
             relations: ['owner']
         });
         
-        if (!entity) {
-            throw new EntityNotFoundError(<EntityName>, `<EntityName> with id ${id} not found`);
-        }
-        
-        return plainToInstance(Response<EntityName>Dto, entity, { excludeExtraneousValues: true });
+        return entities.map(entity => 
+            plainToInstance(Response<EntityName>Dto, entity, { excludeExtraneousValues: true })
+        );
     }
 
     async update(id: string, dto: Update<EntityName>Dto): Promise<Response<EntityName>Dto> {
@@ -136,13 +162,23 @@ export class <EntityName>Service {
         await queryRunner.startTransaction();
         
         try {
-            const entity = await queryRunner.manager.findOne(<EntityName>, { 
+            const entity = await queryRunner.manager.findOne(<EntityName>, {
                 where: { id },
                 relations: ['owner']
             });
             
             if (!entity) {
                 throw new EntityNotFoundError(<EntityName>, `<EntityName> with id ${id} not found`);
+            }
+            
+            if (dto.ownerId && dto.ownerId !== entity.ownerId) {
+                const newOwner = await queryRunner.manager.findOne(<OwnerEntityName>, {
+                    where: { id: dto.ownerId }
+                });
+                
+                if (!newOwner) {
+                    throw new EntityNotFoundError(<OwnerEntityName>, `<OwnerEntityName> with id ${dto.ownerId} not found`);
+                }
             }
             
             Object.assign(entity, dto);
@@ -166,30 +202,28 @@ export class <EntityName>Service {
     async delete(id: string): Promise<void> {
         this.logger.debug(`Deleting <EntityName> with id: ${id}`);
         
-        const result = await this.repository.delete(id);
-        if (result.affected === 0) {
-            throw new EntityNotFoundError(<EntityName>, `<EntityName> with id ${id} not found`);
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        
+        try {
+            const entity = await queryRunner.manager.findOne(<EntityName>, {
+                where: { id }
+            });
+            
+            if (!entity) {
+                throw new EntityNotFoundError(<EntityName>, `<EntityName> with id ${id} not found`);
+            }
+            
+            await queryRunner.manager.remove(entity);
+            await queryRunner.commitTransaction();
+            
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
         }
-    }
-
-    async findAll(): Promise<Response<EntityName>Dto[]> {
-        this.logger.debug('Finding all <EntityName>s');
-        
-        const entities = await this.repository.find({
-            relations: ['owner']
-        });
-        
-        return entities.map(entity => 
-            plainToInstance(Response<EntityName>Dto, entity, { excludeExtraneousValues: true })
-        );
-    }
-
-    async enable(id: string): Promise<Response<EntityName>Dto> {
-        return this.update(id, { isEnabled: true });
-    }
-
-    async disable(id: string): Promise<Response<EntityName>Dto> {
-        return this.update(id, { isEnabled: false });
     }
 }
 ```
@@ -209,11 +243,13 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource, Repository, QueryFailedError } from 'typeorm';
 import { <EntityName>Service } from './<EntityName>Service';
 import { <EntityName> } from '../models/<EntityName>';
+import { <OwnerEntityName> } from '../models/<OwnerEntityName>';
 import { Create<EntityName>Dto, Update<EntityName>Dto } from '@my-app/shared';
 
 describe('<EntityName>Service', () => {
     let service: <EntityName>Service;
     let repository: Repository<<EntityName>>;
+    let ownerRepository: Repository<<OwnerEntityName>>;
     let dataSource: DataSource;
 
     const mockRepository = {
@@ -221,7 +257,11 @@ describe('<EntityName>Service', () => {
         save: jest.fn(),
         findOne: jest.fn(),
         find: jest.fn(),
-        delete: jest.fn(),
+        remove: jest.fn(),
+    };
+
+    const mockOwnerRepository = {
+        findOne: jest.fn(),
     };
 
     const mockDataSource = {
@@ -231,6 +271,7 @@ describe('<EntityName>Service', () => {
             manager: {
                 findOne: jest.fn(),
                 save: jest.fn(),
+                remove: jest.fn(),
             },
             commitTransaction: jest.fn(),
             rollbackTransaction: jest.fn(),
@@ -247,6 +288,10 @@ describe('<EntityName>Service', () => {
                     useValue: mockRepository,
                 },
                 {
+                    provide: getRepositoryToken(<OwnerEntityName>),
+                    useValue: mockOwnerRepository,
+                },
+                {
                     provide: DataSource,
                     useValue: mockDataSource,
                 },
@@ -255,6 +300,7 @@ describe('<EntityName>Service', () => {
 
         service = module.get<<EntityName>Service>(<EntityName>Service);
         repository = module.get<Repository<<EntityName>>>(getRepositoryToken(<EntityName>));
+        ownerRepository = module.get<Repository<<OwnerEntityName>>>(getRepositoryToken(<OwnerEntityName>));
         dataSource = module.get<DataSource>(DataSource);
     });
 
@@ -263,41 +309,44 @@ describe('<EntityName>Service', () => {
     });
 
     describe('create', () => {
-        it('should create a new entity successfully', async () => {
+        it('should create a new entity with valid owner successfully', async () => {
+            const ownerId = 'test-owner-id';
             const createDto: Create<EntityName>Dto = {
                 name: 'Test Name',
-                isEnabled: true,
+                ownerId,
             };
 
-            const entity = new <EntityName>();
-            Object.assign(entity, createDto);
-            entity.id = 'test-id';
-
-            mockRepository.create.mockReturnValue(entity);
-            mockRepository.save.mockResolvedValue(entity);
+            const owner = { id: ownerId };
+            const entity = { id: 'test-id', ...createDto };
+            
+            const queryRunner = mockDataSource.createQueryRunner();
+            queryRunner.manager.findOne.mockResolvedValueOnce(owner);
+            queryRunner.manager.save.mockResolvedValueOnce(entity);
 
             const result = await service.create(createDto);
 
             expect(result).toBeDefined();
             expect(result.id).toBe('test-id');
             expect(result.name).toBe(createDto.name);
-            expect(mockRepository.create).toHaveBeenCalledWith(createDto);
-            expect(mockRepository.save).toHaveBeenCalledWith(entity);
+            expect(queryRunner.startTransaction).toHaveBeenCalled();
+            expect(queryRunner.commitTransaction).toHaveBeenCalled();
+            expect(queryRunner.release).toHaveBeenCalled();
         });
 
-        it('should handle unique constraint violations', async () => {
+        it('should throw error when owner not found', async () => {
             const createDto: Create<EntityName>Dto = {
                 name: 'Test Name',
-                isEnabled: true,
+                ownerId: 'non-existent-owner',
             };
 
-            mockRepository.create.mockReturnValue(new <EntityName>());
-            mockRepository.save.mockRejectedValue(new QueryFailedError('query', [], 'unique constraint'));
+            const queryRunner = mockDataSource.createQueryRunner();
+            queryRunner.manager.findOne.mockResolvedValueOnce(null);
 
-            await expect(service.create(createDto)).rejects.toThrow('Failed to create <EntityName> due to constraint violation');
+            await expect(service.create(createDto)).rejects.toThrow(EntityNotFoundError);
+            expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
+            expect(queryRunner.release).toHaveBeenCalled();
         });
     });
 
-    // Additional test cases for update, delete, findById, etc.
+    // Additional test cases for update, delete, findByOwnerId, etc.
 });
-``` 
