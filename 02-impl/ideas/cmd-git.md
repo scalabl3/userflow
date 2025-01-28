@@ -1,4 +1,5 @@
-lets do a comprehensive add/commit, you can combine them together, but you can't have newlines in the command. 
+Lets do a comprehensive add/commit from root folder of project.
+You can combine git commands together, but you can't have newlines in the command.
 
 1. `git add .`
 2. git commmit with a very detailed message
