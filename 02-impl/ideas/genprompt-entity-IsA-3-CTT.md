@@ -1,320 +1,262 @@
 # Entity Generation Guide - Is-A Relationship - Part 3: Controller, Controller Tests, Model Tests (CTT)
 
+## Instructions for Template Creation
+- Replace `<EntityName>` with the actual entity name in PascalCase
+- Replace `<BaseEntityName>` with the base entity name in PascalCase
+- Replace `<entityName>` with the entity name in camelCase
+- Replace `<baseEntityName>` with the base entity name in camelCase
+- Ensure consistent casing across all files:
+  - PascalCase for classes and types
+  - camelCase for methods and properties
+- Verify all paths and imports are correct
+- Remove any unnecessary code or comments
+- Keep examples minimal but clear
+
 ## Aider Prompt Template
 
 ### AI Role
-You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this third phase is to generate the controller layer and comprehensive tests for an entity that has an Is-A relationship with another entity. Focus on API design, inheritance handling, and thorough testing. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
+You are a seasoned veteran software engineer focused on building robust REST APIs with comprehensive test coverage for entities with Is-A relationships. Your role in this third phase is to generate the controller implementation and comprehensive tests. Focus on proper request/response handling, inheritance validation, and thorough testing of both the controller and model. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
 
-##### Semantic Examples:
+##### Semantic Examples: 
 - `EntityName` is-a `BaseEntityName`
 - AdminUser is-a User
 - class AdminUser extends User {}
 
-### Instructions for Placeholder Replacement
-- Replace `<EntityName>` with the actual entity name in PascalCase (e.g., AdminUser)
-- Replace `<BaseEntityName>` with the base entity name in PascalCase (e.g., User)
-- Ensure consistent casing across all files:
-  - PascalCase for all TypeScript files
-  - camelCase for properties and methods
-
-### Entity Specification
-{entity model stub goes here}
-
 ### Files to Generate
 
 1. Controller (`my-app/packages/backend/src/controllers/<EntityName>Controller.ts`)
-   - REST endpoints
-   - Request/Response handling
-   - Error handling
-   - OpenAPI documentation
-   - Inheritance-specific endpoints
+   - Controller class with route decorators
+   - Request validation with inheritance
+   - Response handling with inheritance
+   - Error handling for inheritance constraints
+   - Swagger documentation for inheritance
 
 2. Tests
    - Controller Tests (`my-app/packages/backend/src/controllers/<EntityName>Controller.spec.ts`)
-     - Endpoint tests
-     - Error handling tests
-     - Request validation tests
-     - Inheritance operation tests
+     - Endpoint tests with inheritance
+     - Error handling tests for inheritance
+     - Request validation tests for inheritance
+     - Response format tests with inheritance
    - Model Tests (`my-app/packages/backend/src/models/<EntityName>.spec.ts`)
-     - Validation tests
-     - Constraint tests
-     - Inheritance tests
+     - Validation tests for inheritance
+     - Constraint tests for inheritance
+     - Method tests with inheritance
+     - Edge case tests for inheritance
 
 ### Verification Checklist
-- [ ] Controller uses /api prefix in routes
-- [ ] Comprehensive OpenAPI/Swagger decorators
-- [ ] Proper validation pipes implemented
-- [ ] Auth guards properly set up
-- [ ] Consistent response transformation
-- [ ] Query parameter handling
-- [ ] Proper error response structure
-- [ ] Controller tests cover all endpoints
-- [ ] Model tests cover all validations
-- [ ] Integration tests included
-- [ ] Inheritance endpoints properly tested
-- [ ] Base entity functionality properly tested
+- [ ] Controller handles inheritance operations properly
+- [ ] Request validation includes inherited fields
+- [ ] Response handling includes inheritance
+- [ ] Error handling covers inheritance constraints
+- [ ] Swagger documentation includes inheritance
+- [ ] Controller tests cover inheritance endpoints
+- [ ] Controller tests cover inheritance errors
+- [ ] Model tests cover inheritance validations
+- [ ] Model tests cover inheritance constraints
+- [ ] All imports properly organized
 
-### File Generation Guidelines
+### Code Structure Guidelines
 
-#### Controller Guidelines
-- Use `/api/<entity-name>` base path
-- Include comprehensive OpenAPI/Swagger decorators
-- Implement proper validation pipes
-- Include proper auth guards
-- Transform responses consistently
-- Handle query parameters properly
-- Include inheritance-specific endpoints
-- Follow consistent error response structure
-- Use proper HTTP status codes
-- Handle inheritance validation
-
-#### Controller Test Guidelines
-- Test all endpoints
-- Test validation errors
-- Test auth guards
-- Test query parameters
-- Test response formats
-- Test error responses
-- Test inheritance operations
-- Use proper request mocking
-- Include integration tests
-- Test base entity interactions
-
-#### Model Test Guidelines
-- Test all validations
-- Test unique constraints
-- Test default values
-- Test inheritance constraints
-- Test lifecycle hooks
-- Test custom methods
-- Use factory patterns
-- Test edge cases
-- Include proper cleanup
-- Test inheritance validations
-
-### Generic Stubs
-
-#### Controller Stub
+#### Controller Structure
+Required Imports:
 ```typescript
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { <EntityName>Service } from '../services/<EntityName>Service';
-import { Create<EntityName>Dto, Update<EntityName>Dto, Response<EntityName>Dto } from '@my-app/shared';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { EntityName } from '../models/EntityName';
+import { BaseEntityName } from '../models/BaseEntityName';
+import { EntityNameService } from '../services/EntityNameService';
+import { CreateEntityNameDto, UpdateEntityNameDto, ResponseEntityNameDto } from '@my-app/shared';
+```
 
-@ApiTags('<EntityName>')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
-@Controller('api/<entity-name>')
-export class <EntityName>Controller {
-    constructor(private readonly service: <EntityName>Service) {}
+Key Points:
+- Use proper HTTP method decorators
+- Implement inheritance validation
+- Handle responses with inheritance
+- Handle inheritance errors
+- Document inheritance with Swagger
+- Follow REST conventions
+- Include proper logging
 
-    @Post()
-    @ApiOperation({ summary: 'Create a new <EntityName>' })
-    @ApiResponse({ 
-        status: 201, 
-        description: 'The <EntityName> has been successfully created.',
-        type: Response<EntityName>Dto
-    })
-    async create(@Body() dto: Create<EntityName>Dto): Promise<Response<EntityName>Dto> {
-        return this.service.create(dto);
+Example Pattern:
+```typescript
+@Controller('examples')
+@ApiTags('examples')
+export class ExampleController extends BaseController {
+    constructor(
+        private readonly service: ExampleService
+    ) {
+        super(service);
     }
 
     @Get(':id')
-    @ApiOperation({ summary: 'Get a <EntityName> by id' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'The <EntityName> has been successfully retrieved.',
-        type: Response<EntityName>Dto
-    })
-    @ApiResponse({ status: 404, description: '<EntityName> not found' })
-    async findById(@Param('id') id: string): Promise<Response<EntityName>Dto> {
+    @ApiOperation({ summary: 'Get example by ID' })
+    @ApiResponse({ status: 200, type: ResponseExampleDto })
+    async findById(@Param('id') id: string): Promise<ResponseExampleDto> {
         return this.service.findById(id);
     }
 
     @Put(':id')
-    @ApiOperation({ summary: 'Update a <EntityName>' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'The <EntityName> has been successfully updated.',
-        type: Response<EntityName>Dto
-    })
-    @ApiResponse({ status: 404, description: '<EntityName> not found' })
+    @ApiOperation({ summary: 'Update example' })
+    @ApiResponse({ status: 200, type: ResponseExampleDto })
     async update(
         @Param('id') id: string,
-        @Body() dto: Update<EntityName>Dto
-    ): Promise<Response<EntityName>Dto> {
+        @Body() dto: UpdateExampleDto
+    ): Promise<ResponseExampleDto> {
         return this.service.update(id, dto);
     }
 
-    @Delete(':id')
-    @ApiOperation({ summary: 'Delete a <EntityName>' })
-    @ApiResponse({ status: 204, description: 'The <EntityName> has been successfully deleted.' })
-    @ApiResponse({ status: 404, description: '<EntityName> not found' })
-    async delete(@Param('id') id: string): Promise<void> {
-        await this.service.delete(id);
-    }
-
-    @Get()
-    @ApiOperation({ summary: 'Get all <EntityName>s' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'List of <EntityName>s retrieved successfully.',
-        type: [Response<EntityName>Dto]
-    })
-    async findAll(): Promise<Response<EntityName>Dto[]> {
-        return this.service.findAll();
+    // Override base method with specific implementation
+    @Get('type/:type')
+    @ApiOperation({ summary: 'Get examples by type' })
+    @ApiResponse({ status: 200, type: [ResponseExampleDto] })
+    async findByType(@Param('type') type: string): Promise<ResponseExampleDto[]> {
+        return this.service.findByType(type);
     }
 }
 ```
 
-#### Controller Test Stub
+#### Controller Test Structure
+Required Imports:
 ```typescript
 import { Test, TestingModule } from '@nestjs/testing';
-import { <EntityName>Controller } from './<EntityName>Controller';
-import { <EntityName>Service } from '../services/<EntityName>Service';
-import { Create<EntityName>Dto, Update<EntityName>Dto, Response<EntityName>Dto } from '@my-app/shared';
-import { EntityNotFoundError } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
+import { ExampleController } from './ExampleController';
+import { ExampleService } from '../services/ExampleService';
+```
 
-describe('<EntityName>Controller', () => {
-    let controller: <EntityName>Controller;
-    let service: <EntityName>Service;
+Key Points:
+- Mock service dependencies
+- Test inherited endpoints
+- Cover inheritance validation
+- Test inheritance responses
+- Use proper assertions
+- Follow AAA pattern
+- Include inheritance edge cases
+- Test inheritance errors
 
-    const mockService = {
-        create: jest.fn(),
-        findById: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        findAll: jest.fn(),
+Example Pattern:
+```typescript
+describe('ExampleController', () => {
+    let controller: ExampleController;
+    let service: ExampleService;
+
+    const mockEntity = {
+        id: '123',
+        base_field: 'Base Value',
+        additional_field: 'Additional Value',
+        type: 'example'
     };
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            controllers: [<EntityName>Controller],
+            controllers: [ExampleController],
             providers: [
                 {
-                    provide: <EntityName>Service,
-                    useValue: mockService,
-                },
-            ],
+                    provide: ExampleService,
+                    useValue: {
+                        findById: jest.fn(),
+                        findByType: jest.fn(),
+                        update: jest.fn()
+                    }
+                }
+            ]
         }).compile();
 
-        controller = module.get<<EntityName>Controller>(<EntityName>Controller);
-        service = module.get<<EntityName>Service>(<EntityName>Service);
+        controller = module.get<ExampleController>(ExampleController);
+        service = module.get<ExampleService>(ExampleService);
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
-
-    describe('create', () => {
-        it('should create a new entity successfully', async () => {
-            const createDto: Create<EntityName>Dto = {
-                specialField: 'Test Special',
-                isSpecial: true,
-            };
-
-            const expectedResponse: Response<EntityName>Dto = {
-                id: 'test-id',
-                specialField: 'Test Special',
-                isSpecial: true,
-                createdAt: new Date(),
-                modifiedAt: new Date(),
-            };
-
-            mockService.create.mockResolvedValue(expectedResponse);
-
-            const result = await controller.create(createDto);
-
-            expect(result).toBe(expectedResponse);
-            expect(service.create).toHaveBeenCalledWith(createDto);
-        });
-    });
-
-    describe('findById', () => {
-        it('should find entity by id successfully', async () => {
-            const id = 'test-id';
-            const expectedResponse: Response<EntityName>Dto = {
-                id,
-                specialField: 'Test Special',
-                isSpecial: true,
-                createdAt: new Date(),
-                modifiedAt: new Date(),
-            };
-
-            mockService.findById.mockResolvedValue(expectedResponse);
-
-            const result = await controller.findById(id);
-
-            expect(result).toBe(expectedResponse);
-            expect(service.findById).toHaveBeenCalledWith(id);
+    describe('findByType', () => {
+        it('should return entities by type', async () => {
+            const entities = [mockEntity];
+            
+            jest.spyOn(service, 'findByType').mockResolvedValue(entities);
+            
+            const result = await controller.findByType('example');
+            
+            expect(result).toBeDefined();
+            expect(result).toEqual(entities);
+            expect(service.findByType).toHaveBeenCalledWith('example');
         });
 
-        it('should throw error when entity not found', async () => {
-            const id = 'non-existent-id';
-            mockService.findById.mockRejectedValue(
-                new EntityNotFoundError(<EntityName>, `<EntityName> with id ${id} not found`)
-            );
-
-            await expect(controller.findById(id)).rejects.toThrow(EntityNotFoundError);
+        it('should handle empty result for type', async () => {
+            jest.spyOn(service, 'findByType').mockResolvedValue([]);
+            
+            const result = await controller.findByType('unknown');
+            
+            expect(result).toEqual([]);
         });
     });
-
-    // Additional test cases for update, delete, findAll, etc.
 });
 ```
 
-#### Model Test Stub
+#### Model Test Structure
+Required Imports:
 ```typescript
 import { validate } from 'class-validator';
-import { <EntityName> } from './<EntityName>';
+import { Example } from './Example';
+```
 
-describe('<EntityName>', () => {
-    let entity: <EntityName>;
+Key Points:
+- Test inheritance validations
+- Test inheritance constraints
+- Test inherited methods
+- Test inheritance edge cases
+- Use proper assertions
+- Follow AAA pattern
+- Include cleanup
+- Test inheritance errors
+
+Example Pattern:
+```typescript
+describe('Example', () => {
+    let entity: Example;
 
     beforeEach(() => {
-        entity = new <EntityName>();
+        entity = new Example();
     });
 
-    describe('validation', () => {
-        it('should validate with all required fields', async () => {
-            entity.specialField = 'Test Special';
-            entity.isSpecial = true;
+    describe('inheritance validation', () => {
+        it('should validate with inherited fields', async () => {
+            entity.base_field = 'Base Value';
+            entity.additional_field = 'Additional Value';
 
             const errors = await validate(entity);
             expect(errors.length).toBe(0);
         });
 
-        it('should fail validation without required specialField', async () => {
-            entity.isSpecial = true;
+        it('should fail validation without required inherited field', async () => {
+            entity.additional_field = 'Additional Value';
 
             const errors = await validate(entity);
             expect(errors.length).toBeGreaterThan(0);
             expect(errors[0].constraints).toHaveProperty('isNotEmpty');
         });
 
-        it('should validate with optional fields', async () => {
-            entity.specialField = 'Test Special';
-            entity.isSpecial = true;
-            entity.additionalInfo = 'Additional Info';
-
-            const errors = await validate(entity);
-            expect(errors.length).toBe(0);
-        });
-
-        it('should inherit base entity validations', async () => {
-            // Test base entity validations are properly inherited
-            entity.specialField = 'Test Special';
-            entity.isSpecial = true;
-            
-            // Add base entity required fields here
-            // entity.baseField = 'Base Value';
+        it('should validate optional inherited fields', async () => {
+            entity.base_field = 'Base Value';
+            entity.additional_field = 'Additional Value';
+            entity.optional_base_field = 'Optional Base Value';
 
             const errors = await validate(entity);
             expect(errors.length).toBe(0);
         });
     });
 
-    // Additional test cases for inheritance, custom methods, etc.
+    describe('inherited methods', () => {
+        it('should override base method correctly', () => {
+            entity.base_field = 'Base Value';
+            entity.additional_field = 'Additional Value';
+            
+            expect(entity.calculateTotal()).toBe(220); // with 20% markup instead of 10%
+        });
+
+        it('should handle inheritance edge cases', () => {
+            entity.base_field = null;
+            entity.additional_field = 'Additional Value';
+            
+            expect(entity.calculateTotal()).toBe(0);
+        });
+    });
 });
 ``` 

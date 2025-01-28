@@ -1,303 +1,223 @@
 # Entity Generation Guide - Part 2: Service, update DTO, service Tests (SDT)
 
+## Instructions for Template Creation
+- Replace `<EntityName>` with the actual entity name in PascalCase
+- Replace `<entityName>` with the entity name in camelCase
+- Ensure consistent casing across all files:
+  - PascalCase for classes and types
+  - camelCase for methods and properties
+- Verify all paths and imports are correct
+- Remove any unnecessary code or comments
+- Keep examples minimal but clear
+
 ## Aider Prompt Template
 
 ### AI Role
-You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this second phase is to generate the service layer, update DTOs, and comprehensive service tests. Focus on business logic, data integrity, and proper error handling. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
+You are a seasoned veteran software engineer focused on building robust service layers with comprehensive test coverage. Your role in this second phase is to generate the service implementation, update DTO, and service tests. Focus on proper error handling, transaction management, and thorough testing. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
 
-### Instructions for Placeholder Replacement
-- Replace `<EntityName>` with the actual entity name in PascalCase
-- Ensure consistent casing across all files:
-  - PascalCase for all TypeScript files
-  - camelCase for properties and methods
 
-### Entity Specification
-{entity model stub goes here}
 
 ### Files to Generate
 
 1. Service (`my-app/packages/backend/src/services/<EntityName>Service.ts`)
+   - Service class with dependency injection
    - CRUD operations
-   - Business logic methods
+   - Transaction management
    - Error handling
-   - Transaction handling
+   - Logging
 
-2. DTOs (`my-app/packages/shared/src/dtos/`)
-   - Update<EntityName>Dto.ts
+2. Update DTO (`my-app/packages/shared/src/dtos/<EntityName>/Update<EntityName>Dto.ts`)
+   - Partial update support
+   - Validation rules
+   - OpenAPI documentation
 
-3. Tests (`my-app/packages/backend/src/services/<EntityName>Service.spec.ts`)
-   - CRUD operation tests
-   - Business logic tests
-   - Error handling tests
+3. Service Tests (`my-app/packages/backend/src/services/<EntityName>Service.spec.ts`)
+   - Unit tests for all operations
+   - Error case coverage
+   - Transaction rollback tests
+   - Mock repository setup
 
 ### Verification Checklist
-- [ ] Service implements proper error handling
-- [ ] Service includes specialized business methods
-- [ ] Proper transaction handling implemented
-- [ ] Logging properly implemented
-- [ ] Update DTO extends Partial<CreateDTO>
-- [ ] Update DTO has proper validation
-- [ ] Tests cover all service methods
-- [ ] Tests include error cases
-- [ ] Tests use proper mocking
-- [ ] Tests handle transactions correctly
+- [ ] Service follows dependency injection pattern
+- [ ] Proper error handling for all operations
+- [ ] Transaction management for critical operations
+- [ ] Comprehensive logging
+- [ ] Update DTO supports partial updates
+- [ ] Update validation rules are correct
+- [ ] Test coverage for success cases
+- [ ] Test coverage for error cases
+- [ ] Mock repository properly configured
+- [ ] All imports properly organized
 
-### File Generation Guidelines
+### Code Structure Guidelines
 
-#### Service Guidelines
-- Implement proper error handling for unique constraints
-- Include specialized methods (enable/disable, visibility)
-- Implement soft delete handling
-- Use TypeORM transactions where needed
-- Implement proper logging
-- Include configuration validation
-- Use TypeORM query builder for complex queries
-- Implement pagination for list operations
-
-#### Update DTO Guidelines
-- Extend Partial<CreateDTO>
-- Include validation for partial updates
-- Include comprehensive OpenAPI docs
-- Handle nested object updates properly
-- Include proper validation messages
-
-#### Service Test Guidelines
-- Create test data factories
-- Implement proper mocks
-- Cover edge cases
-- Handle test transactions
-- Test error scenarios
-- Test business logic thoroughly
-- Implement proper cleanup
-- Use test database
-- Mock external services 
-
-### Generic Stubs
-
-#### Service Stub
+#### Service Structure
+Required Imports:
 ```typescript
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { <EntityName> } from '../models/<EntityName>';
-import { Create<EntityName>Dto } from '@my-app/shared';
-import { Update<EntityName>Dto } from '@my-app/shared';
-import { Response<EntityName>Dto } from '@my-app/shared';
-import { plainToInstance } from 'class-transformer';
-import { EntityNotFoundError, QueryFailedError } from 'typeorm';
+import { EntityName } from '../models/EntityName';
+```
 
+Key Points:
+- Use dependency injection for repository
+- Implement proper error handling
+- Use transactions for critical operations
+- Add comprehensive logging
+- Follow existing service patterns
+- Include method documentation
+- Handle edge cases properly
+
+Example Pattern:
+```typescript
 @Injectable()
-export class <EntityName>Service {
-    private readonly logger = new Logger(<EntityName>Service.name);
+export class ExampleService {
+    private readonly logger = new Logger(ExampleService.name);
 
     constructor(
-        @InjectRepository(<EntityName>)
-        private readonly repository: Repository<<EntityName>>,
+        @InjectRepository(Example)
+        private readonly repository: Repository<Example>,
         private readonly dataSource: DataSource,
     ) {}
 
-    async create(dto: Create<EntityName>Dto): Promise<Response<EntityName>Dto> {
-        this.logger.debug(`Creating <EntityName> with data: ${JSON.stringify(dto)}`);
-        
-        const entity = this.repository.create(dto);
-        
-        try {
-            const saved = await this.repository.save(entity);
-            return plainToInstance(Response<EntityName>Dto, saved, { excludeExtraneousValues: true });
-        } catch (error) {
-            if (error instanceof QueryFailedError) {
-                this.logger.error(`Failed to create <EntityName>: ${error.message}`);
-                throw new Error('Failed to create <EntityName> due to constraint violation');
-            }
-            throw error;
-        }
-    }
-
-    async findById(id: string): Promise<Response<EntityName>Dto> {
-        this.logger.debug(`Finding <EntityName> by id: ${id}`);
-        
-        const entity = await this.repository.findOne({ 
-            where: { id },
-            relations: ['owner']
-        });
-        
+    async findById(id: string): Promise<Example> {
+        const entity = await this.repository.findOne({ where: { id } });
         if (!entity) {
-            throw new EntityNotFoundError(<EntityName>, `<EntityName> with id ${id} not found`);
+            this.logger.warn(`Entity with ID ${id} not found`);
+            throw new NotFoundException(`Entity not found`);
         }
-        
-        return plainToInstance(Response<EntityName>Dto, entity, { excludeExtraneousValues: true });
+        return entity;
     }
 
-    async update(id: string, dto: Update<EntityName>Dto): Promise<Response<EntityName>Dto> {
-        this.logger.debug(`Updating <EntityName> ${id} with data: ${JSON.stringify(dto)}`);
-        
+    async update(id: string, dto: UpdateExampleDto): Promise<Example> {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
         
         try {
-            const entity = await queryRunner.manager.findOne(<EntityName>, { 
-                where: { id },
-                relations: ['owner']
-            });
-            
-            if (!entity) {
-                throw new EntityNotFoundError(<EntityName>, `<EntityName> with id ${id} not found`);
-            }
-            
+            const entity = await this.findById(id);
             Object.assign(entity, dto);
-            const updated = await queryRunner.manager.save(entity);
-            
+            const result = await queryRunner.manager.save(entity);
             await queryRunner.commitTransaction();
-            return plainToInstance(Response<EntityName>Dto, updated, { excludeExtraneousValues: true });
-            
+            return result;
         } catch (error) {
             await queryRunner.rollbackTransaction();
-            if (error instanceof QueryFailedError) {
-                this.logger.error(`Failed to update <EntityName>: ${error.message}`);
-                throw new Error('Failed to update <EntityName> due to constraint violation');
-            }
             throw error;
         } finally {
             await queryRunner.release();
         }
     }
-
-    async delete(id: string): Promise<void> {
-        this.logger.debug(`Deleting <EntityName> with id: ${id}`);
-        
-        const result = await this.repository.delete(id);
-        if (result.affected === 0) {
-            throw new EntityNotFoundError(<EntityName>, `<EntityName> with id ${id} not found`);
-        }
-    }
-
-    async findAll(): Promise<Response<EntityName>Dto[]> {
-        this.logger.debug('Finding all <EntityName>s');
-        
-        const entities = await this.repository.find({
-            relations: ['owner']
-        });
-        
-        return entities.map(entity => 
-            plainToInstance(Response<EntityName>Dto, entity, { excludeExtraneousValues: true })
-        );
-    }
-
-    async enable(id: string): Promise<Response<EntityName>Dto> {
-        return this.update(id, { isEnabled: true });
-    }
-
-    async disable(id: string): Promise<Response<EntityName>Dto> {
-        return this.update(id, { isEnabled: false });
-    }
 }
 ```
 
-#### Update DTO Stub
+#### Update DTO Structure
+Required Imports:
 ```typescript
-import { PartialType } from '@nestjs/swagger';
-import { Create<EntityName>Dto } from './Create<EntityName>Dto';
-
-export class Update<EntityName>Dto extends PartialType(Create<EntityName>Dto) {}
+import { IsOptional } from 'class-validator';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { CreateExampleDto } from './CreateExampleDto';
 ```
 
-#### Service Test Stub
+Key Points:
+- Extend from PartialType of Create DTO when possible
+- Make all fields optional
+- Keep validation rules from Create DTO
+- Add comprehensive OpenAPI documentation
+- Include meaningful examples
+- Follow consistent naming patterns
+
+Example Pattern:
+```typescript
+export class UpdateExampleDto extends PartialType(CreateExampleDto) {
+    @ApiProperty({
+        description: 'Optional field description',
+        required: false
+    })
+    @IsOptional()
+    optionalField?: string;
+}
+```
+
+#### Service Test Structure
+Required Imports:
 ```typescript
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { DataSource, Repository, QueryFailedError } from 'typeorm';
-import { <EntityName>Service } from './<EntityName>Service';
-import { <EntityName> } from '../models/<EntityName>';
-import { Create<EntityName>Dto, Update<EntityName>Dto } from '@my-app/shared';
+import { Repository, DataSource } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
+```
 
-describe('<EntityName>Service', () => {
-    let service: <EntityName>Service;
-    let repository: Repository<<EntityName>>;
+Key Points:
+- Mock repository and dependencies
+- Test all service methods
+- Cover error scenarios
+- Test transaction rollbacks
+- Use proper type assertions
+- Follow AAA pattern (Arrange, Act, Assert)
+- Include edge cases
+- Mock external services
+
+Example Pattern:
+```typescript
+describe('ExampleService', () => {
+    let service: ExampleService;
+    let repository: Repository<Example>;
     let dataSource: DataSource;
 
-    const mockRepository = {
-        create: jest.fn(),
-        save: jest.fn(),
-        findOne: jest.fn(),
-        find: jest.fn(),
-        delete: jest.fn(),
-    };
-
-    const mockDataSource = {
-        createQueryRunner: jest.fn(() => ({
-            connect: jest.fn(),
-            startTransaction: jest.fn(),
-            manager: {
-                findOne: jest.fn(),
-                save: jest.fn(),
-            },
-            commitTransaction: jest.fn(),
-            rollbackTransaction: jest.fn(),
-            release: jest.fn(),
-        })),
+    const mockEntity = {
+        id: '123',
+        name: 'Test'
     };
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
-                <EntityName>Service,
+                ExampleService,
                 {
-                    provide: getRepositoryToken(<EntityName>),
-                    useValue: mockRepository,
+                    provide: getRepositoryToken(Example),
+                    useClass: Repository
                 },
                 {
                     provide: DataSource,
-                    useValue: mockDataSource,
-                },
+                    useValue: {
+                        createQueryRunner: jest.fn().mockReturnValue({
+                            connect: jest.fn(),
+                            startTransaction: jest.fn(),
+                            commitTransaction: jest.fn(),
+                            rollbackTransaction: jest.fn(),
+                            release: jest.fn(),
+                            manager: {
+                                save: jest.fn()
+                            }
+                        })
+                    }
+                }
             ],
         }).compile();
 
-        service = module.get<<EntityName>Service>(<EntityName>Service);
-        repository = module.get<Repository<<EntityName>>>(getRepositoryToken(<EntityName>));
+        service = module.get<ExampleService>(ExampleService);
+        repository = module.get<Repository<Example>>(getRepositoryToken(Example));
         dataSource = module.get<DataSource>(DataSource);
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
-
-    describe('create', () => {
-        it('should create a new entity successfully', async () => {
-            const createDto: Create<EntityName>Dto = {
-                name: 'Test Name',
-                isEnabled: true,
-            };
-
-            const entity = new <EntityName>();
-            Object.assign(entity, createDto);
-            entity.id = 'test-id';
-
-            mockRepository.create.mockReturnValue(entity);
-            mockRepository.save.mockResolvedValue(entity);
-
-            const result = await service.create(createDto);
-
+    describe('update', () => {
+        it('should update entity and commit transaction', async () => {
+            const dto = { name: 'Updated' };
+            jest.spyOn(repository, 'findOne').mockResolvedValue(mockEntity);
+            
+            const result = await service.update('123', dto);
+            
             expect(result).toBeDefined();
-            expect(result.id).toBe('test-id');
-            expect(result.name).toBe(createDto.name);
-            expect(mockRepository.create).toHaveBeenCalledWith(createDto);
-            expect(mockRepository.save).toHaveBeenCalledWith(entity);
+            expect(result.name).toBe(dto.name);
         });
 
-        it('should handle unique constraint violations', async () => {
-            const createDto: Create<EntityName>Dto = {
-                name: 'Test Name',
-                isEnabled: true,
-            };
-
-            mockRepository.create.mockReturnValue(new <EntityName>());
-            mockRepository.save.mockRejectedValue(new QueryFailedError('query', [], 'unique constraint'));
-
-            await expect(service.create(createDto)).rejects.toThrow('Failed to create <EntityName> due to constraint violation');
+        it('should rollback transaction on error', async () => {
+            jest.spyOn(repository, 'findOne').mockRejectedValue(new Error());
+            
+            await expect(service.update('123', {}))
+                .rejects
+                .toThrow();
         });
     });
-
-    // Additional test cases for update, delete, findById, etc.
-});
-``` 
+}); 

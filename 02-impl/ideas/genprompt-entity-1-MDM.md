@@ -1,20 +1,27 @@
 # Entity Generation Guide - Part 1: Model, create and response DTOs, Migration (MDM)
 
-## Aider Prompt Template
-
-### AI Role
-You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this first phase is to generate the core entity model, its essential DTOs, and migration. Focus on proper data modeling, validation, and database schema. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
-
-### Instructions for Placeholder Replacement
+## Instructions for Template Creation
 - Replace `<EntityName>` with the actual entity name in PascalCase
 - Replace `<timestamp>` with the current Unix timestamp (`date +%s`)
 - Replace `<order>` with the sequence number for this migration (e.g., 001, 002)
 - Ensure consistent casing across all files:
   - PascalCase for all TypeScript files
   - camelCase for properties and methods
+- Verify all paths and imports are correct
+- Remove any unnecessary code or comments
+- Keep examples minimal but clear
+
+## Migration File Naming Convention
+- For new entities: `<timestamp>_<order>-Create<EntityName>.ts`
+- For existing entities: `<timestamp>_<order>-Modify<OwnerEntityName>With<EntityName>.ts`
+
+## Aider Prompt Template
+
+### AI Role
+You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this first phase is to generate the core entity model, its essential DTOs, and migration. Focus on proper data modeling, validation, and database schema. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
 
 ### Entity Specification
-{entity model stub goes here}
+{entity description and properties goes here}
 
 ### Files to Generate
 
@@ -27,10 +34,8 @@ You are a seasoned veteran software engineer that understands the problems cause
    - Create<EntityName>Dto.ts
    - Response<EntityName>Dto.ts
 
-3. Migration (`my-app/packages/backend/src/migrations/<timestamp>_<order>_Create<EntityName>.ts`)
-   - Table creation with class name: Create<EntityName>_<timestamp>_<order>
-   - Indices
-   - Foreign key constraints
+3. Migration (`my-app/packages/backend/src/migrations/<migration filename>`)
+   
 
 ### Verification Checklist
 - [ ] Entity follows TypeORM patterns with proper decorators
@@ -44,225 +49,169 @@ You are a seasoned veteran software engineer that understands the problems cause
 - [ ] Migration has proper up/down methods
 - [ ] All imports are properly organized and exist
 
-### File Generation Guidelines
+### Code Structure Guidelines
 
-#### Model Guidelines
-- Use `@Index` decorators for unique columns
-- Organize imports: TypeORM first, class-validator, others
-- Include comprehensive JSDoc documentation
-- Export related interfaces and types
-- Use proper null handling
-- Include proper column constraints and defaults
-
-#### DTO Guidelines
-Create DTOs:
-- Include comprehensive OpenAPI examples
-- Include proper validation messages
-- Organize imports properly
-- Use class-validator decorators
-
-Response DTOs:
-- Inherit appropriate properties from entity
-- Handle date formatting
-- Handle sensitive data
-- Include comprehensive OpenAPI docs
-
-#### Migration Guidelines
-- Create proper indices
-- Include comprehensive column constraints
-- Set appropriate default values
-- Include proper down migration
-- Use transactions
-- Follow naming convention: <timestamp>_<order>_Create<EntityName>.ts 
-
-### Generic Stubs
-
-#### Model Stub
+#### Model Structure
+Required Imports:
 ```typescript
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, ManyToOne, JoinColumn } from 'typeorm';
-import { IsNotEmpty, IsOptional, IsUUID, IsBoolean } from 'class-validator';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
+import { IsNotEmpty, IsOptional } from 'class-validator';
+```
 
-/**
- * <EntityName> entity represents a core business object in the system.
- * It maintains [describe key relationships and purpose].
- */
-@Entity('entity_name')
-@Index(['uniqueField1', 'uniqueField2'], { unique: true })
-export class <EntityName> {
+Key Points:
+- Use appropriate TypeORM decorators for entity and columns
+- Include class-validator decorators for validation
+- Add indices for unique constraints
+- Follow consistent naming conventions
+- Include comprehensive JSDoc documentation
+- Handle null/undefined cases properly
+- Use proper column types and constraints
+- Follow established patterns for timestamps
+
+Example Pattern:
+```typescript
+@Entity('example_table')
+@Index(['uniqueField'], { unique: true })
+export class ExampleEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({ type: 'varchar', nullable: false })
-    @IsNotEmpty({ message: 'Name is required' })
-    name: string;
+    @IsNotEmpty({ message: 'Field is required' })
+    requiredField: string;
 
-    @Column({ type: 'boolean', default: true })
-    @IsBoolean()
-    isEnabled: boolean;
-
-    @Column({ type: 'uuid', nullable: true })
+    @Column({ type: 'varchar', nullable: true })
     @IsOptional()
-    @IsUUID()
-    ownerId?: string;
-
-    @ManyToOne(() => Owner)
-    @JoinColumn({ name: 'ownerId' })
-    owner?: Owner;
+    optionalField?: string;
 
     @CreateDateColumn()
     createdAt: Date;
-
-    @UpdateDateColumn()
-    modifiedAt: Date;
 }
 ```
 
-#### DTO Stubs
-
-Create DTO:
+#### DTO Structure
+Required Imports:
 ```typescript
-import { IsNotEmpty, IsOptional, IsUUID, IsBoolean } from 'class-validator';
+// For Create DTO
+import { IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class Create<EntityName>Dto {
-    @ApiProperty({
-        description: 'The name of the entity',
-        example: 'Sample Name',
-    })
-    @IsNotEmpty({ message: 'Name is required' })
-    name: string;
-
-    @ApiProperty({
-        description: 'Whether the entity is enabled',
-        example: true,
-        default: true,
-    })
-    @IsOptional()
-    @IsBoolean()
-    isEnabled?: boolean;
-
-    @ApiProperty({
-        description: 'The ID of the owner entity',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-    })
-    @IsOptional()
-    @IsUUID()
-    ownerId?: string;
-}
-```
-
-Response DTO:
-```typescript
+// For Response DTO
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
+```
 
-@Exclude()
-export class Response<EntityName>Dto {
-    @Expose()
-    @ApiProperty({
-        description: 'The unique identifier',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-    })
-    id: string;
+Create DTO Key Points:
+- Include all required fields with proper validation
+- Add comprehensive OpenAPI documentation
+- Use appropriate class-validator decorators
+- Handle optional fields correctly
+- Include meaningful examples
+- Add clear validation messages
+- Follow consistent naming patterns
 
-    @Expose()
+Example Create DTO Pattern:
+```typescript
+export class CreateExampleDto {
     @ApiProperty({
-        description: 'The name of the entity',
-        example: 'Sample Name',
+        description: 'Clear description of the field purpose',
+        example: 'Example value'
     })
-    name: string;
+    @IsNotEmpty({ message: 'Clear validation message' })
+    requiredField: string;
 
-    @Expose()
     @ApiProperty({
-        description: 'Whether the entity is enabled',
-        example: true,
+        description: 'Optional field description',
+        required: false
     })
-    isEnabled: boolean;
-
-    @Expose()
-    @ApiProperty({
-        description: 'The creation timestamp',
-        example: '2024-01-27T12:00:00Z',
-    })
-    createdAt: Date;
-
-    @Expose()
-    @ApiProperty({
-        description: 'The last modification timestamp',
-        example: '2024-01-27T12:00:00Z',
-    })
-    modifiedAt: Date;
+    @IsOptional()
+    optionalField?: string;
 }
 ```
 
-#### Migration Stub
+Response DTO Key Points:
+- Use class-transformer decorators appropriately
+- Expose only necessary fields
+- Include comprehensive OpenAPI documentation
+- Handle date formatting consistently
+- Manage sensitive data appropriately
+- Follow established response patterns
+- Include meaningful examples
+
+Example Response DTO Pattern:
+```typescript
+@Exclude()
+export class ResponseExampleDto {
+    @Expose()
+    @ApiProperty({
+        description: 'Clear field description',
+        example: 'Meaningful example'
+    })
+    field: string;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Timestamp field',
+        example: '2024-01-01T00:00:00Z'
+    })
+    createdAt: Date;
+}
+```
+
+#### Migration Structure
+Required Imports:
 ```typescript
 import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm';
+```
 
-export class Create<EntityName>_<timestamp>_<order> implements MigrationInterface {
+Key Points:
+- Follow established naming convention
+- Create tables with proper constraints
+- Add appropriate indices
+- Handle foreign keys properly
+- Include both up and down methods
+- Use transactions where appropriate
+- Follow consistent column naming
+- Handle default values appropriately
+
+Example Migration Pattern:
+```typescript
+export class CreateExample_<timestamp>_<order> implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({
-                name: 'entity_name',
+                name: 'example_table',
                 columns: [
                     {
                         name: 'id',
                         type: 'uuid',
                         isPrimary: true,
-                        isGenerated: true,
                         generationStrategy: 'uuid',
-                        default: 'uuid_generate_v4()',
+                        default: 'uuid_generate_v4()'
                     },
                     {
-                        name: 'name',
+                        name: 'required_field',
                         type: 'varchar',
-                        isNullable: false,
+                        isNullable: false
                     },
                     {
-                        name: 'isEnabled',
-                        type: 'boolean',
-                        isNullable: false,
-                        default: true,
-                    },
-                    {
-                        name: 'ownerId',
-                        type: 'uuid',
-                        isNullable: true,
-                    },
-                    {
-                        name: 'createdAt',
-                        type: 'datetime',
-                        isNullable: false,
-                        default: 'CURRENT_TIMESTAMP',
-                    },
-                    {
-                        name: 'modifiedAt',
-                        type: 'datetime',
-                        isNullable: false,
-                        default: 'CURRENT_TIMESTAMP',
-                    },
+                        name: 'created_at',
+                        type: 'timestamp',
+                        default: 'CURRENT_TIMESTAMP'
+                    }
                 ],
                 indices: [
                     new TableIndex({
-                        name: 'IDX_ENTITY_NAME_UNIQUE',
-                        columnNames: ['name', 'ownerId'],
-                        isUnique: true,
-                    }),
-                ],
-                foreignKeys: [
-                    {
-                        columnNames: ['ownerId'],
-                        referencedTableName: 'owner',
-                        referencedColumnNames: ['id'],
-                        onDelete: 'SET NULL',
-                    },
-                ],
-            }),
-            true
+                        name: 'IDX_EXAMPLE_UNIQUE_FIELD',
+                        columnNames: ['unique_field'],
+                        isUnique: true
+                    })
+                ]
+            })
         );
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropTable('entity_name');
+        await queryRunner.dropTable('example_table');
     }
 } 

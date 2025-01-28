@@ -1,330 +1,236 @@
-# Entity Generation Guide - Part 3: Controller, controller Tests, model Tests (CTT)
+# Entity Generation Guide - Part 3: Controller, Controller Tests, Model Tests (CTT)
 
+## Instructions for Template Creation
+- Replace `<EntityName>` with the actual entity name in PascalCase
+- Replace `<entityName>` with the entity name in camelCase
+- Ensure consistent casing across all files:
+  - PascalCase for classes and types
+  - camelCase for methods and properties
+- Verify all paths and imports are correct
+- Remove any unnecessary code or comments
+- Keep examples minimal but clear
 
 ## Aider Prompt Template
 
 ### AI Role
-You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this third phase is to generate the controller layer and comprehensive tests. Focus on API design, request handling, and thorough testing. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
-
-### Instructions for Placeholder Replacement
-- Replace `<EntityName>` with the actual entity name in PascalCase
-- Ensure consistent casing across all files:
-  - PascalCase for all TypeScript files
-  - camelCase for properties and methods
-
-### Entity Specification
-{entity model stub goes here}
+You are a seasoned veteran software engineer focused on building robust REST APIs with comprehensive test coverage. Your role in this third phase is to generate the controller implementation and comprehensive tests. Focus on proper request/response handling, validation, and thorough testing of both the controller and model. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
 
 ### Files to Generate
 
 1. Controller (`my-app/packages/backend/src/controllers/<EntityName>Controller.ts`)
-   - REST endpoints
-   - Request/Response handling
+   - Controller class with route decorators
+   - Request validation
+   - Response handling
    - Error handling
-   - OpenAPI documentation
+   - Swagger documentation
 
 2. Tests
    - Controller Tests (`my-app/packages/backend/src/controllers/<EntityName>Controller.spec.ts`)
      - Endpoint tests
      - Error handling tests
      - Request validation tests
+     - Response format tests
    - Model Tests (`my-app/packages/backend/src/models/<EntityName>.spec.ts`)
      - Validation tests
      - Constraint tests
-     - Relationship tests
+     - Method tests
+     - Edge case tests
 
 ### Verification Checklist
-- [ ] Controller uses /api prefix in routes
-- [ ] Comprehensive OpenAPI/Swagger decorators
-- [ ] Proper validation pipes implemented
-- [ ] Auth guards properly set up
-- [ ] Consistent response transformation
-- [ ] Query parameter handling
-- [ ] Proper error response structure
+- [ ] Controller follows REST patterns
+- [ ] Request validation is comprehensive
+- [ ] Response handling is proper
+- [ ] Error handling is proper
+- [ ] Swagger documentation is complete
 - [ ] Controller tests cover all endpoints
+- [ ] Controller tests cover error cases
 - [ ] Model tests cover all validations
-- [ ] Integration tests included
+- [ ] Model tests cover all constraints
+- [ ] All imports properly organized
 
-### File Generation Guidelines
+### Code Structure Guidelines
 
-#### Controller Guidelines
-- Use `/api` prefix in routes
-- Include comprehensive OpenAPI/Swagger decorators
-- Implement proper validation pipes
-- Include proper auth guards
-- Transform responses consistently
-- Handle query parameters properly
-- Include specialized endpoints
-- Follow consistent error response structure
-- Use proper HTTP status codes
-- Handle file uploads/downloads if needed
-
-#### Controller Test Guidelines
-- Test all endpoints
-- Test validation errors
-- Test auth guards
-- Test query parameters
-- Test response formats
-- Test error responses
-- Use proper request mocking
-- Test file handling if applicable
-- Include integration tests
-
-#### Model Test Guidelines
-- Test all validations
-- Test unique constraints
-- Test default values
-- Test relationships
-- Test lifecycle hooks
-- Test custom methods
-- Use factory patterns
-- Test edge cases
-- Include proper cleanup 
-
-### Generic Stubs
-
-#### Controller Stub
+#### Controller Structure
+Required Imports:
 ```typescript
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { <EntityName>Service } from '../services/<EntityName>Service';
-import { Create<EntityName>Dto, Update<EntityName>Dto, Response<EntityName>Dto } from '@my-app/shared';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseInterceptors } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { EntityName } from '../models/EntityName';
+import { EntityNameService } from '../services/EntityNameService';
+import { CreateEntityNameDto, UpdateEntityNameDto, ResponseEntityNameDto } from '@my-app/shared';
+```
 
-@ApiTags('<EntityName>')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
-@Controller('api/<entity-name>')
-export class <EntityName>Controller {
-    constructor(private readonly service: <EntityName>Service) {}
+Key Points:
+- Use proper HTTP method decorators
+- Implement request validation
+- Handle responses consistently
+- Handle errors appropriately
+- Document with Swagger
+- Follow REST conventions
+- Include proper logging
 
-    @Post()
-    @ApiOperation({ summary: 'Create a new <EntityName>' })
-    @ApiResponse({ 
-        status: 201, 
-        description: 'The <EntityName> has been successfully created.',
-        type: Response<EntityName>Dto
-    })
-    async create(@Body() dto: Create<EntityName>Dto): Promise<Response<EntityName>Dto> {
-        return this.service.create(dto);
-    }
+Example Pattern:
+```typescript
+@Controller('examples')
+@ApiTags('examples')
+export class ExampleController {
+    constructor(
+        private readonly service: ExampleService
+    ) {}
 
     @Get(':id')
-    @ApiOperation({ summary: 'Get a <EntityName> by id' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'The <EntityName> has been successfully retrieved.',
-        type: Response<EntityName>Dto
-    })
-    @ApiResponse({ status: 404, description: '<EntityName> not found' })
-    async findById(@Param('id') id: string): Promise<Response<EntityName>Dto> {
+    @ApiOperation({ summary: 'Get example by ID' })
+    @ApiResponse({ status: 200, type: ResponseExampleDto })
+    async findById(@Param('id') id: string): Promise<ResponseExampleDto> {
         return this.service.findById(id);
     }
 
     @Put(':id')
-    @ApiOperation({ summary: 'Update a <EntityName>' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'The <EntityName> has been successfully updated.',
-        type: Response<EntityName>Dto
-    })
-    @ApiResponse({ status: 404, description: '<EntityName> not found' })
+    @ApiOperation({ summary: 'Update example' })
+    @ApiResponse({ status: 200, type: ResponseExampleDto })
     async update(
         @Param('id') id: string,
-        @Body() dto: Update<EntityName>Dto
-    ): Promise<Response<EntityName>Dto> {
+        @Body() dto: UpdateExampleDto
+    ): Promise<ResponseExampleDto> {
         return this.service.update(id, dto);
-    }
-
-    @Delete(':id')
-    @ApiOperation({ summary: 'Delete a <EntityName>' })
-    @ApiResponse({ status: 204, description: 'The <EntityName> has been successfully deleted.' })
-    @ApiResponse({ status: 404, description: '<EntityName> not found' })
-    async delete(@Param('id') id: string): Promise<void> {
-        await this.service.delete(id);
-    }
-
-    @Get()
-    @ApiOperation({ summary: 'Get all <EntityName>s' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'List of <EntityName>s retrieved successfully.',
-        type: [Response<EntityName>Dto]
-    })
-    async findAll(): Promise<Response<EntityName>Dto[]> {
-        return this.service.findAll();
-    }
-
-    @Put(':id/enable')
-    @ApiOperation({ summary: 'Enable a <EntityName>' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'The <EntityName> has been successfully enabled.',
-        type: Response<EntityName>Dto
-    })
-    async enable(@Param('id') id: string): Promise<Response<EntityName>Dto> {
-        return this.service.enable(id);
-    }
-
-    @Put(':id/disable')
-    @ApiOperation({ summary: 'Disable a <EntityName>' })
-    @ApiResponse({ 
-        status: 200, 
-        description: 'The <EntityName> has been successfully disabled.',
-        type: Response<EntityName>Dto
-    })
-    async disable(@Param('id') id: string): Promise<Response<EntityName>Dto> {
-        return this.service.disable(id);
     }
 }
 ```
 
-#### Controller Test Stub
+#### Controller Test Structure
+Required Imports:
 ```typescript
 import { Test, TestingModule } from '@nestjs/testing';
-import { <EntityName>Controller } from './<EntityName>Controller';
-import { <EntityName>Service } from '../services/<EntityName>Service';
-import { Create<EntityName>Dto, Update<EntityName>Dto, Response<EntityName>Dto } from '@my-app/shared';
-import { EntityNotFoundError } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
+import { ExampleController } from './ExampleController';
+import { ExampleService } from '../services/ExampleService';
+```
 
-describe('<EntityName>Controller', () => {
-    let controller: <EntityName>Controller;
-    let service: <EntityName>Service;
+Key Points:
+- Mock service dependencies
+- Test all endpoints
+- Cover validation errors
+- Test response formats
+- Use proper assertions
+- Follow AAA pattern
+- Include edge cases
+- Test error responses
 
-    const mockService = {
-        create: jest.fn(),
-        findById: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        findAll: jest.fn(),
-        enable: jest.fn(),
-        disable: jest.fn(),
+Example Pattern:
+```typescript
+describe('ExampleController', () => {
+    let controller: ExampleController;
+    let service: ExampleService;
+
+    const mockEntity = {
+        id: '123',
+        name: 'Test'
     };
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            controllers: [<EntityName>Controller],
+            controllers: [ExampleController],
             providers: [
                 {
-                    provide: <EntityName>Service,
-                    useValue: mockService,
-                },
-            ],
+                    provide: ExampleService,
+                    useValue: {
+                        findById: jest.fn(),
+                        update: jest.fn()
+                    }
+                }
+            ]
         }).compile();
 
-        controller = module.get<<EntityName>Controller>(<EntityName>Controller);
-        service = module.get<<EntityName>Service>(<EntityName>Service);
-    });
-
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
-
-    describe('create', () => {
-        it('should create a new entity successfully', async () => {
-            const createDto: Create<EntityName>Dto = {
-                name: 'Test Name',
-                isEnabled: true,
-            };
-
-            const expectedResponse: Response<EntityName>Dto = {
-                id: 'test-id',
-                name: 'Test Name',
-                isEnabled: true,
-                createdAt: new Date(),
-                modifiedAt: new Date(),
-            };
-
-            mockService.create.mockResolvedValue(expectedResponse);
-
-            const result = await controller.create(createDto);
-
-            expect(result).toBe(expectedResponse);
-            expect(service.create).toHaveBeenCalledWith(createDto);
-        });
+        controller = module.get<ExampleController>(ExampleController);
+        service = module.get<ExampleService>(ExampleService);
     });
 
     describe('findById', () => {
-        it('should find entity by id successfully', async () => {
-            const id = 'test-id';
-            const expectedResponse: Response<EntityName>Dto = {
-                id,
-                name: 'Test Name',
-                isEnabled: true,
-                createdAt: new Date(),
-                modifiedAt: new Date(),
-            };
+        it('should return entity by id', async () => {
+            jest.spyOn(service, 'findById').mockResolvedValue(mockEntity);
 
-            mockService.findById.mockResolvedValue(expectedResponse);
+            const result = await controller.findById('123');
 
-            const result = await controller.findById(id);
-
-            expect(result).toBe(expectedResponse);
-            expect(service.findById).toHaveBeenCalledWith(id);
+            expect(result).toBeDefined();
+            expect(result).toEqual(mockEntity);
+            expect(service.findById).toHaveBeenCalledWith('123');
         });
 
-        it('should throw error when entity not found', async () => {
-            const id = 'non-existent-id';
-            mockService.findById.mockRejectedValue(
-                new EntityNotFoundError(<EntityName>, `<EntityName> with id ${id} not found`)
-            );
+        it('should throw NotFoundException when entity not found', async () => {
+            jest.spyOn(service, 'findById').mockRejectedValue(new NotFoundException());
 
-            await expect(controller.findById(id)).rejects.toThrow(EntityNotFoundError);
+            await expect(controller.findById('999'))
+                .rejects
+                .toThrow(NotFoundException);
         });
     });
-
-    // Additional test cases for update, delete, findAll, etc.
 });
 ```
 
-#### Model Test Stub
+#### Model Test Structure
+Required Imports:
 ```typescript
 import { validate } from 'class-validator';
-import { <EntityName> } from './<EntityName>';
+import { Example } from './Example';
+```
 
-describe('<EntityName>', () => {
-    let entity: <EntityName>;
+Key Points:
+- Test all validations
+- Test all constraints
+- Test custom methods
+- Test edge cases
+- Use proper assertions
+- Follow AAA pattern
+- Include cleanup
+- Test error cases
+
+Example Pattern:
+```typescript
+describe('Example', () => {
+    let entity: Example;
 
     beforeEach(() => {
-        entity = new <EntityName>();
+        entity = new Example();
     });
 
     describe('validation', () => {
         it('should validate with all required fields', async () => {
             entity.name = 'Test Name';
-            entity.isEnabled = true;
+            entity.email = 'test@example.com';
 
             const errors = await validate(entity);
             expect(errors.length).toBe(0);
         });
 
         it('should fail validation without required name', async () => {
-            entity.isEnabled = true;
+            entity.email = 'test@example.com';
 
             const errors = await validate(entity);
             expect(errors.length).toBeGreaterThan(0);
             expect(errors[0].constraints).toHaveProperty('isNotEmpty');
         });
 
-        it('should validate with optional fields', async () => {
+        it('should validate optional fields', async () => {
             entity.name = 'Test Name';
-            entity.isEnabled = true;
-            entity.ownerId = '123e4567-e89b-12d3-a456-426614174000';
+            entity.email = 'test@example.com';
+            entity.description = 'Optional description';
 
             const errors = await validate(entity);
             expect(errors.length).toBe(0);
         });
-
-        it('should fail validation with invalid UUID for ownerId', async () => {
-            entity.name = 'Test Name';
-            entity.isEnabled = true;
-            entity.ownerId = 'invalid-uuid';
-
-            const errors = await validate(entity);
-            expect(errors.length).toBeGreaterThan(0);
-            expect(errors[0].constraints).toHaveProperty('isUuid');
-        });
     });
 
-    // Additional test cases for relationships, custom methods, etc.
+    describe('methods', () => {
+        it('should calculate derived values correctly', () => {
+            entity.value = 100;
+            
+            expect(entity.calculateTotal()).toBe(110); // with 10% markup
+        });
+
+        it('should handle edge cases in calculations', () => {
+            entity.value = 0;
+            
+            expect(entity.calculateTotal()).toBe(0);
+        });
+    });
 }); 

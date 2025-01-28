@@ -6,10 +6,10 @@ This template provides the common setup and command structure for generating ent
 ## File Location
 Generate file at: `02-impl/ideas/genprompt/<EntityName>/0-aider.md`
 
-## Instructions
+## AI Instructions
 1. Copy this template to the target location
 2. Replace `<EntityName>` with the actual entity name
-3. Replace `{ }` in the command line with the appropriate file paths
+3. Replace `{ }` in the command line with the appropriate file paths in aider cmdline
 4. Ensure all referenced files exist before running aider
 
 ## Generation Template
@@ -17,7 +17,7 @@ Generate file at: `02-impl/ideas/genprompt/<EntityName>/0-aider.md`
 ### Aider Command Line
 ```bash
 gouserflow && rm -rf .aider.tags.cache.v3 && 
-aider --architect --model o1-mini {include full relative file paths to existing model, service, controller, dtos, migration file, model test, service test, controller test}
+aider --no-auto-commits --architect --model sonnet {include full relative file paths to existing model, service, controller, dtos, migration file, model test, service test, controller test}
 ```
 
 ### Aider Tree Command (don't change)
@@ -34,7 +34,7 @@ The following paths should exist and be included in the command line:
   - `my-app/packages/shared/src/dtos/<EntityName>/Create<EntityName>Dto.ts`
   - `my-app/packages/shared/src/dtos/<EntityName>/Update<EntityName>Dto.ts`
   - `my-app/packages/shared/src/dtos/<EntityName>/Response<EntityName>Dto.ts`
-- Migration: `my-app/packages/backend/src/migrations/<timestamp>_<order>_Create<EntityName>.ts`
+- Migration: `my-app/packages/backend/src/migrations/<timestamp>_<order>-Create<EntityName>.ts`
 - Tests:
   - `my-app/packages/backend/src/models/<EntityName>.spec.ts`
   - `my-app/packages/backend/src/services/<EntityName>Service.spec.ts`

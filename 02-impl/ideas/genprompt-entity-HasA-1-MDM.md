@@ -1,274 +1,243 @@
-# Entity Generation Guide - Has-A Relationship - Part 1: Model, DTOs, Migration (MDM)
+# Entity Generation Guide - Has-A Relationship (MDM)
+
+## Instructions for Template Creation
+- Replace `<EntityName>` with the actual entity name in PascalCase
+- Replace `<OwnerEntityName>` with the owner entity name in PascalCase
+- Replace `<entityName>` with the entity name in camelCase
+- Replace `<ownerEntityName>` with the owner entity name in camelCase
+- Ensure consistent casing across all files:
+  - PascalCase for classes and types
+  - camelCase for methods and properties
+- Verify all paths and imports are correct
+- Remove any unnecessary code or comments
+- Keep examples minimal but clear
+
+## Migration File Naming Convention
+- For new entities: `<timestamp>_<order>-Create<EntityName>.ts`
+- For existing entities: `<timestamp>_<order>-Modify<OwnerEntityName>With<EntityName>.ts`
 
 ## Aider Prompt Template
 
 ### AI Role
-You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this first phase is to generate the core entity model, its essential DTOs, and migration for an entity that has a Has-A relationship with another entity. Focus on proper relationship modeling, validation, and database schema. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
-
-##### Semantic Examples: 
-- `OwnerEntityName` has-a `EntityName`
-- User has-a Preferences
-- User.preferences = new Preferences();
-
-### Instructions for Placeholder Replacement
-- Replace `<EntityName>` with the actual entity name in PascalCase (e.g., BillingCredential)
-- Replace `<OwnerEntityName>` with the containing entity name in PascalCase (e.g., BillingCredentialSet)
-- Replace `<timestamp>` with the current Unix timestamp (`date +%s`)
-- Replace `<order>` with the sequence number for this migration (e.g., 001, 002)
-- Ensure consistent casing across all files:
-  - PascalCase for all TypeScript files
-  - camelCase for properties and methods
-
-### Entity Specification
-{entity model stub goes here}
+You are a seasoned veteran software engineer focused on implementing Has-A relationships in TypeORM entities. Your role is to generate the model, DTOs, and migration files for entities with Has-A relationships. Focus on proper relationship modeling, validation, and database schema. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
 
 ### Files to Generate
 
 1. Model (`my-app/packages/backend/src/models/<EntityName>.ts`)
-   - Entity definition with decorators
-   - Relationship decorators
-   - Column constraints and indices
-   - Foreign key constraints
+   - Entity class with relationship decorators
+   - Validation rules
+   - Indices and constraints
+   - Relationship configuration
 
-2. DTOs (`my-app/packages/shared/src/dtos/`)
+2. DTOs (`my-app/packages/shared/src/dtos/<EntityName>/`)
    - Create<EntityName>Dto.ts
    - Response<EntityName>Dto.ts
 
-3. Migration (`my-app/packages/backend/src/migrations/<timestamp>_<order>_Create<EntityName>.ts`)
-   - Table creation
-   - Indices
-   - Foreign key constraints
-
-4. Owner Entity Updates
-   - Update owner entity model with relationship
-   - Update owner entity DTOs if needed
+3. Migration (`my-app/packages/backend/src/migrations/<migration filename>`)
+   
 
 ### Verification Checklist
-- [ ] Entity follows TypeORM patterns with proper decorators
-- [ ] Relationship decorators are properly configured
-- [ ] Foreign key constraints are correctly defined
-- [ ] Proper @Index decorators for unique columns
-- [ ] Comprehensive JSDoc documentation
-- [ ] Proper null handling with TypeScript strict mode
-- [ ] Column constraints and defaults properly set
-- [ ] DTOs have comprehensive OpenAPI examples
-- [ ] DTOs handle relationship fields appropriately
-- [ ] DTOs have proper validation messages
-- [ ] Migration includes proper indices and foreign keys
-- [ ] Migration has proper up/down methods
-- [ ] Owner entity updates maintain consistency
-- [ ] All imports are properly organized and exist
+- [ ] Model has proper relationship decorators
+- [ ] Foreign key constraints are defined
+- [ ] Indices are properly configured
+- [ ] Validation rules are comprehensive
+- [ ] DTOs handle relationship fields
+- [ ] Migration includes proper constraints
+- [ ] All imports properly organized
+- [ ] Naming follows conventions
+- [ ] Documentation is complete
+- [ ] Relationship cascade options set
 
-### File Generation Guidelines
+### Code Structure Guidelines
 
-#### Model Guidelines
-- Use proper relationship decorators (@ManyToOne, @OneToMany, etc.)
-- Configure cascade options appropriately
-- Set up proper foreign key columns
-- Use `@Index` decorators for unique columns
-- Organize imports: TypeORM first, class-validator, others
-- Include comprehensive JSDoc documentation
-- Export related interfaces and types
-- Use proper null handling
-- Include proper column constraints and defaults
-
-#### DTO Guidelines
-Create DTOs:
-- Include relationship fields
-- Include comprehensive OpenAPI examples
-- Include proper validation messages
-- Organize imports properly
-- Use class-validator decorators
-
-Response DTOs:
-- Inherit appropriate properties from entity
-- Handle relationship data appropriately
-- Handle date formatting
-- Handle sensitive data
-- Include comprehensive OpenAPI docs
-
-#### Migration Guidelines
-- Create proper indices
-- Include comprehensive column constraints
-- Set up foreign key constraints
-- Set appropriate default values
-- Include proper down migration
-- Use transactions
-- Follow naming convention: <timestamp>_<order>_Create<EntityName>.ts
-
-### Generic Stubs
-
-#### Model Stub
+#### Model Structure
+Required Imports:
 ```typescript
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
-import { OwnerEntity } from './OwnerEntity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { IsNotEmpty, IsOptional } from 'class-validator';
+import { OwnerEntityName } from './OwnerEntityName';
+```
 
-/**
- * <EntityName> entity represents a component owned by <OwnerEntityName>.
- * It maintains [describe relationship and purpose].
- */
-@Entity('entity_name')
-export class <EntityName> {
+Key Points:
+- Use appropriate relationship decorator (ManyToOne/OneToMany)
+- Configure proper cascade options
+- Set up foreign key constraints
+- Add indices for performance
+- Include relationship validation
+- Handle null/undefined cases
+- Document relationship behavior
+
+Example Pattern:
+```typescript
+@Entity()
+export class Example {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'varchar', nullable: false })
-    @IsNotEmpty({ message: 'Name is required' })
-    name: string;
-
-    @Column({ type: 'uuid', nullable: false })
-    @IsNotEmpty()
-    @IsUUID()
-    ownerId: string;
-
-    @ManyToOne(() => OwnerEntity, owner => owner.entities, {
+    @ManyToOne(() => OwnerEntity, owner => owner.examples, {
         nullable: false,
         onDelete: 'CASCADE'
     })
-    @JoinColumn({ name: 'ownerId' })
+    @JoinColumn({ name: 'owner_id' })
     owner: OwnerEntity;
 
+    @Column()
+    @Index()
+    owner_id: string;
+
     @CreateDateColumn()
-    createdAt: Date;
+    created_at: Date;
 
     @UpdateDateColumn()
-    modifiedAt: Date;
+    updated_at: Date;
 }
 ```
 
-#### DTO Stubs
-
-Create DTO:
+#### DTO Structure
+Required Imports:
 ```typescript
-import { IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
+```
 
-export class Create<EntityName>Dto {
-    @ApiProperty({
-        description: 'The name of the entity',
-        example: 'Sample Name',
-    })
-    @IsNotEmpty({ message: 'Name is required' })
-    name: string;
+Key Points:
+- Include relationship fields in DTOs
+- Add proper validation for foreign keys
+- Use clear field descriptions
+- Include relationship documentation
+- Handle nested objects appropriately
+- Follow naming conventions
 
+Example Pattern:
+```typescript
+// Create DTO
+export class CreateExampleDto {
     @ApiProperty({
         description: 'The ID of the owner entity',
-        example: '123e4567-e89b-12d3-a456-426614174000',
+        example: '123e4567-e89b-12d3-a456-426614174000'
     })
-    @IsNotEmpty({ message: 'Owner ID is required' })
+    @IsNotEmpty()
     @IsUUID()
-    ownerId: string;
+    owner_id: string;
 }
-```
 
-Response DTO:
-```typescript
-import { ApiProperty } from '@nestjs/swagger';
-import { Exclude, Expose } from 'class-transformer';
-
-@Exclude()
-export class Response<EntityName>Dto {
+// Response DTO
+export class ResponseExampleDto {
     @Expose()
     @ApiProperty({
         description: 'The unique identifier',
-        example: '123e4567-e89b-12d3-a456-426614174000',
+        example: '123e4567-e89b-12d3-a456-426614174000'
     })
     id: string;
 
     @Expose()
     @ApiProperty({
-        description: 'The name of the entity',
-        example: 'Sample Name',
+        description: 'The owner of this entity',
+        type: () => ResponseOwnerDto
     })
-    name: string;
-
-    @Expose()
-    @ApiProperty({
-        description: 'The ID of the owner entity',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-    })
-    ownerId: string;
-
-    @Expose()
-    @ApiProperty({
-        description: 'The creation timestamp',
-        example: '2024-01-27T12:00:00Z',
-    })
-    createdAt: Date;
-
-    @Expose()
-    @ApiProperty({
-        description: 'The last modification timestamp',
-        example: '2024-01-27T12:00:00Z',
-    })
-    modifiedAt: Date;
+    owner: ResponseOwnerDto;
 }
 ```
 
-#### Migration Stub
+#### Migration Structure
+Required Imports:
 ```typescript
-import { MigrationInterface, QueryRunner, Table, TableIndex, TableForeignKey } from 'typeorm';
+import { MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex } from 'typeorm';
+```
 
-export class Create<EntityName>_<timestamp>_<order> implements MigrationInterface {
+Key Points:
+- Use appropriate migration naming
+- Create proper foreign key constraints
+- Add necessary indices
+- Include rollback logic
+- Handle existing data
+- Follow naming conventions
+- Document migration purpose
+
+Example Pattern:
+```typescript
+// For new entities
+export class CreateExample implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({
-                name: 'entity_name',
+                name: 'example',
                 columns: [
                     {
                         name: 'id',
                         type: 'uuid',
                         isPrimary: true,
-                        isGenerated: true,
                         generationStrategy: 'uuid',
-                        default: 'uuid_generate_v4()',
+                        default: 'uuid_generate_v4()'
                     },
                     {
-                        name: 'name',
-                        type: 'varchar',
-                        isNullable: false,
-                    },
-                    {
-                        name: 'ownerId',
+                        name: 'owner_id',
                         type: 'uuid',
-                        isNullable: false,
+                        isNullable: false
                     },
                     {
-                        name: 'createdAt',
-                        type: 'datetime',
-                        isNullable: false,
-                        default: 'CURRENT_TIMESTAMP',
+                        name: 'created_at',
+                        type: 'timestamp',
+                        default: 'now()'
                     },
                     {
-                        name: 'modifiedAt',
-                        type: 'datetime',
-                        isNullable: false,
-                        default: 'CURRENT_TIMESTAMP',
-                    },
-                ],
-                indices: [
-                    new TableIndex({
-                        name: 'IDX_ENTITY_NAME_OWNER',
-                        columnNames: ['ownerId'],
-                    }),
-                ],
-                foreignKeys: [
-                    new TableForeignKey({
-                        name: 'FK_ENTITY_NAME_OWNER',
-                        columnNames: ['ownerId'],
-                        referencedTableName: 'owner_table',
-                        referencedColumnNames: ['id'],
-                        onDelete: 'CASCADE',
-                    }),
-                ],
-            }),
-            true
+                        name: 'updated_at',
+                        type: 'timestamp',
+                        default: 'now()'
+                    }
+                ]
+            })
+        );
+
+        await queryRunner.createForeignKey(
+            'example',
+            new TableForeignKey({
+                columnNames: ['owner_id'],
+                referencedColumnNames: ['id'],
+                referencedTableName: 'owner',
+                onDelete: 'CASCADE'
+            })
+        );
+
+        await queryRunner.createIndex(
+            'example',
+            new TableIndex({
+                name: 'IDX_EXAMPLE_OWNER',
+                columnNames: ['owner_id']
+            })
         );
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropTable('entity_name');
+        await queryRunner.dropTable('example');
     }
 }
-``` 
+
+// For existing entities
+export class ModifyOwnerWithExample implements MigrationInterface {
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.addColumn(
+            'owner',
+            new TableColumn({
+                name: 'example_id',
+                type: 'uuid',
+                isNullable: true
+            })
+        );
+
+        await queryRunner.createForeignKey(
+            'owner',
+            new TableForeignKey({
+                columnNames: ['example_id'],
+                referencedColumnNames: ['id'],
+                referencedTableName: 'example',
+                onDelete: 'SET NULL'
+            })
+        );
+    }
+
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.dropColumn('owner', 'example_id');
+    }
+}
