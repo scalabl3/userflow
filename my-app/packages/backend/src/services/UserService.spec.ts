@@ -6,15 +6,12 @@ import { Repository } from 'typeorm';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateUserDto } from '@my-app/shared/dist/dtos/User/CreateUserDto';
 import { UpdateUserDto } from '@my-app/shared/dist/dtos/User/UpdateUserDto';
-import { Organization } from '../models/Organization';
-import { UserState } from '@my-app/shared/dist/enums/UserState';
+import { user as userMock } from '../test/__mocks__/user.mock';
+import { mockRepository } from '../test/setup';
 
 describe('UserService', () => {
     let service: UserService;
     let repository: Repository<User>;
-
-    let mockOrg: Organization;
-    let mockUser: User;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -22,13 +19,7 @@ describe('UserService', () => {
                 UserService,
                 {
                     provide: getRepositoryToken(User),
-                    useValue: {
-                        create: jest.fn(),
-                        save: jest.fn(),
-                        find: jest.fn(),
-                        findOne: jest.fn(),
-                        remove: jest.fn(),
-                    },
+                    useFactory: mockRepository,
                 },
             ],
         }).compile();
@@ -36,29 +27,8 @@ describe('UserService', () => {
         service = module.get<UserService>(UserService);
         repository = module.get<Repository<User>>(getRepositoryToken(User));
 
-        mockOrg = new Organization();
-        mockOrg.id = 'org123';
-        mockOrg.name = 'Test Org';
-        mockOrg.visible = true;
-
-        mockUser = new User();
-        mockUser.id = 'user123';
-        mockUser.firstname = 'John';
-        mockUser.lastname = 'Doe';
-        mockUser.username = 'johndoe';
-        mockUser.displayname = 'John Doe';
-        mockUser.contactEmail = 'john@example.com';
-        mockUser.organizationId = mockOrg.id;
-        mockUser.state = UserState.ACTIVE;
-        mockUser.preferences = {
-            theme: 'light',
-            notifications: {
-                email: true,
-                push: true
-            }
-        };
-        mockUser.createdAt = new Date();
-        mockUser.modifiedAt = new Date();
+        // Reset mocks
+        jest.clearAllMocks();
     });
 
     it('should be defined', () => {
@@ -67,25 +37,11 @@ describe('UserService', () => {
 
     describe('create', () => {
         it('should create a new user when username is unique', async () => {
-            const createUserDto: CreateUserDto = {
-                firstname: 'John',
-                lastname: 'Doe',
-                username: 'johndoe',
-                displayname: 'John Doe',
-                contactEmail: 'john.doe@example.com',
-                organizationId: 'org123',
-                preferences: {
-                    theme: 'light',
-                    notifications: {
-                        email: true,
-                        push: true
-                    }
-                }
-            };
+            const createUserDto = userMock.dtos.create;
 
             jest.spyOn(repository, 'findOne').mockResolvedValue(null);
-            jest.spyOn(repository, 'create').mockReturnValue(mockUser);
-            jest.spyOn(repository, 'save').mockResolvedValue(mockUser);
+            jest.spyOn(repository, 'create').mockReturnValue(userMock.standard);
+            jest.spyOn(repository, 'save').mockResolvedValue(userMock.standard);
 
             const result = await service.create(createUserDto);
 
@@ -93,28 +49,14 @@ describe('UserService', () => {
                 where: { username: createUserDto.username }
             });
             expect(repository.create).toHaveBeenCalledWith(createUserDto);
-            expect(repository.save).toHaveBeenCalledWith(mockUser);
-            expect(result).toEqual(mockUser);
+            expect(repository.save).toHaveBeenCalledWith(userMock.standard);
+            expect(result).toEqual(userMock.standard);
         });
 
         it('should throw ConflictException when username already exists', async () => {
-            const createUserDto: CreateUserDto = {
-                firstname: 'John',
-                lastname: 'Doe',
-                username: 'johndoe',
-                displayname: 'John Doe',
-                contactEmail: 'john.doe@example.com',
-                organizationId: 'org123',
-                preferences: {
-                    theme: 'light',
-                    notifications: {
-                        email: true,
-                        push: true
-                    }
-                }
-            };
+            const createUserDto = userMock.dtos.create;
 
-            jest.spyOn(repository, 'findOne').mockResolvedValue(mockUser);
+            jest.spyOn(repository, 'findOne').mockResolvedValue(userMock.standard);
 
             await expect(service.create(createUserDto)).rejects.toThrow(
                 new ConflictException(`Username ${createUserDto.username} is already taken`)
@@ -124,7 +66,7 @@ describe('UserService', () => {
 
     describe('findAll', () => {
         it('should return an array of users', async () => {
-            const users = [mockUser];
+            const users = [userMock.standard];
             jest.spyOn(repository, 'find').mockResolvedValue(users);
 
             const result = await service.findAll();
@@ -149,15 +91,15 @@ describe('UserService', () => {
 
     describe('findOne', () => {
         it('should return a user by id', async () => {
-            jest.spyOn(repository, 'findOne').mockResolvedValue(mockUser);
+            jest.spyOn(repository, 'findOne').mockResolvedValue(userMock.standard);
 
-            const result = await service.findOne('user123');
+            const result = await service.findOne(userMock.standard.id);
 
             expect(repository.findOne).toHaveBeenCalledWith({
-                where: { id: 'user123' },
+                where: { id: userMock.standard.id },
                 relations: ['organization']
             });
-            expect(result).toEqual(mockUser);
+            expect(result).toEqual(userMock.standard);
         });
 
         it('should throw NotFoundException when user not found', async () => {
@@ -171,15 +113,15 @@ describe('UserService', () => {
 
     describe('findByUsername', () => {
         it('should return a user by username', async () => {
-            jest.spyOn(repository, 'findOne').mockResolvedValue(mockUser);
+            jest.spyOn(repository, 'findOne').mockResolvedValue(userMock.standard);
 
-            const result = await service.findByUsername('johndoe');
+            const result = await service.findByUsername(userMock.standard.username);
 
             expect(repository.findOne).toHaveBeenCalledWith({
-                where: { username: 'johndoe' },
+                where: { username: userMock.standard.username },
                 relations: ['organization']
             });
-            expect(result).toEqual(mockUser);
+            expect(result).toEqual(userMock.standard);
         });
 
         it('should return null when username not found', async () => {
@@ -197,25 +139,25 @@ describe('UserService', () => {
 
     describe('update', () => {
         it('should update a user when username is not changed', async () => {
-            const updateUserDto: UpdateUserDto = {
-                firstname: 'Jane',
-                preferences: {
-                    theme: 'dark'
-                }
-            };
-
+            const updateUserDto = userMock.dtos.update;
             const updatedUser = new User();
-            Object.assign(updatedUser, mockUser, updateUserDto);
+            Object.assign(updatedUser, userMock.standard);
+            if (updateUserDto.displayname) {
+                updatedUser.displayname = updateUserDto.displayname;
+            }
+            if (updateUserDto.preferences) {
+                updatedUser.preferences = updateUserDto.preferences;
+            }
             
             jest.spyOn(repository, 'findOne')
-                .mockResolvedValueOnce(mockUser) // First call for findOne
+                .mockResolvedValueOnce(userMock.standard) // First call for findOne
                 .mockResolvedValueOnce(null);    // Second call for username check
             jest.spyOn(repository, 'save').mockResolvedValue(updatedUser);
 
-            const result = await service.update('user123', updateUserDto);
+            const result = await service.update(userMock.standard.id, updateUserDto);
 
             expect(repository.findOne).toHaveBeenCalledWith({
-                where: { id: 'user123' },
+                where: { id: userMock.standard.id },
                 relations: ['organization']
             });
             expect(repository.save).toHaveBeenCalled();
@@ -223,15 +165,13 @@ describe('UserService', () => {
         });
 
         it('should throw ConflictException when updating to existing username', async () => {
-            const updateUserDto: UpdateUserDto = {
-                username: 'existinguser'
-            };
+            const updateUserDto: UpdateUserDto = { username: 'existinguser' };
 
             jest.spyOn(repository, 'findOne')
-                .mockResolvedValueOnce(mockUser) // First call for findOne
+                .mockResolvedValueOnce(userMock.standard) // First call for findOne
                 .mockResolvedValueOnce(new User()); // Second call finding existing username
 
-            await expect(service.update('user123', updateUserDto)).rejects.toThrow(
+            await expect(service.update(userMock.standard.id, updateUserDto)).rejects.toThrow(
                 new ConflictException(`Username ${updateUserDto.username} is already taken`)
             );
         });
@@ -247,16 +187,16 @@ describe('UserService', () => {
 
     describe('remove', () => {
         it('should remove a user', async () => {
-            jest.spyOn(repository, 'findOne').mockResolvedValue(mockUser);
-            jest.spyOn(repository, 'remove').mockResolvedValue(mockUser);
+            jest.spyOn(repository, 'findOne').mockResolvedValue(userMock.standard);
+            jest.spyOn(repository, 'remove').mockResolvedValue(userMock.standard);
 
-            await service.remove('user123');
+            await service.remove(userMock.standard.id);
 
             expect(repository.findOne).toHaveBeenCalledWith({
-                where: { id: 'user123' },
+                where: { id: userMock.standard.id },
                 relations: ['organization']
             });
-            expect(repository.remove).toHaveBeenCalledWith(mockUser);
+            expect(repository.remove).toHaveBeenCalledWith(userMock.standard);
         });
 
         it('should throw NotFoundException when removing non-existent user', async () => {

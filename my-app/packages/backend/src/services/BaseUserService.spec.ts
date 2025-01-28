@@ -6,44 +6,13 @@ import { Repository, UpdateResult } from 'typeorm';
 import { CreateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/CreateBaseUserDto';
 import { UserState } from '@my-app/shared/dist/enums/UserState';
 import { BadRequestException } from '@nestjs/common';
-import { LoginProvider } from '../models/LoginProvider';
-import { LoginCredential } from '../models/LoginCredential';
-import { CredentialType, OAuthProvider } from '@my-app/shared';
+import { user as userMock } from '../test/__mocks__/user.mock';
+import { auth as authMock } from '../test/__mocks__/auth.mock';
 import { mockRepository } from '../test/setup';
 
 describe('BaseUserService', () => {
     let service: BaseUserService;
     let repository: Repository<BaseUser>;
-
-    const mockLoginProvider: LoginProvider = {
-        id: '123',
-        code: 'email',
-        name: 'Email and Password',
-        isEnabled: true,
-        createdAt: new Date(),
-        modifiedAt: new Date()
-    } as LoginProvider;
-
-    const mockLoginCredential: LoginCredential = {
-        id: '456',
-        identifier: 'test@example.com',
-        credentials: 'hashedPassword',
-        credentialType: CredentialType.PASSWORD,
-        loginProvider: mockLoginProvider,
-        loginProviderId: '123',
-        isEnabled: true,
-        createdAt: new Date(),
-        modifiedAt: new Date()
-    } as LoginCredential;
-
-    const mockUser: BaseUser = {
-        id: '789',
-        state: UserState.ACTIVE,
-        primaryLoginCredentialId: '456',
-        loginCredentials: [mockLoginCredential],
-        createdAt: new Date(),
-        modifiedAt: new Date()
-    } as BaseUser;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -67,22 +36,13 @@ describe('BaseUserService', () => {
     describe('create', () => {
         it('should create a user with a login credential', async () => {
             const createUserDto: CreateBaseUserDto = {
-                firstname: 'John',
-                lastname: 'Doe',
-                contactEmail: 'john@example.com',
-                primaryLoginCredentialId: mockLoginCredential.id
+                firstname: userMock.base.firstname,
+                lastname: userMock.base.lastname,
+                contactEmail: userMock.base.contactEmail,
+                primaryLoginCredentialId: authMock.credentials.password.id
             };
 
-            const savedUser: BaseUser = {
-                id: 'user123',
-                ...createUserDto,
-                state: UserState.PENDING,
-                isEnabled: true,
-                createdAt: new Date(),
-                modifiedAt: new Date(),
-                loginCredentials: [mockLoginCredential],
-                primaryLoginCredential: mockLoginCredential
-            };
+            const savedUser = userMock.base;
 
             jest.spyOn(repository, 'create').mockReturnValue(savedUser);
             jest.spyOn(repository, 'save').mockResolvedValue(savedUser);
@@ -97,9 +57,9 @@ describe('BaseUserService', () => {
 
         it('should throw error if no login credential is provided', async () => {
             const createUserDto: CreateBaseUserDto = {
-                firstname: 'John',
-                lastname: 'Doe',
-                contactEmail: 'john@example.com'
+                firstname: userMock.base.firstname,
+                lastname: userMock.base.lastname,
+                contactEmail: userMock.base.contactEmail
             };
 
             await expect(service.create(createUserDto))
@@ -110,7 +70,7 @@ describe('BaseUserService', () => {
 
     describe('findAll', () => {
         it('should return all users with their credentials', async () => {
-            const users = [mockUser];
+            const users = [userMock.base];
             jest.spyOn(repository, 'find').mockResolvedValue(users);
 
             const result = await service.findAll();
@@ -133,27 +93,13 @@ describe('BaseUserService', () => {
 
     describe('findOne', () => {
         it('should return user with login credentials', async () => {
-            const userId = 'user123';
-            const user: BaseUser = {
-                id: userId,
-                firstname: 'John',
-                lastname: 'Doe',
-                contactEmail: 'john@example.com',
-                state: UserState.PENDING,
-                isEnabled: true,
-                createdAt: new Date(),
-                modifiedAt: new Date(),
-                loginCredentials: [mockLoginCredential],
-                primaryLoginCredential: mockLoginCredential
-            };
+            jest.spyOn(repository, 'findOne').mockResolvedValue(userMock.base);
 
-            jest.spyOn(repository, 'findOne').mockResolvedValue(user);
+            const result = await service.findOne(userMock.base.id);
 
-            const result = await service.findOne(userId);
-
-            expect(result).toEqual(user);
+            expect(result).toEqual(userMock.base);
             expect(repository.findOne).toHaveBeenCalledWith({
-                where: { id: userId },
+                where: { id: userMock.base.id },
                 relations: {
                     loginCredentials: true,
                     primaryLoginCredential: true
@@ -171,21 +117,8 @@ describe('BaseUserService', () => {
 
     describe('update', () => {
         it('should update user state', async () => {
-            const userId = 'user123';
             const updateDto = { state: UserState.ACTIVE };
-            const existingUser: BaseUser = {
-                id: userId,
-                firstname: 'John',
-                lastname: 'Doe',
-                contactEmail: 'john@example.com',
-                state: UserState.PENDING,
-                isEnabled: true,
-                createdAt: new Date(),
-                modifiedAt: new Date(),
-                loginCredentials: [mockLoginCredential],
-                primaryLoginCredential: mockLoginCredential
-            };
-            const updatedUser = { ...existingUser, ...updateDto };
+            const updatedUser = { ...userMock.base, ...updateDto };
 
             jest.spyOn(repository, 'findOne').mockResolvedValue(updatedUser);
             jest.spyOn(repository, 'update').mockResolvedValue({
@@ -194,18 +127,17 @@ describe('BaseUserService', () => {
                 generatedMaps: []
             } as UpdateResult);
 
-            const result = await service.update(userId, updateDto);
+            const result = await service.update(userMock.base.id, updateDto);
 
             expect(result).toEqual(updatedUser);
-            expect(repository.update).toHaveBeenCalledWith(userId, updateDto);
+            expect(repository.update).toHaveBeenCalledWith(userMock.base.id, updateDto);
         });
 
         it('should not allow removing primary login credential', async () => {
-            const userId = '789';
-            jest.spyOn(repository, 'findOne').mockResolvedValue(mockUser);
+            jest.spyOn(repository, 'findOne').mockResolvedValue(userMock.base);
             jest.spyOn(repository, 'update').mockResolvedValue({ affected: 1, raw: [], generatedMaps: [] });
 
-            await expect(service.update(userId, { primaryLoginCredentialId: undefined }))
+            await expect(service.update(userMock.base.id, { primaryLoginCredentialId: undefined }))
                 .rejects
                 .toThrow(BadRequestException);
         });
@@ -218,7 +150,6 @@ describe('BaseUserService', () => {
         });
 
         it('should allow updating fields other than primaryLoginCredentialId', async () => {
-            const userId = '789';
             const updateDto = {
                 firstname: 'Updated',
                 lastname: 'User',
@@ -227,15 +158,14 @@ describe('BaseUserService', () => {
                 isEnabled: false
             };
 
-            const existingUser = { ...mockUser };
-            const updatedUser = { ...existingUser, ...updateDto };
+            const updatedUser = { ...userMock.base, ...updateDto };
 
             jest.spyOn(repository, 'findOne').mockResolvedValue(updatedUser);
             jest.spyOn(repository, 'update').mockResolvedValue({ affected: 1, raw: [], generatedMaps: [] });
 
-            const result = await service.update(userId, updateDto);
+            const result = await service.update(userMock.base.id, updateDto);
             expect(result).toEqual(updatedUser);
-            expect(repository.update).toHaveBeenCalledWith(userId, updateDto);
+            expect(repository.update).toHaveBeenCalledWith(userMock.base.id, updateDto);
         });
     });
 
@@ -243,8 +173,8 @@ describe('BaseUserService', () => {
         it('should delete a user', async () => {
             jest.spyOn(repository, 'delete').mockResolvedValue({ affected: 1, raw: [] });
 
-            await service.remove('user123');
-            expect(repository.delete).toHaveBeenCalledWith('user123');
+            await service.remove(userMock.base.id);
+            expect(repository.delete).toHaveBeenCalledWith(userMock.base.id);
         });
     });
 }); 

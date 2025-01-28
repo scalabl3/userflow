@@ -10,6 +10,7 @@ export const mockRepository = () => ({
   save: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
+  remove: jest.fn(),
   create: jest.fn(dto => dto),
   createQueryBuilder: jest.fn(() => ({
     where: jest.fn().mockReturnThis(),

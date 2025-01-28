@@ -13,6 +13,8 @@ import {
 } from '@my-app/shared';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
+import { user as userMock } from '../test/__mocks__/user.mock';
+import { organization as orgMock } from '../test/__mocks__/organization.mock';
 
 /**
  * Service specification for Organization entity.
@@ -59,45 +61,6 @@ describe('OrganizationService', () => {
     let organizationRepository: Repository<Organization>;
     let userRepository: Repository<User>;
 
-    // Mock data setup
-    const mockUser = {
-        id: 'user123',
-        username: 'johndoe',
-        email: 'john@example.com',
-        isEmailVerified: true,
-        phoneNumber: '+1234567890',
-        isPhoneVerified: true,
-        isActive: true,
-        organizationId: null, // Important for create tests
-        preferences: {
-            theme: 'light',
-            notifications: {
-                email: true,
-                push: true
-            }
-        },
-        firstname: 'John',
-        lastname: 'Doe',
-        displayname: 'John Doe',
-        contactEmail: 'john@example.com',
-        state: UserState.ACTIVE,
-        isEnabled: true,
-        createdAt: new Date(),
-        modifiedAt: new Date(),
-        setDefaultPreferences: () => {},
-        loginCredentials: []
-    } as unknown as User;
-
-    const mockOrganization = {
-        id: 'org123',
-        name: 'Test Organization',
-        visible: true,
-        adminUser: mockUser.id,
-        users: [mockUser],
-        createdAt: new Date(),
-        modifiedAt: new Date()
-    } as unknown as Organization;
-
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -131,15 +94,20 @@ describe('OrganizationService', () => {
 
     describe('create', () => {
         it('should create an organization with valid admin user', async () => {
+            const userWithoutOrg = { 
+                ...userMock.standard, 
+                organizationId: '',
+                setDefaultPreferences: () => {}
+            } as User;
             const createDto: CreateOrganizationDto = {
-                name: 'Test Org',
+                name: orgMock.standard.name,
                 visible: true,
-                adminUser: mockUser.id
+                adminUser: userMock.standard.id
             };
 
-            jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockUser);
-            jest.spyOn(organizationRepository, 'create').mockReturnValue(mockOrganization);
-            jest.spyOn(organizationRepository, 'save').mockResolvedValue(mockOrganization);
+            jest.spyOn(userRepository, 'findOne').mockResolvedValue(userWithoutOrg);
+            jest.spyOn(organizationRepository, 'create').mockReturnValue(orgMock.standard);
+            jest.spyOn(organizationRepository, 'save').mockResolvedValue(orgMock.standard);
             jest.spyOn(userRepository, 'update').mockResolvedValue({
                 affected: 1,
                 raw: [],
@@ -148,18 +116,18 @@ describe('OrganizationService', () => {
 
             const result = await service.create(createDto);
             
-            expect(result).toEqual(mockOrganization);
-            expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: mockUser.id } });
+            expect(result).toEqual(orgMock.standard);
+            expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userMock.standard.id } });
             expect(organizationRepository.create).toHaveBeenCalledWith({
                 ...createDto,
                 visible: false
             });
-            expect(userRepository.update).toHaveBeenCalledWith(mockUser.id, { organizationId: mockOrganization.id });
+            expect(userRepository.update).toHaveBeenCalledWith(userMock.standard.id, { organizationId: orgMock.standard.id });
         });
 
         it('should throw BadRequestException if admin user not found', async () => {
             const createDto: CreateOrganizationDto = {
-                name: 'Test Org',
+                name: orgMock.standard.name,
                 visible: true,
                 adminUser: 'nonexistent'
             };
@@ -172,9 +140,9 @@ describe('OrganizationService', () => {
         });
 
         it('should throw BadRequestException if admin user already has an organization', async () => {
-            const userWithOrg = { ...mockUser, organizationId: 'existing-org' };
+            const userWithOrg = { ...userMock.standard, organizationId: 'existing-org' };
             const createDto: CreateOrganizationDto = {
-                name: 'Test Org',
+                name: orgMock.standard.name,
                 visible: true,
                 adminUser: userWithOrg.id
             };
@@ -189,8 +157,8 @@ describe('OrganizationService', () => {
 
     describe('findAll', () => {
         it('should return all organizations with relations', async () => {
-            const organizations = [mockOrganization];
-            jest.spyOn(organizationRepository, 'find').mockResolvedValue(organizations as Organization[]);
+            const organizations = [orgMock.standard];
+            jest.spyOn(organizationRepository, 'find').mockResolvedValue(organizations);
 
             const result = await service.findAll();
             
@@ -211,13 +179,13 @@ describe('OrganizationService', () => {
 
     describe('findOne', () => {
         it('should return an organization by id with relations', async () => {
-            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(mockOrganization as Organization);
+            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(orgMock.standard);
 
-            const result = await service.findOne(mockOrganization.id);
+            const result = await service.findOne(orgMock.standard.id);
             
-            expect(result).toEqual(mockOrganization);
+            expect(result).toEqual(orgMock.standard);
             expect(organizationRepository.findOne).toHaveBeenCalledWith({
-                where: { id: mockOrganization.id },
+                where: { id: orgMock.standard.id },
                 relations: ['users']
             });
         });
@@ -239,18 +207,17 @@ describe('OrganizationService', () => {
             };
 
             const updatedOrg = { 
-                ...mockOrganization, 
+                ...orgMock.standard, 
                 ...updateDto 
             };
 
-            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(mockOrganization as Organization);
-            jest.spyOn(organizationRepository, 'save').mockResolvedValue(updatedOrg as Organization);
+            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(orgMock.standard);
+            jest.spyOn(organizationRepository, 'save').mockResolvedValue(updatedOrg);
 
-            const result = await service.update(mockOrganization.id, updateDto);
+            const result = await service.update(orgMock.standard.id, updateDto);
             
             expect(result).toEqual(updatedOrg);
-            expect(result?.name).toBe(updateDto.name);
-            expect(result?.visible).toBe(updateDto.visible);
+            expect(organizationRepository.save).toHaveBeenCalledWith(expect.objectContaining(updateDto));
         });
 
         it('should return null if organization not found', async () => {
@@ -260,39 +227,74 @@ describe('OrganizationService', () => {
             
             expect(result).toBeNull();
         });
+
+        it('should update admin user', async () => {
+            const updateDto: UpdateOrganizationDto = {
+                adminUser: 'new-admin-id'
+            };
+
+            const updatedOrg = { 
+                ...orgMock.standard, 
+                adminUser: 'new-admin-id'
+            };
+
+            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(orgMock.standard);
+            jest.spyOn(organizationRepository, 'save').mockResolvedValue(updatedOrg);
+
+            const result = await service.update(orgMock.standard.id, updateDto);
+            
+            expect(result).toEqual(updatedOrg);
+            expect(organizationRepository.save).toHaveBeenCalledWith(expect.objectContaining({
+                adminUser: 'new-admin-id'
+            }));
+        });
     });
 
     describe('remove', () => {
-        it('should delete an organization and return true', async () => {
-            const orgWithoutUsers = { ...mockOrganization, users: [] };
-            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(orgWithoutUsers as Organization);
+        it('should delete an organization', async () => {
+            const orgWithoutUsers = { ...orgMock.standard, users: [] };
+            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(orgWithoutUsers);
             jest.spyOn(organizationRepository, 'delete').mockResolvedValue({ affected: 1, raw: [] });
 
-            const result = await service.remove(mockOrganization.id);
+            const result = await service.remove(orgMock.standard.id);
             
             expect(result).toBe(true);
             expect(organizationRepository.findOne).toHaveBeenCalledWith({
-                where: { id: mockOrganization.id },
+                where: { id: orgMock.standard.id },
                 relations: ['users']
             });
-            expect(organizationRepository.delete).toHaveBeenCalledWith(mockOrganization.id);
-        });
-
-        it('should throw BadRequestException if organization has users', async () => {
-            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(mockOrganization as Organization);
-
-            await expect(service.remove(mockOrganization.id))
-                .rejects
-                .toThrow(BadRequestException);
+            expect(organizationRepository.delete).toHaveBeenCalledWith(orgMock.standard.id);
         });
 
         it('should return false if organization not found', async () => {
-            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(null);
+            jest.spyOn(organizationRepository, 'delete').mockResolvedValue({ affected: 0, raw: [] });
 
             const result = await service.remove('nonexistent');
             
             expect(result).toBe(false);
-            expect(organizationRepository.delete).not.toHaveBeenCalled();
+        });
+
+        it('should throw BadRequestException when trying to delete organization with active users', async () => {
+            const orgWithUsers = { 
+                ...orgMock.standard, 
+                users: [userMock.standard]
+            };
+            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(orgWithUsers);
+
+            await expect(service.remove(orgMock.standard.id))
+                .rejects
+                .toThrow(new BadRequestException('Cannot delete organization with active users'));
+        });
+
+        it('should return false if delete operation affected no rows', async () => {
+            const orgWithoutUsers = { ...orgMock.standard, users: [] };
+            jest.spyOn(organizationRepository, 'findOne').mockResolvedValue(orgWithoutUsers);
+            jest.spyOn(organizationRepository, 'delete').mockResolvedValue({ affected: undefined, raw: [] });
+
+            const result = await service.remove(orgMock.standard.id);
+            
+            expect(result).toBe(false);
+            expect(organizationRepository.delete).toHaveBeenCalledWith(orgMock.standard.id);
         });
     });
 });

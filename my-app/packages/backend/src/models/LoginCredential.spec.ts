@@ -57,6 +57,24 @@ describe('LoginCredential', () => {
             expect(loginCredential.modifiedAt).toBeInstanceOf(Date);
         });
 
+        it('should handle id field', () => {
+            const credentialId = '123e4567-e89b-12d3-a456-426614174000';
+            loginCredential.id = credentialId;
+            expect(loginCredential.id).toBe(credentialId);
+        });
+
+        it('should handle identifier and loginProviderId as a unique pair', () => {
+            const credential = new LoginCredential();
+            const identifier = 'test@example.com';
+            const providerId = '123';
+            
+            credential.identifier = identifier;
+            credential.loginProviderId = providerId;
+            
+            expect(credential.identifier).toBe(identifier);
+            expect(credential.loginProviderId).toBe(providerId);
+        });
+
         it('should handle SQLite compatible datetime fields', () => {
             const now = new Date();
             loginCredential.createdAt = now;
@@ -147,6 +165,30 @@ describe('LoginCredential', () => {
 
             expect(loginCredential.baseUser).toBeUndefined();
             expect(loginCredential.baseUserId).toBeUndefined();
+        });
+
+        it('should handle login provider relationship', () => {
+            const credential = new LoginCredential();
+            const provider = new LoginProvider();
+            provider.id = '123';
+            
+            credential.loginProviderId = provider.id;
+            credential.loginProvider = provider;
+            
+            expect(credential.loginProviderId).toBe('123');
+            expect(credential.loginProvider).toBe(provider);
+        });
+
+        it('should handle base user relationship', () => {
+            const credential = new LoginCredential();
+            const user = new BaseUser();
+            user.id = '456';
+            
+            credential.baseUserId = user.id;
+            credential.baseUser = user;
+            
+            expect(credential.baseUserId).toBe('456');
+            expect(credential.baseUser).toBe(user);
         });
     });
 }); 

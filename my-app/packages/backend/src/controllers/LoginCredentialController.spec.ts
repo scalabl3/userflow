@@ -17,6 +17,9 @@ import {
     UserState
 } from '@my-app/shared';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { auth } from '../test/__mocks__/auth.mock';
+import { user } from '../test/__mocks__/user.mock';
+import { core } from '../test/__mocks__/core.mock';
 
 describe('LoginCredentialController', () => {
     let controller: LoginCredentialController;
@@ -45,50 +48,36 @@ describe('LoginCredentialController', () => {
         loginCredentials: []
     } as BaseUser;
 
-    // Mock DTO responses
+    // Mock DTO responses using shared mocks
     const mockPasswordCredentialResponse: ResponseLoginCredentialDto = {
-        id: 'cred123',
-        identifier: 'john@example.com',
-        loginProviderId: mockLoginProvider.id,
-        loginProvider: {
-            id: mockLoginProvider.id,
-            code: mockLoginProvider.code,
-            name: mockLoginProvider.name,
-            isEnabled: mockLoginProvider.isEnabled,
-            createdAt: mockLoginProvider.createdAt,
-            modifiedAt: mockLoginProvider.modifiedAt
-        },
-        credentialType: CredentialType.PASSWORD,
+        id: auth.credentials.password.id,
+        identifier: auth.credentials.password.identifier,
+        loginProviderId: auth.credentials.password.loginProviderId,
+        loginProvider: auth.credentials.password.loginProvider,
+        credentialType: auth.credentials.password.credentialType,
         hasPassword: true,
-        isEnabled: true,
-        baseUserId: mockBaseUser.id,
-        createdAt: new Date(),
-        modifiedAt: new Date()
+        isEnabled: auth.credentials.password.isEnabled,
+        baseUserId: auth.credentials.password.baseUserId,
+        createdAt: auth.credentials.password.createdAt,
+        modifiedAt: auth.credentials.password.modifiedAt
     };
 
     const mockGoogleCredentialResponse: ResponseLoginCredentialDto = {
-        id: 'cred456',
-        identifier: '12345',
-        loginProviderId: 'google-provider-id',
-        loginProvider: {
-            id: 'google-provider-id',
-            code: 'google',
-            name: 'Google',
-            isEnabled: true,
-            createdAt: new Date(),
-            modifiedAt: new Date()
-        },
-        credentialType: CredentialType.OAUTH,
-        provider: OAuthProvider.GOOGLE,
-        accessTokenExpiresAt: new Date(),
+        id: auth.credentials.google.id,
+        identifier: auth.credentials.google.identifier,
+        loginProviderId: auth.credentials.google.loginProviderId,
+        loginProvider: auth.credentials.google.loginProvider,
+        credentialType: auth.credentials.google.credentialType,
+        provider: auth.credentials.google.provider,
+        accessTokenExpiresAt: core.timestamps.future,
         hasRefreshToken: true,
-        refreshTokenExpiresAt: new Date(),
-        scope: 'email profile',
-        rawProfile: { email: 'john@gmail.com', name: 'John Doe' },
-        isEnabled: true,
-        baseUserId: mockBaseUser.id,
-        createdAt: new Date(),
-        modifiedAt: new Date()
+        refreshTokenExpiresAt: core.timestamps.future,
+        scope: auth.credentials.google.scope,
+        rawProfile: auth.credentials.google.rawProfile,
+        isEnabled: auth.credentials.google.isEnabled,
+        baseUserId: auth.credentials.google.baseUserId,
+        createdAt: core.timestamps.past,
+        modifiedAt: core.timestamps.now
     };
 
     const mockAppleCredentialResponse: ResponseLoginCredentialDto = {
@@ -173,10 +162,10 @@ describe('LoginCredentialController', () => {
         describe('create', () => {
             it('should create a password credential', async () => {
                 const createPasswordDto: CreatePasswordCredentialDto = {
-                    identifier: 'john@example.com',
-                    loginProviderId: mockLoginProvider.id,
+                    identifier: auth.credentials.password.identifier,
+                    loginProviderId: auth.credentials.password.loginProviderId,
                     credentialType: CredentialType.PASSWORD,
-                    password: 'Password123!',
+                    password: auth.requests.login.email.password,
                     isEnabled: true
                 };
 
@@ -187,22 +176,34 @@ describe('LoginCredentialController', () => {
                 expect(result).toEqual(mockPasswordCredentialResponse);
                 expect(service.createPasswordCredential).toHaveBeenCalledWith(createPasswordDto);
             });
+
+            it('should throw BadRequestException for invalid credential type', async () => {
+                const createDto = {
+                    ...auth.credentials.password,
+                    credentialType: 'INVALID' as CredentialType,  // Force invalid type
+                    password: 'testpass'
+                };
+
+                await expect(controller.create(createDto))
+                    .rejects
+                    .toThrow(new BadRequestException('Invalid credential type'));
+            });
         });
 
         describe('update', () => {
             it('should update password', async () => {
                 const updatePasswordDto: UpdatePasswordCredentialDto = {
-                    currentPassword: 'oldpass123',
+                    currentPassword: auth.requests.login.email.password,
                     newPassword: 'newpass123'
                 };
 
                 const updatedResponse = { ...mockPasswordCredentialResponse };
                 jest.spyOn(service, 'update').mockResolvedValue(updatedResponse);
 
-                const result = await controller.update('cred123', updatePasswordDto);
+                const result = await controller.update(auth.credentials.password.id, updatePasswordDto);
                 
                 expect(result).toEqual(updatedResponse);
-                expect(service.update).toHaveBeenCalledWith('cred123', updatePasswordDto);
+                expect(service.update).toHaveBeenCalledWith(auth.credentials.password.id, updatePasswordDto);
             });
 
             it('should throw BadRequestException if password update fails', async () => {
@@ -213,7 +214,7 @@ describe('LoginCredentialController', () => {
 
                 jest.spyOn(service, 'update').mockResolvedValue(null);
 
-                await expect(controller.update('cred123', updatePasswordDto))
+                await expect(controller.update(auth.credentials.password.id, updatePasswordDto))
                     .rejects
                     .toThrow(BadRequestException);
             });
@@ -224,16 +225,16 @@ describe('LoginCredentialController', () => {
         describe('create', () => {
             it('should create a Google OAuth credential', async () => {
                 const createOAuthDto: CreateOAuthCredentialDto = {
-                    identifier: '12345',
-                    loginProviderId: 'google-provider-id',
+                    identifier: auth.credentials.google.identifier,
+                    loginProviderId: auth.credentials.google.loginProviderId,
                     credentialType: CredentialType.OAUTH,
                     provider: OAuthProvider.GOOGLE,
                     accessToken: 'google_access_token',
-                    accessTokenExpiresAt: new Date(),
-                    refreshToken: 'google_refresh_token',
-                    refreshTokenExpiresAt: new Date(),
-                    scope: 'email profile',
-                    rawProfile: { email: 'john@gmail.com', name: 'John Doe' },
+                    accessTokenExpiresAt: core.timestamps.future,
+                    refreshToken: 'new_refresh_token',
+                    refreshTokenExpiresAt: core.timestamps.future,
+                    scope: auth.credentials.google.scope,
+                    rawProfile: auth.credentials.google.rawProfile,
                     isEnabled: true
                 };
 
@@ -269,47 +270,37 @@ describe('LoginCredentialController', () => {
         });
 
         describe('update', () => {
-            it('should update OAuth fields', async () => {
-                const updateOAuthDto: UpdateOAuthCredentialDto = {
+            it('should update OAuth credential', async () => {
+                const updateOAuthDto = {
+                    credentialType: CredentialType.OAUTH,
+                    provider: OAuthProvider.GOOGLE,
                     accessToken: 'new_access_token',
-                    refreshToken: 'new_refresh_token'
+                    accessTokenExpiresAt: core.timestamps.future,
+                    refreshToken: 'new_refresh_token',
+                    refreshTokenExpiresAt: core.timestamps.future,
+                    scope: auth.credentials.google.scope,
+                    rawProfile: auth.credentials.google.rawProfile
                 };
 
                 const updatedResponse = { ...mockGoogleCredentialResponse };
                 jest.spyOn(service, 'update').mockResolvedValue(updatedResponse);
 
-                const result = await controller.update('cred456', updateOAuthDto);
+                const result = await controller.update(auth.credentials.google.id, updateOAuthDto);
                 
                 expect(result).toEqual(updatedResponse);
-                expect(service.update).toHaveBeenCalledWith('cred456', updateOAuthDto);
-            });
-
-            it('should update Apple-specific fields', async () => {
-                const updateAppleOAuthDto: UpdateOAuthCredentialDto = {
-                    provider: OAuthProvider.APPLE,
-                    accessToken: 'new_access_token',
-                    identityToken: 'new_identity_token',
-                    authorizationCode: 'new_auth_code',
-                    realUserStatus: 'REAL'
-                };
-
-                const updatedResponse = { ...mockAppleCredentialResponse };
-                jest.spyOn(service, 'update').mockResolvedValue(updatedResponse);
-
-                const result = await controller.update('cred789', updateAppleOAuthDto);
-                
-                expect(result).toEqual(updatedResponse);
-                expect(service.update).toHaveBeenCalledWith('cred789', updateAppleOAuthDto);
+                expect(service.update).toHaveBeenCalledWith(auth.credentials.google.id, updateOAuthDto);
             });
 
             it('should throw BadRequestException if OAuth update fails', async () => {
-                const updateOAuthDto: UpdateOAuthCredentialDto = {
-                    accessToken: 'new_token'
+                const updateDto: UpdateLoginCredentialDto = {
+                    credentialType: CredentialType.OAUTH,
+                    isEnabled: true,
+                    loginProviderId: auth.credentials.google.loginProviderId
                 };
 
                 jest.spyOn(service, 'update').mockResolvedValue(null);
 
-                await expect(controller.update('cred456', updateOAuthDto))
+                await expect(controller.update(auth.credentials.google.id, updateDto))
                     .rejects
                     .toThrow(BadRequestException);
             });

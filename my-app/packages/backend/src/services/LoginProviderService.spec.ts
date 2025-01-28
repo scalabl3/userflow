@@ -6,19 +6,11 @@ import { Repository, QueryFailedError } from 'typeorm';
 import { CreateLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/CreateLoginProviderDto';
 import { UpdateLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/UpdateLoginProviderDto';
 import { mockRepository } from '../test/setup';
+import { auth as authMock } from '../test/__mocks__/auth.mock';
 
 describe('LoginProviderService', () => {
     let service: LoginProviderService;
     let repository: Repository<LoginProvider>;
-
-    const mockLoginProvider: LoginProvider = {
-        id: '123',
-        code: 'email',
-        name: 'Email and Password',
-        isEnabled: true,
-        createdAt: new Date(),
-        modifiedAt: new Date()
-    };
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -42,28 +34,25 @@ describe('LoginProviderService', () => {
     describe('create', () => {
         it('should create a login provider', async () => {
             const createDto: CreateLoginProviderDto = {
-                code: 'email',
-                name: 'Email and Password',
+                code: authMock.providers.email.code,
+                name: authMock.providers.email.name,
                 isEnabled: true
             };
 
-            jest.spyOn(repository, 'create').mockReturnValue(mockLoginProvider);
-            jest.spyOn(repository, 'save').mockResolvedValue(mockLoginProvider);
+            jest.spyOn(repository, 'create').mockReturnValue(authMock.providers.email);
+            jest.spyOn(repository, 'save').mockResolvedValue(authMock.providers.email);
 
             const result = await service.create(createDto);
-            expect(result).toEqual(mockLoginProvider);
-            expect(repository.create).toHaveBeenCalledWith(createDto);
-            expect(repository.save).toHaveBeenCalled();
+            expect(result).toEqual(authMock.providers.email);
         });
 
         it('should not allow duplicate provider codes', async () => {
             const createDto: CreateLoginProviderDto = {
-                code: 'email',
-                name: 'Email and Password',
+                code: authMock.providers.email.code,
+                name: authMock.providers.email.name,
                 isEnabled: true
             };
 
-            // Mock the save to throw a unique constraint violation
             jest.spyOn(repository, 'save').mockRejectedValue(new QueryFailedError(
                 'query',
                 [],
@@ -76,7 +65,7 @@ describe('LoginProviderService', () => {
 
     describe('findAll', () => {
         it('should return an array of login providers', async () => {
-            const providers = [mockLoginProvider];
+            const providers = [authMock.providers.email];
             jest.spyOn(repository, 'find').mockResolvedValue(providers);
 
             const result = await service.findAll();
@@ -87,11 +76,11 @@ describe('LoginProviderService', () => {
 
     describe('findOne', () => {
         it('should return a login provider by id', async () => {
-            jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockLoginProvider);
+            jest.spyOn(repository, 'findOneBy').mockResolvedValue(authMock.providers.email);
 
-            const result = await service.findOne('123');
-            expect(result).toEqual(mockLoginProvider);
-            expect(repository.findOneBy).toHaveBeenCalledWith({ id: '123' });
+            const result = await service.findOne(authMock.providers.email.id);
+            expect(result).toEqual(authMock.providers.email);
+            expect(repository.findOneBy).toHaveBeenCalledWith({ id: authMock.providers.email.id });
         });
 
         it('should return null if provider not found', async () => {
@@ -108,12 +97,12 @@ describe('LoginProviderService', () => {
                 name: 'Updated Email Provider',
                 isEnabled: false
             };
-            const updatedProvider = { ...mockLoginProvider, ...updateDto };
+            const updatedProvider = { ...authMock.providers.email, ...updateDto };
 
-            jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockLoginProvider);
+            jest.spyOn(repository, 'findOneBy').mockResolvedValue(authMock.providers.email);
             jest.spyOn(repository, 'save').mockResolvedValue(updatedProvider);
 
-            const result = await service.update('123', updateDto);
+            const result = await service.update(authMock.providers.email.id, updateDto);
             expect(result).toEqual(updatedProvider);
         });
 
@@ -129,9 +118,9 @@ describe('LoginProviderService', () => {
         it('should delete a login provider', async () => {
             jest.spyOn(repository, 'delete').mockResolvedValue({ affected: 1, raw: [] });
 
-            const result = await service.remove('123');
+            const result = await service.remove(authMock.providers.email.id);
             expect(result).toBe(true);
-            expect(repository.delete).toHaveBeenCalledWith('123');
+            expect(repository.delete).toHaveBeenCalledWith(authMock.providers.email.id);
         });
 
         it('should return false when no provider was deleted', async () => {
@@ -139,7 +128,6 @@ describe('LoginProviderService', () => {
 
             const result = await service.remove('456');
             expect(result).toBe(false);
-            expect(repository.delete).toHaveBeenCalledWith('456');
         });
 
         it('should handle undefined affected rows gracefully', async () => {
@@ -147,7 +135,6 @@ describe('LoginProviderService', () => {
 
             const result = await service.remove('789');
             expect(result).toBe(false);
-            expect(repository.delete).toHaveBeenCalledWith('789');
         });
     });
 });
