@@ -1,4 +1,4 @@
-# Entity Generation Guide - Part 3: Controller, Tests (CcTmT)
+# Entity Generation Guide - Part 3: Controller, Tests (CTT)
 
 ## Aider Command Line
 ```bash
