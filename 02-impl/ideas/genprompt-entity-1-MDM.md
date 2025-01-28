@@ -1,4 +1,4 @@
-# Entity Generation Guide - Part 1: Model, DTOs, Migration (MDM)
+# Entity Generation Guide - Part 1: Model, create and response DTOs, Migration (MDM)
 
 ## Aider Command Line
 ```bash
