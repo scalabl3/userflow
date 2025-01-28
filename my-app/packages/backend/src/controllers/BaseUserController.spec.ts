@@ -5,6 +5,7 @@ import { CreateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/CreateBaseU
 import { UpdateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/UpdateBaseUserDto';
 import { user as userMock } from '../test/__mocks__/user.mock';
 import { auth as authMock } from '../test/__mocks__/auth.mock';
+import { NotFoundException } from '@nestjs/common';
 
 describe('BaseUserController', () => {
     let controller: BaseUserController;
@@ -129,12 +130,20 @@ describe('BaseUserController', () => {
     });
 
     describe('remove', () => {
-        it('should remove a base user', async () => {
-            jest.spyOn(service, 'remove').mockResolvedValue(undefined);
+        it('should delete a user', async () => {
+            jest.spyOn(service, 'remove').mockResolvedValue(true);
 
-            await controller.remove(userMock.base.id);
+            await controller.remove('test-id');
 
-            expect(service.remove).toHaveBeenCalledWith(userMock.base.id);
+            expect(service.remove).toHaveBeenCalledWith('test-id');
+        });
+
+        it('should throw NotFoundException when user not found', async () => {
+            jest.spyOn(service, 'remove').mockResolvedValue(false);
+
+            await expect(controller.remove('nonexistent')).rejects.toThrow(
+                new NotFoundException('BaseUser with ID nonexistent not found')
+            );
         });
     });
 }); 

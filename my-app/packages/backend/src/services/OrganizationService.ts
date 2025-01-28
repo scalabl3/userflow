@@ -1,101 +1,180 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
+import { Organization } from '../models/Organization';
 import { CreateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/CreateOrganizationDto';
 import { UpdateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/UpdateOrganizationDto';
-import { Organization } from '../models/Organization';
-import { User } from '../models/User';
+import { handleError, createErrorContext } from '../utils/error-handling';
 
 @Injectable()
 export class OrganizationService {
+    private readonly logger = new Logger(OrganizationService.name);
+    private readonly ENTITY_NAME = 'Organization';
+
     constructor(
         @InjectRepository(Organization)
         private readonly organizationRepository: Repository<Organization>,
-        @InjectRepository(User)
-        private readonly userRepository: Repository<User>,
+        private readonly dataSource: DataSource,
     ) {}
 
     async findAll(): Promise<Organization[]> {
-        return await this.organizationRepository.find({
-            relations: ['users']
-        });
+        try {
+            return await this.organizationRepository.find({
+                relations: ['users', 'adminUser']
+            });
+        } catch (error) {
+            const handled = handleError<Organization[]>(this.logger, error, createErrorContext(
+                'findAll',
+                this.ENTITY_NAME
+            ));
+            if (handled === undefined) {
+                throw error;
+            }
+            return handled ?? [];
+        }
     }
 
     async findOne(id: string): Promise<Organization | null> {
-        return await this.organizationRepository.findOne({
-            where: { id },
-            relations: ['users']
-        });
+        try {
+            const organization = await this.organizationRepository.findOne({
+                where: { id },
+                relations: ['users', 'adminUser']
+            });
+
+            if (!organization) {
+                throw new NotFoundException(`${this.ENTITY_NAME} not found`);
+            }
+
+            return organization;
+        } catch (error) {
+            const handled = handleError<Organization>(this.logger, error, createErrorContext(
+                'findOne',
+                this.ENTITY_NAME,
+                id
+            ));
+            return handled === undefined ? null : handled;
+        }
     }
 
     async create(createOrganizationDto: CreateOrganizationDto): Promise<Organization> {
-        // Check if admin user already has an organization
-        const existingUser = await this.userRepository.findOne({
-            where: { id: createOrganizationDto.adminUser }
-        });
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-        if (!existingUser) {
-            throw new BadRequestException('Admin user not found');
+        try {
+            // Check for existing organization with same name
+            const existing = await this.organizationRepository.findOne({
+                where: { name: createOrganizationDto.name }
+            });
+            if (existing) {
+                throw new ConflictException(`${this.ENTITY_NAME} with name ${createOrganizationDto.name} already exists`);
+            }
+
+            const organization = this.organizationRepository.create(createOrganizationDto);
+            const result = await queryRunner.manager.save(Organization, organization);
+            
+            await queryRunner.commitTransaction();
+            this.logger.log(`Created ${this.ENTITY_NAME}: ${result.id}`);
+            return result;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            const handled = handleError<Organization>(this.logger, error, createErrorContext(
+                'create',
+                this.ENTITY_NAME,
+                undefined,
+                { dto: createOrganizationDto }
+            ));
+            if (handled === undefined || handled === null) {
+                throw error;
+            }
+            return handled;
+        } finally {
+            await queryRunner.release();
         }
-
-        if (existingUser.organizationId) {
-            throw new BadRequestException('User already belongs to an organization');
-        }
-
-        const organization = this.organizationRepository.create({
-            ...createOrganizationDto,
-            adminUser: createOrganizationDto.adminUser,
-            visible: false // Default to hidden/shadow organization
-        });
-
-        const savedOrg = await this.organizationRepository.save(organization);
-
-        // Update the user with the new organization
-        await this.userRepository.update(existingUser.id, {
-            organizationId: savedOrg.id
-        });
-
-        return savedOrg;
     }
 
     async update(id: string, updateOrganizationDto: UpdateOrganizationDto): Promise<Organization | null> {
-        const organization = await this.organizationRepository.findOne({
-            where: { id },
-            relations: ['users']
-        });
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-        if (!organization) {
-            return null;
+        try {
+            const organization = await this.findOne(id);
+            if (!organization) return null;
+
+            // Check name uniqueness if name is being updated
+            if (updateOrganizationDto.name && updateOrganizationDto.name !== organization.name) {
+                const existing = await this.organizationRepository.findOne({
+                    where: { name: updateOrganizationDto.name }
+                });
+                if (existing) {
+                    throw new ConflictException(`${this.ENTITY_NAME} with name ${updateOrganizationDto.name} already exists`);
+                }
+            }
+
+            // Verify new admin user exists in organization if being updated
+            if (updateOrganizationDto.adminUser && updateOrganizationDto.adminUser !== organization.adminUser) {
+                const adminExists = organization.users.some(user => user.id === updateOrganizationDto.adminUser);
+                if (!adminExists) {
+                    throw new BadRequestException('Admin user must be a member of the organization');
+                }
+                this.logger.log(`${this.ENTITY_NAME} ${id} admin changed to user: ${updateOrganizationDto.adminUser}`);
+            }
+
+            // Log visibility changes
+            if (updateOrganizationDto.visible !== undefined && updateOrganizationDto.visible !== organization.visible) {
+                this.logger.log(`${this.ENTITY_NAME} ${id} visibility changed to: ${updateOrganizationDto.visible}`);
+            }
+
+            Object.assign(organization, updateOrganizationDto);
+            const result = await queryRunner.manager.save(Organization, organization);
+            
+            await queryRunner.commitTransaction();
+            this.logger.log(`Updated ${this.ENTITY_NAME}: ${id}`);
+            return result;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            const handled = handleError<Organization>(this.logger, error, createErrorContext(
+                'update',
+                this.ENTITY_NAME,
+                id,
+                { dto: updateOrganizationDto }
+            ));
+            return handled === undefined ? null : handled;
+        } finally {
+            await queryRunner.release();
         }
-        
-        if (updateOrganizationDto.adminUser) {
-            organization.adminUser = updateOrganizationDto.adminUser;
-        }
-        
-        Object.assign(organization, {
-            name: updateOrganizationDto.name,
-            visible: updateOrganizationDto.visible
-        });
-        
-        return await this.organizationRepository.save(organization);
     }
 
     async remove(id: string): Promise<boolean> {
-        const organization = await this.organizationRepository.findOne({
-            where: { id },
-            relations: ['users']
-        });
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-        if (!organization) {
-            return false;
+        try {
+            const organization = await this.findOne(id);
+            if (!organization) return false;
+
+            // Check if organization has active users
+            if (organization.users.length > 0) {
+                throw new BadRequestException('Cannot delete organization with active users');
+            }
+
+            await queryRunner.manager.remove(Organization, organization);
+            
+            await queryRunner.commitTransaction();
+            this.logger.log(`Removed ${this.ENTITY_NAME}: ${id}`);
+            return true;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            const handled = handleError<boolean>(this.logger, error, createErrorContext(
+                'remove',
+                this.ENTITY_NAME,
+                id
+            ));
+            return handled ?? false;
+        } finally {
+            await queryRunner.release();
         }
-
-        // Cannot delete organization if it has users
-        if (organization.users.length > 0) {
-            throw new BadRequestException('Cannot delete organization with active users');
-        }
-
-        const result = await this.organizationRepository.delete(id);
-        return result.affected ? result.affected > 0 : false;
     }
 }

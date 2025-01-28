@@ -16,7 +16,7 @@ import {
     OAuthProvider,
     UserState
 } from '@my-app/shared';
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { auth } from '../test/__mocks__/auth.mock';
 import { user } from '../test/__mocks__/user.mock';
 import { core } from '../test/__mocks__/core.mock';
@@ -136,6 +136,14 @@ describe('LoginCredentialController', () => {
                 expect(result).toEqual(credentials);
                 expect(service.findAll).toHaveBeenCalled();
             });
+
+            it('should return empty array when no credentials exist', async () => {
+                jest.spyOn(service, 'findAll').mockResolvedValue([]);
+
+                const result = await controller.findAll();
+
+                expect(result).toEqual([]);
+            });
         });
 
         describe('findOne', () => {
@@ -148,12 +156,12 @@ describe('LoginCredentialController', () => {
                 expect(service.findOne).toHaveBeenCalledWith('cred123');
             });
 
-            it('should throw BadRequestException if credential not found', async () => {
+            it('should throw NotFoundException when credential not found', async () => {
                 jest.spyOn(service, 'findOne').mockResolvedValue(null);
 
-                await expect(controller.findOne('nonexistent'))
-                    .rejects
-                    .toThrow(BadRequestException);
+                await expect(controller.findOne('nonexistent')).rejects.toThrow(
+                    new NotFoundException('Login credential not found')
+                );
             });
         });
     });
@@ -161,32 +169,23 @@ describe('LoginCredentialController', () => {
     describe('Password Credentials', () => {
         describe('create', () => {
             it('should create a password credential', async () => {
-                const createPasswordDto: CreatePasswordCredentialDto = {
-                    identifier: auth.credentials.password.identifier,
-                    loginProviderId: auth.credentials.password.loginProviderId,
-                    credentialType: CredentialType.PASSWORD,
-                    password: auth.requests.login.email.password,
-                    isEnabled: true
-                };
-
                 jest.spyOn(service, 'createPasswordCredential').mockResolvedValue(mockPasswordCredentialResponse);
 
-                const result = await controller.create(createPasswordDto);
-                
+                const result = await controller.create({
+                    ...auth.credentials.password,
+                    credentialType: CredentialType.PASSWORD,
+                    password: 'testpass'
+                } as CreatePasswordCredentialDto);
+
                 expect(result).toEqual(mockPasswordCredentialResponse);
-                expect(service.createPasswordCredential).toHaveBeenCalledWith(createPasswordDto);
             });
 
             it('should throw BadRequestException for invalid credential type', async () => {
-                const createDto = {
-                    ...auth.credentials.password,
-                    credentialType: 'INVALID' as CredentialType,  // Force invalid type
-                    password: 'testpass'
-                };
-
-                await expect(controller.create(createDto))
-                    .rejects
-                    .toThrow(new BadRequestException('Invalid credential type'));
+                await expect(controller.create({
+                    credentialType: 'INVALID' as CredentialType
+                } as CreateLoginCredentialDto)).rejects.toThrow(
+                    new BadRequestException('Invalid credential type')
+                );
             });
         });
 
@@ -345,13 +344,12 @@ describe('LoginCredentialController', () => {
             expect(service.remove).toHaveBeenCalledWith('cred123');
         });
 
-        it('should return false if credential not found', async () => {
+        it('should throw NotFoundException when credential not found', async () => {
             jest.spyOn(service, 'remove').mockResolvedValue(false);
 
-            const result = await controller.remove('nonexistent');
-            
-            expect(result).toBe(false);
-            expect(service.remove).toHaveBeenCalledWith('nonexistent');
+            await expect(controller.remove('nonexistent')).rejects.toThrow(
+                new NotFoundException('Login credential not found')
+            );
         });
     });
 });

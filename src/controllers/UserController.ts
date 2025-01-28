@@ -14,7 +14,7 @@ export class UserController {
     async create(@Body() createUserDto: CreateUserDto): Promise<ResponseUserDto> {
         const user = await this.userService.create(createUserDto);
         if (!user) {
-            throw new NotFoundException(`Failed to create user with username ${createUserDto.username}`);
+            throw new NotFoundException(`Failed to create ${createUserDto.username}`);
         }
         return plainToClass(ResponseUserDto, {
             ...user,
@@ -99,4 +99,4 @@ export class UserController {
             throw new NotFoundException(`User with ID ${id} not found`);
         }
     }
-}
+} 

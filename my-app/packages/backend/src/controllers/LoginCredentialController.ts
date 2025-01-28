@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, BadRequestException, NotFoundException } from '@nestjs/common';
 import { LoginCredentialService } from '../services/LoginCredentialService';
 import { 
     CreateLoginCredentialDto,
@@ -15,17 +15,23 @@ export class LoginCredentialController {
 
     @Post()
     async create(@Body() createLoginCredentialDto: CreateLoginCredentialDto): Promise<ResponseLoginCredentialDto> {
+        let result;
         if (createLoginCredentialDto.credentialType === CredentialType.OAUTH) {
-            return this.loginCredentialService.createOAuthCredential(createLoginCredentialDto as CreateOAuthCredentialDto);
+            result = await this.loginCredentialService.createOAuthCredential(createLoginCredentialDto as CreateOAuthCredentialDto);
+        } else if (createLoginCredentialDto.credentialType === CredentialType.PASSWORD) {
+            result = await this.loginCredentialService.createPasswordCredential(createLoginCredentialDto as CreatePasswordCredentialDto);
+        } else {
+            throw new BadRequestException('Invalid credential type');
         }
-        if (createLoginCredentialDto.credentialType === CredentialType.PASSWORD) {
-            return this.loginCredentialService.createPasswordCredential(createLoginCredentialDto as CreatePasswordCredentialDto);
+
+        if (!result) {
+            throw new BadRequestException('Failed to create login credential');
         }
-        throw new BadRequestException('Invalid credential type');
+        return result;
     }
 
     @Get()
-    async findAll(): Promise<ResponseLoginCredentialDto[]> {
+    findAll(): Promise<ResponseLoginCredentialDto[]> {
         return this.loginCredentialService.findAll();
     }
 
@@ -33,25 +39,25 @@ export class LoginCredentialController {
     async findOne(@Param('id') id: string): Promise<ResponseLoginCredentialDto> {
         const credential = await this.loginCredentialService.findOne(id);
         if (!credential) {
-            throw new BadRequestException('Login credential not found');
+            throw new NotFoundException('Login credential not found');
         }
         return credential;
     }
 
     @Put(':id')
-    async update(
-        @Param('id') id: string,
-        @Body() updateLoginCredentialDto: UpdateLoginCredentialDto
-    ): Promise<ResponseLoginCredentialDto> {
-        const updated = await this.loginCredentialService.update(id, updateLoginCredentialDto);
-        if (!updated) {
-            throw new BadRequestException('Login credential not found');
+    async update(@Param('id') id: string, @Body() updateLoginCredentialDto: UpdateLoginCredentialDto): Promise<ResponseLoginCredentialDto> {
+        const result = await this.loginCredentialService.update(id, updateLoginCredentialDto);
+        if (!result) {
+            throw new NotFoundException('Login credential not found');
         }
-        return updated;
+        return result;
     }
 
     @Delete(':id')
-    async remove(@Param('id') id: string): Promise<boolean> {
-        return this.loginCredentialService.remove(id);
+    async remove(@Param('id') id: string): Promise<void> {
+        const result = await this.loginCredentialService.remove(id);
+        if (!result) {
+            throw new NotFoundException('Login credential not found');
+        }
     }
 }

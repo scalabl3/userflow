@@ -1,4 +1,6 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { UserState } from '@my-app/shared';
+import { getIdColumn, getTimestampColumns, getEnumColumn, createEnumCheck, dropEnumCheck } from './helpers';
 
 export class CreateBaseUser1737964200004 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
@@ -6,14 +8,7 @@ export class CreateBaseUser1737964200004 implements MigrationInterface {
             new Table({
                 name: 'base_user',
                 columns: [
-                    {
-                        name: 'id',
-                        type: 'uuid',
-                        isPrimary: true,
-                        isGenerated: true,
-                        generationStrategy: 'uuid',
-                        default: 'uuid_generate_v4()',
-                    },
+                    getIdColumn(queryRunner),
                     {
                         name: 'firstname',
                         type: 'varchar',
@@ -32,13 +27,7 @@ export class CreateBaseUser1737964200004 implements MigrationInterface {
                         length: '255',
                         isNullable: false,
                     },
-                    {
-                        name: 'state',
-                        type: 'varchar',
-                        length: '50',
-                        isNullable: false,
-                        default: "'PENDING'",
-                    },
+                    getEnumColumn(queryRunner, 'state', Object.values(UserState), false),
                     {
                         name: 'primaryLoginCredentialId',
                         type: 'uuid',
@@ -55,25 +44,17 @@ export class CreateBaseUser1737964200004 implements MigrationInterface {
                         isNullable: false,
                         default: true,
                     },
-                    {
-                        name: 'createdAt',
-                        type: 'datetime',
-                        isNullable: false,
-                        default: 'CURRENT_TIMESTAMP',
-                    },
-                    {
-                        name: 'modifiedAt',
-                        type: 'datetime',
-                        isNullable: false,
-                        default: 'CURRENT_TIMESTAMP',
-                    },
+                    ...getTimestampColumns(queryRunner)
                 ],
             }),
             true
         );
+
+        await createEnumCheck(queryRunner, 'base_user', 'state', Object.values(UserState));
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        await dropEnumCheck(queryRunner, 'base_user', 'state');
         await queryRunner.dropTable('base_user');
     }
 }

@@ -49,6 +49,7 @@ BillingProvider represents a payment provider supported by the system. Key aspec
    - ResponseBillingProviderDto.ts with proper field exposure
 
 3. Migration (`my-app/packages/backend/src/migrations/1738084609-009-CREATE-BillingProvider.ts`)
+   - Class Name `export class CreateBillingProvider1738084609009 implements MigrationInterface`
    - Create billing_provider table
    - Add unique index on name
    - Set up enabled/visible defaults

@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { getIdColumn, getTimestampColumns } from './helpers';
 
 export class CreateOrganization1737964200006 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
@@ -6,14 +7,7 @@ export class CreateOrganization1737964200006 implements MigrationInterface {
             new Table({
                 name: 'organization',
                 columns: [
-                    {
-                        name: 'id',
-                        type: 'uuid',
-                        isPrimary: true,
-                        isGenerated: true,
-                        generationStrategy: 'uuid',
-                        default: 'uuid_generate_v4()',
-                    },
+                    getIdColumn(queryRunner),
                     {
                         name: 'name',
                         type: 'varchar',
@@ -32,18 +26,7 @@ export class CreateOrganization1737964200006 implements MigrationInterface {
                         type: 'uuid',
                         isNullable: false,
                     },
-                    {
-                        name: 'createdAt',
-                        type: 'datetime',
-                        isNullable: false,
-                        default: 'CURRENT_TIMESTAMP',
-                    },
-                    {
-                        name: 'modifiedAt',
-                        type: 'datetime',
-                        isNullable: false,
-                        default: 'CURRENT_TIMESTAMP',
-                    },
+                    ...getTimestampColumns(queryRunner)
                 ],
             }),
             true

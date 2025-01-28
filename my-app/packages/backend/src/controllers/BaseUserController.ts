@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
 import { BaseUserService } from '../services/BaseUserService';
 import { CreateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/CreateBaseUserDto';
 import { UpdateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/UpdateBaseUserDto';
@@ -32,7 +32,10 @@ export class BaseUserController {
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string): Promise<void> {
-        return this.baseUserService.remove(id);
+    async remove(@Param('id') id: string): Promise<void> {
+        const result = await this.baseUserService.remove(id);
+        if (!result) {
+            throw new NotFoundException(`BaseUser with ID ${id} not found`);
+        }
     }
 } 

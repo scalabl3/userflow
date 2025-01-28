@@ -1,5 +1,6 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 import { CredentialType, OAuthProvider } from '@my-app/shared';
+import { getIdColumn, getTimestampColumns, getEnumColumn, createEnumCheck, dropEnumCheck } from './helpers';
 
 export class CreateLoginCredential1737964200002 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
@@ -7,14 +8,7 @@ export class CreateLoginCredential1737964200002 implements MigrationInterface {
             new Table({
                 name: 'login_credential',
                 columns: [
-                    {
-                        name: 'id',
-                        type: 'uuid',
-                        isPrimary: true,
-                        isGenerated: true,
-                        generationStrategy: 'uuid',
-                        default: 'uuid_generate_v4()',
-                    },
+                    getIdColumn(queryRunner),
                     {
                         name: 'identifier',
                         type: 'varchar',
@@ -25,11 +19,7 @@ export class CreateLoginCredential1737964200002 implements MigrationInterface {
                         type: 'uuid',
                         isNullable: false,
                     },
-                    {
-                        name: 'credentialType',
-                        type: 'varchar',
-                        isNullable: false,
-                    },
+                    getEnumColumn(queryRunner, 'credentialType', Object.values(CredentialType), false),
                     {
                         name: 'isEnabled',
                         type: 'boolean',
@@ -43,11 +33,7 @@ export class CreateLoginCredential1737964200002 implements MigrationInterface {
                         isNullable: true,
                     },
                     // OAuth-specific fields
-                    {
-                        name: 'provider',
-                        type: 'varchar',
-                        isNullable: true,
-                    },
+                    getEnumColumn(queryRunner, 'provider', Object.values(OAuthProvider), true),
                     {
                         name: 'accessToken',
                         type: 'varchar',
@@ -99,19 +85,7 @@ export class CreateLoginCredential1737964200002 implements MigrationInterface {
                         type: 'varchar',
                         isNullable: true,
                     },
-                    // Timestamps
-                    {
-                        name: 'createdAt',
-                        type: 'datetime',
-                        isNullable: false,
-                        default: 'CURRENT_TIMESTAMP',
-                    },
-                    {
-                        name: 'modifiedAt',
-                        type: 'datetime',
-                        isNullable: false,
-                        default: 'CURRENT_TIMESTAMP',
-                    },
+                    ...getTimestampColumns(queryRunner)
                 ],
                 uniques: [
                     {
@@ -126,9 +100,14 @@ export class CreateLoginCredential1737964200002 implements MigrationInterface {
             }),
             true
         );
+
+        await createEnumCheck(queryRunner, 'login_credential', 'credentialType', Object.values(CredentialType));
+        await createEnumCheck(queryRunner, 'login_credential', 'provider', Object.values(OAuthProvider));
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
+        await dropEnumCheck(queryRunner, 'login_credential', 'provider');
+        await dropEnumCheck(queryRunner, 'login_credential', 'credentialType');
         await queryRunner.dropTable('login_credential');
     }
 }

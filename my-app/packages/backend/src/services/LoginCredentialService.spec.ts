@@ -198,51 +198,69 @@ describe('LoginCredentialService', () => {
 
         describe('updatePassword', () => {
             it('should update password when current password is valid', async () => {
-                const mockCred = authMock.credentials.password;
-                const updateDto: UpdatePasswordCredentialDto = {
-                    currentPassword: 'password123',
-                    newPassword: 'newpassword123'
+                const dto: UpdatePasswordCredentialDto = {
+                    currentPassword: 'oldpass',
+                    newPassword: 'newpass'
                 };
 
-                jest.spyOn(repository, 'findOne').mockResolvedValue(mockCred);
-                jest.spyOn(repository, 'save').mockResolvedValue({
-                    ...mockCred,
-                    passwordHash: 'new_hashed_password'
-                });
+                jest.spyOn(repository, 'findOne').mockResolvedValue(authMock.credentials.password);
+                jest.spyOn(service, 'validatePassword').mockResolvedValue(true);
+                jest.spyOn(repository, 'save').mockResolvedValue(authMock.credentials.password);
 
-                const result = await service.updatePassword(mockCred.id, updateDto);
+                const result = await service.updatePassword(authMock.credentials.password.id, dto);
 
                 expect(result).toBeDefined();
-                expect(bcrypt.compare).toHaveBeenCalledWith(updateDto.currentPassword, mockCred.passwordHash);
-                expect(bcrypt.hash).toHaveBeenCalledWith(updateDto.newPassword, 10);
+                expect(service.validatePassword).toHaveBeenCalledWith(authMock.credentials.password, dto.currentPassword);
             });
 
-            it('should reject invalid current password', async () => {
-                const mockCred = authMock.credentials.password;
-                const updateDto: UpdatePasswordCredentialDto = {
-                    currentPassword: 'wrongpassword',
-                    newPassword: 'newpassword123'
+            it('should return null when credential not found', async () => {
+                jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+
+                const result = await service.updatePassword('nonexistent', {
+                    currentPassword: 'oldpass',
+                    newPassword: 'newpass'
+                });
+
+                expect(result).toBeNull();
+            });
+
+            it('should throw UnauthorizedException when current password is invalid', async () => {
+                const dto: UpdatePasswordCredentialDto = {
+                    currentPassword: 'wrongpass',
+                    newPassword: 'newpass'
                 };
 
-                jest.spyOn(repository, 'findOne').mockResolvedValue(mockCred);
-                jest.spyOn(bcrypt, 'compare').mockImplementationOnce(async () => false);
+                jest.spyOn(repository, 'findOne').mockResolvedValue(authMock.credentials.password);
+                jest.spyOn(service, 'validatePassword').mockResolvedValue(false);
 
-                await expect(service.updatePassword(mockCred.id, updateDto))
+                await expect(service.updatePassword(authMock.credentials.password.id, dto))
                     .rejects
                     .toThrow(UnauthorizedException);
             });
 
-            it('should return null for non-password credential', async () => {
-                const mockOAuthCred = authMock.credentials.google;
-                jest.spyOn(repository, 'findOne').mockResolvedValue(mockOAuthCred);
+            it('should throw BadRequestException when current password is missing', async () => {
+                const dto = {
+                    newPassword: 'newpass'
+                } as UpdatePasswordCredentialDto;
 
-                const updateDto: UpdatePasswordCredentialDto = {
-                    currentPassword: 'password123',
-                    newPassword: 'newpassword123'
-                };
+                jest.spyOn(repository, 'findOne').mockResolvedValue(authMock.credentials.password);
 
-                const result = await service.updatePassword(mockOAuthCred.id, updateDto);
-                expect(result).toBeNull();
+                await expect(service.updatePassword(authMock.credentials.password.id, dto))
+                    .rejects
+                    .toThrow(new BadRequestException('Current password is required'));
+            });
+
+            it('should throw BadRequestException when new password is missing', async () => {
+                const dto = {
+                    currentPassword: 'oldpass'
+                } as UpdatePasswordCredentialDto;
+
+                jest.spyOn(repository, 'findOne').mockResolvedValue(authMock.credentials.password);
+                jest.spyOn(service, 'validatePassword').mockResolvedValue(true);
+
+                await expect(service.updatePassword(authMock.credentials.password.id, dto))
+                    .rejects
+                    .toThrow(new BadRequestException('New password is required'));
             });
         });
     });

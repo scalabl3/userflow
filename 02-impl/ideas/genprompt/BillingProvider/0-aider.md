@@ -29,7 +29,7 @@ my-app/packages/backend/src/controllers/BillingProviderController.ts \
 my-app/packages/shared/src/dtos/BillingProvider/CreateBillingProviderDto.ts \
 my-app/packages/shared/src/dtos/BillingProvider/UpdateBillingProviderDto.ts \
 my-app/packages/shared/src/dtos/BillingProvider/ResponseBillingProviderDto.ts \
-my-app/packages/backend/src/migrations/1738084609-009-CreateBillingProvider.ts \
+my-app/packages/backend/src/migrations/1738084609-009-CREATE-BillingProvider.ts \
 my-app/packages/backend/src/models/BillingProvider.spec.ts \
 my-app/packages/backend/src/services/BillingProviderService.spec.ts \
 my-app/packages/backend/src/controllers/BillingProviderController.spec.ts

@@ -228,11 +228,19 @@ describe('UserController', () => {
 
     describe('remove', () => {
         it('should remove a user', async () => {
-            jest.spyOn(service, 'remove').mockResolvedValue(undefined);
+            jest.spyOn(service, 'remove').mockResolvedValue(true);
 
-            await controller.remove(userMock.standard.id);
+            await controller.remove('test-id');
 
-            expect(service.remove).toHaveBeenCalledWith(userMock.standard.id);
+            expect(service.remove).toHaveBeenCalledWith('test-id');
+        });
+
+        it('should throw NotFoundException when user not found', async () => {
+            jest.spyOn(service, 'remove').mockResolvedValue(false);
+
+            await expect(controller.remove('nonexistent')).rejects.toThrow(
+                new NotFoundException('User with ID nonexistent not found')
+            );
         });
     });
 }); 
