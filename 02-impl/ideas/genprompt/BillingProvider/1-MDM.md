@@ -1,9 +1,9 @@
 # Entity Generation Guide - Part 1: Model, create and response DTOs, Migration (MDM)
 
 ## Instructions for Template Creation
-- Replace `<EntityName>` with the actual entity name in PascalCase
-- Replace `<timestamp>` with the current Unix timestamp (`date +%s`)
-- Replace `<order>` with the sequence number for this migration (e.g., 001, 002)
+- Replace `<EntityName>` with BillingProvider in PascalCase
+- Replace `<timestamp>` with 1738084609
+- Replace `<order>` with 009
 - Ensure consistent casing across all files:
   - PascalCase for all TypeScript files
   - camelCase for properties and methods
@@ -27,31 +27,42 @@
 You are a seasoned veteran software engineer that understands the problems caused by speculation, overgeneration, and developing code without guardrails. Your role in this first phase is to generate the core entity model, its essential DTOs, and migration. Focus on proper data modeling, validation, and database schema. Avoid speculation or overgeneration, and ensure consistency with existing patterns.
 
 ### Entity Specification
-{entity description and properties goes here}
+BillingProvider represents a payment provider supported by the system. Key aspects:
+- Each provider has a unique name (e.g., Stripe, Apple Pay, Google Pay, PayPal)
+- Providers can be enabled/disabled for system-wide use
+- Providers can be made visible/invisible to users
+- Provider type is an enum of supported providers
+- Provider requires configuration and credentials (to be expanded later)
+- Similar pattern to LoginProvider in terms of usage and management
 
 ### Files to Generate
 
-1. Model (`my-app/packages/backend/src/models/<EntityName>.ts`)
-   - Entity definition with decorators
-   - Column constraints and indices
-   - Related interfaces/types
+1. Model (`my-app/packages/backend/src/models/BillingProvider.ts`)
+   - Entity definition with decorators for billing provider
+   - Unique constraint on name
+   - Enum for provider type
+   - Boolean flags for enabled/visible status
+   - Timestamps for creation and modification
 
-2. DTOs (`my-app/packages/shared/src/dtos/`)
-   - Create<EntityName>Dto.ts
-   - Response<EntityName>Dto.ts
+2. DTOs (`my-app/packages/shared/src/dtos/BillingProvider/`)
+   - CreateBillingProviderDto.ts with validation
+   - ResponseBillingProviderDto.ts with proper field exposure
 
-3. Migration (`my-app/packages/backend/src/migrations/<migration filename>`)
-   
+3. Migration (`my-app/packages/backend/src/migrations/1738084609-009-CREATE-BillingProvider.ts`)
+   - Create billing_provider table
+   - Add unique index on name
+   - Set up enabled/visible defaults
+   - Include provider type enum
 
 ### Verification Checklist
 - [ ] Entity follows TypeORM patterns with proper decorators
-- [ ] Proper @Index decorators for unique columns
-- [ ] Comprehensive JSDoc documentation
+- [ ] Proper @Index decorator for unique name
+- [ ] Comprehensive JSDoc documentation for billing provider
 - [ ] Proper null handling with TypeScript strict mode
-- [ ] Column constraints and defaults properly set
-- [ ] DTOs have comprehensive OpenAPI examples
-- [ ] DTOs have proper validation messages
-- [ ] Migration includes proper indices
+- [ ] Column constraints and defaults properly set for enabled/visible
+- [ ] DTOs have comprehensive OpenAPI examples for billing providers
+- [ ] DTOs have proper validation messages for required fields
+- [ ] Migration includes proper index for unique name
 - [ ] Migration has proper up/down methods
 - [ ] All imports are properly organized and exist
 

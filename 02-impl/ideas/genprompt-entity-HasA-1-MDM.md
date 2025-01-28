@@ -13,8 +13,16 @@
 - Keep examples minimal but clear
 
 ## Migration File Naming Convention
-- For new entities: `<timestamp>_<order>-Create<EntityName>.ts`
-- For existing entities: `<timestamp>_<order>-Modify<OwnerEntityName>With<EntityName>.ts`
+- For new entities: `<timestamp>-<order>-CREATE-<EntityPascalCase>.ts`
+- For existing entities: `<timestamp>-<order>-ALTER-<OwnerEntityPascalCase>-WITH-<EntityPascalCase>.ts`
+- For adding foreign key to entity: `<timestamp>-<order>-ADD-<EntityPascalCase>-<FK>-<TargetEntityPascalCase>.ts`
+
+## Migration Class Naming Convention
+- For new entities: `export class Create${EntityPascalCase}${timestamp}${order} implements MigrationInterface`
+- For existing entities: `export class Alter${OwnerEntityPascalCase}With${EntityPascalCase}${timestamp}${order} implements MigrationInterface`
+- For adding foreign key to entity: `export class Add${EntityPascalCase}Fk${TargetEntityPascalCase}${timestamp}${order} implements MigrationInterface`
+
+
 
 ## Aider Prompt Template
 

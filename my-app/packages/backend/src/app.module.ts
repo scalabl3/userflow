@@ -7,7 +7,7 @@ import { BaseUserModule } from './modules/BaseUserModule';
 import { LoginCredentialModule } from './modules/LoginCredentialModule';
 import { LoginProviderModule } from './modules/LoginProviderModule';
 import { UserModule } from './modules/UserModule';
-import { BillingProviderModule } from './modules/BillingProviderModule';
+
 
 @Module({
   imports: [
@@ -20,7 +20,7 @@ import { BillingProviderModule } from './modules/BillingProviderModule';
     LoginCredentialModule,
     BaseUserModule,
     UserModule,
-    BillingProviderModule,
+    
   ],
 })
 export class AppModule {}

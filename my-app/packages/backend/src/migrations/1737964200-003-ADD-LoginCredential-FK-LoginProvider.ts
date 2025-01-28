@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner, TableForeignKey } from 'typeorm';
 
-export class AddLoginCredentialForeignKeys_1737964200_003 implements MigrationInterface {
+export class AddLoginCredentialFkLoginProvider1737964200003 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createForeignKey(
             'login_credential',

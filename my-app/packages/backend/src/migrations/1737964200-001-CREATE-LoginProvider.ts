@@ -1,38 +1,48 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export class CreateUser_1737964200_007 implements MigrationInterface {
+export class CreateLoginProvider1737964200001 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({
-                name: 'user',
+                name: 'login_provider',
                 columns: [
                     {
                         name: 'id',
                         type: 'uuid',
                         isPrimary: true,
+                        isGenerated: true,
                         generationStrategy: 'uuid',
                         default: 'uuid_generate_v4()',
                     },
                     {
-                        name: 'username',
+                        name: 'code',
                         type: 'varchar',
-                        isNullable: false,
                         isUnique: true,
+                        isNullable: false,
                     },
                     {
-                        name: 'displayname',
+                        name: 'name',
                         type: 'varchar',
+                        length: '255',
                         isNullable: false,
                     },
                     {
-                        name: 'organizationId',
-                        type: 'uuid',
+                        name: 'isEnabled',
+                        type: 'boolean',
                         isNullable: false,
+                        default: true,
                     },
                     {
-                        name: 'preferences',
-                        type: 'simple-json',
-                        isNullable: true,
+                        name: 'createdAt',
+                        type: 'datetime',
+                        isNullable: false,
+                        default: 'CURRENT_TIMESTAMP',
+                    },
+                    {
+                        name: 'modifiedAt',
+                        type: 'datetime',
+                        isNullable: false,
+                        default: 'CURRENT_TIMESTAMP',
                     },
                 ],
             }),
@@ -41,6 +51,6 @@ export class CreateUser_1737964200_007 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropTable('user');
+        await queryRunner.dropTable('login_provider');
     }
-}
+} 
