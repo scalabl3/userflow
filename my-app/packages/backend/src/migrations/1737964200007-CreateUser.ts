@@ -30,11 +30,6 @@ export class CreateUser1737964200007 implements MigrationInterface {
                         isNullable: false,
                     },
                     {
-                        name: 'profileId',
-                        type: 'uuid',
-                        isNullable: true,
-                    },
-                    {
                         name: 'preferences',
                         type: 'simple-json',
                         isNullable: true,

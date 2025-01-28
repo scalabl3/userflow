@@ -98,24 +98,21 @@ The user authentication system supports multiple login methods per user while ma
   - One user can have multiple credentials but only one per provider
 
 ### User (✓ Implemented)
-- Extends BaseUser with profile and organization fields
+- Extends BaseUser with organization fields and user information
 - Fields:
   - `username`: string (unique) - Public identifier
   - `displayname`: string - User's display name
   - `organizationId`: UUID (required) - User's organization
-  - `profileId`: UUID (nullable)
   - `preferences`: JSON (nullable)
     - theme: 'light' | 'dark'
     - notifications: { email?: boolean, push?: boolean }
 - Relationships:
   - Organization (M:1) - Each user belongs to exactly one organization
-  - Profile (1:1) - Optional user profile
   
 - Constraints:
   - User must have exactly one organization
   - Multiple users can belong to the same organization
   - Username must be unique
-  - Profile is optional but unique per user
 
 ## Authentication Flow
 1. User provides identifier (email/phone/etc) and credentials

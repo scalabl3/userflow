@@ -13,8 +13,4 @@ export class ResponseUserDto extends ResponseBaseUserDto {
             push?: boolean;
         };
     };
-
-    // Profile ID will be exposed when Profile entity is implemented
-    @Expose()
-    profileId?: string;
 }

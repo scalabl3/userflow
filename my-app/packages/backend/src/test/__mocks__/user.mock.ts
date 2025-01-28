@@ -74,12 +74,6 @@ export const user = {
       id: core.ids.user,
       username: 'johndoe',
       displayname: 'John Doe'
-    },
-    profile: {
-      id: core.ids.user,
-      username: 'johndoe',
-      displayname: 'John Doe',
-      preferences: { theme: 'light' as const }
     }
   }
 }; 
