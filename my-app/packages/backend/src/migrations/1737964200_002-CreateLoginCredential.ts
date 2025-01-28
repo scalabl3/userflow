@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 import { CredentialType, OAuthProvider } from '@my-app/shared';
 
-export class CreateLoginCredential1737964200002 implements MigrationInterface {
+export class CreateLoginCredential_1737964200_002 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({
