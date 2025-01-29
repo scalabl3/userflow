@@ -1,41 +1,98 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Logger } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { BaseUserService } from '../services/BaseUserService';
 import { CreateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/CreateBaseUserDto';
 import { UpdateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/UpdateBaseUserDto';
-import { BaseUser } from '../models/BaseUser';
+import { ResponseBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/ResponseBaseUserDto';
+import { ControllerBase } from '../utils/controller-utils';
 
 @Controller('base-users')
-export class BaseUserController {
-    constructor(private readonly baseUserService: BaseUserService) {}
+@ApiTags('base-users')
+export class BaseUserController extends ControllerBase {
+    protected readonly RESOURCE_NAME = 'BaseUser';
+    protected readonly logger = new Logger(BaseUserController.name);
+
+    constructor(private readonly baseUserService: BaseUserService) {
+        super();
+    }
 
     @Post()
-    create(@Body() createBaseUserDto: CreateBaseUserDto): Promise<BaseUser> {
-        return this.baseUserService.create(createBaseUserDto);
+    @ApiOperation({ summary: 'Create new base user' })
+    @ApiResponse({ status: 201, type: ResponseBaseUserDto })
+    async create(@Body() createBaseUserDto: CreateBaseUserDto): Promise<ResponseBaseUserDto> {
+        try {
+            const user = await this.baseUserService.create(createBaseUserDto);
+            const response = this.toResponseDto(user, ResponseBaseUserDto);
+            if (!response) {
+                this.handleBadRequest('Failed to create base user', 'create', { dto: createBaseUserDto });
+            }
+            return response;
+        } catch (error) {
+            this.handleError(error, 'create', undefined, { dto: createBaseUserDto });
+        }
     }
 
     @Get()
-    findAll(): Promise<BaseUser[]> {
-        return this.baseUserService.findAll();
+    @ApiOperation({ summary: 'Get all base users' })
+    @ApiResponse({ status: 200, type: [ResponseBaseUserDto] })
+    async findAll(): Promise<ResponseBaseUserDto[]> {
+        try {
+            const users = await this.baseUserService.findAll();
+            return this.toResponseDtoArray(users, ResponseBaseUserDto);
+        } catch (error) {
+            this.handleError(error, 'findAll');
+        }
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string): Promise<BaseUser | null> {
-        return this.baseUserService.findOne(id);
+    @ApiOperation({ summary: 'Get base user by ID' })
+    @ApiResponse({ status: 200, type: ResponseBaseUserDto })
+    @ApiResponse({ status: 404, description: 'Base user not found' })
+    async findOne(@Param('id') id: string): Promise<ResponseBaseUserDto> {
+        try {
+            const user = await this.baseUserService.findOne(id);
+            const response = this.toResponseDto(user, ResponseBaseUserDto);
+            if (!response) {
+                this.handleNotFound(id, 'findOne');
+            }
+            return response;
+        } catch (error) {
+            this.handleError(error, 'findOne', id);
+        }
     }
 
     @Patch(':id')
-    update(
+    @ApiOperation({ summary: 'Update base user' })
+    @ApiResponse({ status: 200, type: ResponseBaseUserDto })
+    @ApiResponse({ status: 404, description: 'Base user not found' })
+    async update(
         @Param('id') id: string,
         @Body() updateBaseUserDto: UpdateBaseUserDto
-    ): Promise<BaseUser | null> {
-        return this.baseUserService.update(id, updateBaseUserDto);
+    ): Promise<ResponseBaseUserDto> {
+        try {
+            const user = await this.baseUserService.update(id, updateBaseUserDto);
+            const response = this.toResponseDto(user, ResponseBaseUserDto);
+            if (!response) {
+                this.handleNotFound(id, 'update');
+            }
+            return response;
+        } catch (error) {
+            this.handleError(error, 'update', id, { dto: updateBaseUserDto });
+        }
     }
 
     @Delete(':id')
+    @ApiOperation({ summary: 'Delete base user' })
+    @ApiResponse({ status: 204, description: 'Base user deleted successfully' })
+    @ApiResponse({ status: 404, description: 'Base user not found' })
     async remove(@Param('id') id: string): Promise<void> {
-        const result = await this.baseUserService.remove(id);
-        if (!result) {
-            throw new NotFoundException(`BaseUser with ID ${id} not found`);
+        try {
+            const result = await this.baseUserService.remove(id);
+            if (!result) {
+                this.handleNotFound(id, 'remove');
+            }
+        } catch (error) {
+            this.handleError(error, 'remove', id);
         }
     }
 } 

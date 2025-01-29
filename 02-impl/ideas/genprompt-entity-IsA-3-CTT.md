@@ -60,57 +60,101 @@ You are a seasoned veteran software engineer focused on building robust REST API
 #### Controller Structure
 Required Imports:
 ```typescript
-import { Controller, Get, Post, Put, Delete, Body, Param, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { EntityName } from '../models/EntityName';
-import { BaseEntityName } from '../models/BaseEntityName';
 import { EntityNameService } from '../services/EntityNameService';
 import { CreateEntityNameDto, UpdateEntityNameDto, ResponseEntityNameDto } from '@my-app/shared';
+import { BaseEntityNameController } from './BaseEntityNameController';
 ```
 
 Key Points:
-- Use proper HTTP method decorators
-- Implement inheritance validation
-- Handle responses with inheritance
-- Handle inheritance errors
-- Document inheritance with Swagger
+- Extend base controller that already extends ControllerBase
+- Override base methods with specialized behavior
+- Add specialized endpoints
+- Handle inheritance-specific errors
+- Document with Swagger
 - Follow REST conventions
 - Include proper logging
+- Add specialized validation methods
 
 Example Pattern:
 ```typescript
-@Controller('examples')
-@ApiTags('examples')
-export class ExampleController extends BaseController {
-    constructor(
-        private readonly service: ExampleService
-    ) {
-        super(service);
+@Controller('specialized-entity-names')
+@ApiTags('specialized-entity-names')
+export class SpecializedEntityNameController extends BaseEntityNameController {
+    protected readonly RESOURCE_NAME = 'SpecializedEntityName';
+    protected readonly logger = new Logger(SpecializedEntityNameController.name);
+
+    constructor(private readonly specializedEntityNameService: SpecializedEntityNameService) {
+        super(specializedEntityNameService);
     }
 
-    @Get(':id')
-    @ApiOperation({ summary: 'Get example by ID' })
-    @ApiResponse({ status: 200, type: ResponseExampleDto })
-    async findById(@Param('id') id: string): Promise<ResponseExampleDto> {
-        return this.service.findById(id);
+    @Post()
+    @ApiOperation({ summary: 'Create new specialized entity' })
+    @ApiResponse({ status: 201, type: ResponseSpecializedEntityNameDto })
+    async create(@Body() createDto: CreateSpecializedEntityNameDto): Promise<ResponseSpecializedEntityNameDto> {
+        try {
+            // Add specialized validation or preprocessing
+            if (!this.validateSpecializedFields(createDto)) {
+                this.handleBadRequest('Invalid specialized entity data', 'create', { dto: createDto });
+            }
+
+            const entity = await this.specializedEntityNameService.create(createDto);
+            const response = this.toResponseDto(entity, ResponseSpecializedEntityNameDto);
+            if (!response) {
+                this.handleBadRequest('Failed to create specialized entity', 'create', { dto: createDto });
+            }
+            return response;
+        } catch (error) {
+            this.handleError(error, 'create', undefined, { dto: createDto });
+        }
+    }
+
+    @Get('specialized-query')
+    @ApiOperation({ summary: 'Specialized query endpoint' })
+    @ApiResponse({ status: 200, type: [ResponseSpecializedEntityNameDto] })
+    async specializedQuery(): Promise<ResponseSpecializedEntityNameDto[]> {
+        try {
+            const entities = await this.specializedEntityNameService.specializedQuery();
+            return this.toResponseDtoArray(entities, ResponseSpecializedEntityNameDto);
+        } catch (error) {
+            this.handleError(error, 'specializedQuery');
+        }
     }
 
     @Put(':id')
-    @ApiOperation({ summary: 'Update example' })
-    @ApiResponse({ status: 200, type: ResponseExampleDto })
+    @ApiOperation({ summary: 'Update specialized entity' })
+    @ApiResponse({ status: 200, type: ResponseSpecializedEntityNameDto })
+    @ApiResponse({ status: 404, description: 'Entity not found' })
     async update(
         @Param('id') id: string,
-        @Body() dto: UpdateExampleDto
-    ): Promise<ResponseExampleDto> {
-        return this.service.update(id, dto);
+        @Body() updateDto: UpdateSpecializedEntityNameDto
+    ): Promise<ResponseSpecializedEntityNameDto> {
+        try {
+            // Add specialized validation or preprocessing
+            if (!this.validateSpecializedFields(updateDto)) {
+                this.handleBadRequest('Invalid specialized entity data', 'update', { dto: updateDto });
+            }
+
+            const entity = await this.specializedEntityNameService.update(id, updateDto);
+            const response = this.toResponseDto(entity, ResponseSpecializedEntityNameDto);
+            if (!response) {
+                this.handleNotFound(id, 'update');
+            }
+            return response;
+        } catch (error) {
+            this.handleError(error, 'update', id, { dto: updateDto });
+        }
     }
 
-    // Override base method with specific implementation
-    @Get('type/:type')
-    @ApiOperation({ summary: 'Get examples by type' })
-    @ApiResponse({ status: 200, type: [ResponseExampleDto] })
-    async findByType(@Param('type') type: string): Promise<ResponseExampleDto[]> {
-        return this.service.findByType(type);
+    // Override base method to add specialized handling
+    protected validateSpecializedFields(dto: CreateSpecializedEntityNameDto | UpdateSpecializedEntityNameDto): boolean {
+        // Add specialized validation logic
+        if (!dto.specializedField) {
+            return false;
+        }
+        return true;
     }
 }
 ```

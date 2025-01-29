@@ -53,46 +53,101 @@ You are a seasoned veteran software engineer focused on building robust REST API
 #### Controller Structure
 Required Imports:
 ```typescript
-import { Controller, Get, Post, Put, Delete, Body, Param, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { EntityName } from '../models/EntityName';
 import { EntityNameService } from '../services/EntityNameService';
 import { CreateEntityNameDto, UpdateEntityNameDto, ResponseEntityNameDto } from '@my-app/shared';
+import { ControllerBase } from '../utils/controller-utils';
 ```
 
 Key Points:
-- Use proper HTTP method decorators
-- Implement request validation
-- Handle responses consistently
-- Handle errors appropriately
+- Extend ControllerBase for consistent error handling
+- Use protected logger and RESOURCE_NAME
+- Implement proper DTO transformations
+- Handle all errors consistently
 - Document with Swagger
 - Follow REST conventions
 - Include proper logging
 
 Example Pattern:
 ```typescript
-@Controller('examples')
-@ApiTags('examples')
-export class ExampleController {
-    constructor(
-        private readonly service: ExampleService
-    ) {}
+@Controller('entity-names')
+@ApiTags('entity-names')
+export class EntityNameController extends ControllerBase {
+    protected readonly RESOURCE_NAME = 'EntityName';
+    protected readonly logger = new Logger(EntityNameController.name);
+
+    constructor(private readonly entityNameService: EntityNameService) {
+        super();
+    }
+
+    @Post()
+    @ApiOperation({ summary: 'Create new entity' })
+    @ApiResponse({ status: 201, type: ResponseEntityNameDto })
+    async create(@Body() createEntityNameDto: CreateEntityNameDto): Promise<ResponseEntityNameDto> {
+        try {
+            const entity = await this.entityNameService.create(createEntityNameDto);
+            const response = this.toResponseDto(entity, ResponseEntityNameDto);
+            if (!response) {
+                this.handleBadRequest('Failed to create entity', 'create', { dto: createEntityNameDto });
+            }
+            return response;
+        } catch (error) {
+            this.handleError(error, 'create', undefined, { dto: createEntityNameDto });
+        }
+    }
 
     @Get(':id')
-    @ApiOperation({ summary: 'Get example by ID' })
-    @ApiResponse({ status: 200, type: ResponseExampleDto })
-    async findById(@Param('id') id: string): Promise<ResponseExampleDto> {
-        return this.service.findById(id);
+    @ApiOperation({ summary: 'Get entity by ID' })
+    @ApiResponse({ status: 200, type: ResponseEntityNameDto })
+    @ApiResponse({ status: 404, description: 'Entity not found' })
+    async findOne(@Param('id') id: string): Promise<ResponseEntityNameDto> {
+        try {
+            const entity = await this.entityNameService.findOne(id);
+            const response = this.toResponseDto(entity, ResponseEntityNameDto);
+            if (!response) {
+                this.handleNotFound(id, 'findOne');
+            }
+            return response;
+        } catch (error) {
+            this.handleError(error, 'findOne', id);
+        }
     }
 
     @Put(':id')
-    @ApiOperation({ summary: 'Update example' })
-    @ApiResponse({ status: 200, type: ResponseExampleDto })
+    @ApiOperation({ summary: 'Update entity' })
+    @ApiResponse({ status: 200, type: ResponseEntityNameDto })
+    @ApiResponse({ status: 404, description: 'Entity not found' })
     async update(
         @Param('id') id: string,
-        @Body() dto: UpdateExampleDto
-    ): Promise<ResponseExampleDto> {
-        return this.service.update(id, dto);
+        @Body() updateEntityNameDto: UpdateEntityNameDto
+    ): Promise<ResponseEntityNameDto> {
+        try {
+            const entity = await this.entityNameService.update(id, updateEntityNameDto);
+            const response = this.toResponseDto(entity, ResponseEntityNameDto);
+            if (!response) {
+                this.handleNotFound(id, 'update');
+            }
+            return response;
+        } catch (error) {
+            this.handleError(error, 'update', id, { dto: updateEntityNameDto });
+        }
+    }
+
+    @Delete(':id')
+    @ApiOperation({ summary: 'Delete entity' })
+    @ApiResponse({ status: 200, description: 'Entity deleted successfully' })
+    @ApiResponse({ status: 404, description: 'Entity not found' })
+    async remove(@Param('id') id: string): Promise<void> {
+        try {
+            const success = await this.entityNameService.remove(id);
+            if (!success) {
+                this.handleNotFound(id, 'remove');
+            }
+        } catch (error) {
+            this.handleError(error, 'remove', id);
+        }
     }
 }
 ```

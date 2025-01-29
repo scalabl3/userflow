@@ -97,4 +97,4 @@ export class BillingProviderController extends ControllerBase {
             this.handleError(error, 'remove', id);
         }
     }
-}
+} 

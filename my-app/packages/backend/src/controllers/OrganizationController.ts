@@ -1,112 +1,98 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Logger } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrganizationService } from '../services/OrganizationService';
 import { CreateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/CreateOrganizationDto';
 import { UpdateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/UpdateOrganizationDto';
-import { Organization } from '../models/Organization';
-
-interface ServiceError {
-    message: string;
-    status?: number;
-}
+import { ResponseOrganizationDto } from '@my-app/shared/dist/dtos/Organization/ResponseOrganizationDto';
+import { ControllerBase } from '../utils/controller-utils';
 
 @Controller('organizations')
-export class OrganizationController {
-    constructor(private readonly organizationService: OrganizationService) {}
+@ApiTags('organizations')
+export class OrganizationController extends ControllerBase {
+    protected readonly RESOURCE_NAME = 'Organization';
+    protected readonly logger = new Logger(OrganizationController.name);
 
-    /**
-     * GET /organizations
-     * Retrieve a list of organizations
-     */
-    @Get()
-    async findAll(): Promise<Organization[]> {
-        try {
-            return await this.organizationService.findAll();
-        } catch (error) {
-            const serviceError = error as ServiceError;
-            throw new HttpException(
-                serviceError.message || 'Internal server error',
-                serviceError.status || HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
+    constructor(private readonly organizationService: OrganizationService) {
+        super();
     }
 
-    /**
-     * POST /organizations
-     * Create a new organization
-     */
     @Post()
-    async create(@Body() createOrganizationDto: CreateOrganizationDto): Promise<Organization> {
+    @ApiOperation({ summary: 'Create new organization' })
+    @ApiResponse({ status: 201, type: ResponseOrganizationDto })
+    async create(@Body() createOrganizationDto: CreateOrganizationDto): Promise<ResponseOrganizationDto> {
         try {
-            return await this.organizationService.create(createOrganizationDto);
+            const organization = await this.organizationService.create(createOrganizationDto);
+            const response = this.toResponseDto(organization, ResponseOrganizationDto);
+            if (!response) {
+                this.handleBadRequest('Failed to create organization', 'create', { dto: createOrganizationDto });
+            }
+            return response;
         } catch (error) {
-            const serviceError = error as ServiceError;
-            throw new HttpException(
-                serviceError.message || 'Internal server error',
-                serviceError.status || HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            this.handleError(error, 'create', undefined, { dto: createOrganizationDto });
         }
     }
 
-    /**
-     * GET /organizations/:id
-     * Retrieve a single organization by ID
-     */
+    @Get()
+    @ApiOperation({ summary: 'Get all organizations' })
+    @ApiResponse({ status: 200, type: [ResponseOrganizationDto] })
+    async findAll(): Promise<ResponseOrganizationDto[]> {
+        try {
+            const organizations = await this.organizationService.findAll();
+            return this.toResponseDtoArray(organizations, ResponseOrganizationDto);
+        } catch (error) {
+            this.handleError(error, 'findAll');
+        }
+    }
+
     @Get(':id')
-    async findOne(@Param('id') id: string): Promise<Organization> {
+    @ApiOperation({ summary: 'Get organization by ID' })
+    @ApiResponse({ status: 200, type: ResponseOrganizationDto })
+    @ApiResponse({ status: 404, description: 'Organization not found' })
+    async findOne(@Param('id') id: string): Promise<ResponseOrganizationDto> {
         try {
             const organization = await this.organizationService.findOne(id);
-            if (!organization) {
-                throw new HttpException('Organization not found', HttpStatus.NOT_FOUND);
+            const response = this.toResponseDto(organization, ResponseOrganizationDto);
+            if (!response) {
+                this.handleNotFound(id, 'findOne');
             }
-            return organization;
+            return response;
         } catch (error) {
-            const serviceError = error as ServiceError;
-            throw new HttpException(
-                serviceError.message || 'Internal server error',
-                serviceError.status || HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            this.handleError(error, 'findOne', id);
         }
     }
 
-    /**
-     * PUT /organizations/:id
-     * Update an existing organization
-     */
     @Put(':id')
-    async update(@Param('id') id: string, @Body() updateOrganizationDto: UpdateOrganizationDto): Promise<Organization> {
+    @ApiOperation({ summary: 'Update organization' })
+    @ApiResponse({ status: 200, type: ResponseOrganizationDto })
+    @ApiResponse({ status: 404, description: 'Organization not found' })
+    async update(
+        @Param('id') id: string,
+        @Body() updateOrganizationDto: UpdateOrganizationDto
+    ): Promise<ResponseOrganizationDto> {
         try {
             const organization = await this.organizationService.update(id, updateOrganizationDto);
-            if (!organization) {
-                throw new HttpException('Organization not found', HttpStatus.NOT_FOUND);
+            const response = this.toResponseDto(organization, ResponseOrganizationDto);
+            if (!response) {
+                this.handleNotFound(id, 'update');
             }
-            return organization;
+            return response;
         } catch (error) {
-            const serviceError = error as ServiceError;
-            throw new HttpException(
-                serviceError.message || 'Internal server error',
-                serviceError.status || HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            this.handleError(error, 'update', id, { dto: updateOrganizationDto });
         }
     }
 
-    /**
-     * DELETE /organizations/:id
-     * Delete an organization by ID
-     */
     @Delete(':id')
-    async remove(@Param('id') id: string): Promise<{ message: string }> {
+    @ApiOperation({ summary: 'Delete organization' })
+    @ApiResponse({ status: 204, description: 'Organization deleted successfully' })
+    @ApiResponse({ status: 404, description: 'Organization not found' })
+    async remove(@Param('id') id: string): Promise<void> {
         try {
             const result = await this.organizationService.remove(id);
             if (!result) {
-                throw new HttpException('Organization not found', HttpStatus.NOT_FOUND);
+                this.handleNotFound(id, 'remove');
             }
-            return { message: 'Organization deleted successfully' };
         } catch (error) {
-            const serviceError = error as ServiceError;
-            throw new HttpException(
-                serviceError.message || 'Internal server error',
-                serviceError.status || HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            this.handleError(error, 'remove', id);
         }
     }
 }

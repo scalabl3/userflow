@@ -4,7 +4,9 @@ import { Repository, DataSource } from 'typeorm';
 import { BillingProvider } from '../models/BillingProvider';
 import { CreateBillingProviderDto } from '@my-app/shared/dist/dtos/BillingProvider/CreateBillingProviderDto';
 import { UpdateBillingProviderDto } from '@my-app/shared/dist/dtos/BillingProvider/UpdateBillingProviderDto';
+import { ResponseBillingProviderDto } from '@my-app/shared/dist/dtos/BillingProvider/ResponseBillingProviderDto';
 import { handleError, createErrorContext } from '../utils/error-handling';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class BillingProviderService {
@@ -17,9 +19,10 @@ export class BillingProviderService {
         private readonly dataSource: DataSource,
     ) {}
 
-    async findAll(): Promise<BillingProvider[]> {
+    async findAll(): Promise<ResponseBillingProviderDto[]> {
         try {
-            return await this.billingProviderRepository.find();
+            const providers = await this.billingProviderRepository.find();
+            return providers.map(provider => plainToClass(ResponseBillingProviderDto, provider, { excludeExtraneousValues: true }));
         } catch (error) {
             const handled = handleError<BillingProvider[]>(this.logger, error, createErrorContext(
                 'findAll',
@@ -28,11 +31,11 @@ export class BillingProviderService {
             if (handled === undefined) {
                 throw error;
             }
-            return handled ?? [];
+            return (handled ?? []).map(provider => plainToClass(ResponseBillingProviderDto, provider, { excludeExtraneousValues: true }));
         }
     }
 
-    async findOne(id: string): Promise<BillingProvider | null> {
+    async findOne(id: string): Promise<ResponseBillingProviderDto | null> {
         try {
             const provider = await this.billingProviderRepository.findOne({
                 where: { id }
@@ -42,18 +45,18 @@ export class BillingProviderService {
                 throw new NotFoundException(`${this.ENTITY_NAME} not found`);
             }
 
-            return provider;
+            return plainToClass(ResponseBillingProviderDto, provider, { excludeExtraneousValues: true });
         } catch (error) {
             const handled = handleError<BillingProvider>(this.logger, error, createErrorContext(
                 'findOne',
                 this.ENTITY_NAME,
                 id
             ));
-            return handled === undefined ? null : handled;
+            return handled === undefined ? null : handled ? plainToClass(ResponseBillingProviderDto, handled, { excludeExtraneousValues: true }) : null;
         }
     }
 
-    async create(createDto: CreateBillingProviderDto): Promise<BillingProvider> {
+    async create(createDto: CreateBillingProviderDto): Promise<ResponseBillingProviderDto | null> {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -72,7 +75,7 @@ export class BillingProviderService {
             
             await queryRunner.commitTransaction();
             this.logger.log(`Created ${this.ENTITY_NAME}: ${result.id}`);
-            return result;
+            return plainToClass(ResponseBillingProviderDto, result, { excludeExtraneousValues: true });
         } catch (error) {
             await queryRunner.rollbackTransaction();
             const handled = handleError<BillingProvider>(this.logger, error, createErrorContext(
@@ -84,20 +87,24 @@ export class BillingProviderService {
             if (handled === undefined || handled === null) {
                 throw error;
             }
-            return handled;
+            return handled ? plainToClass(ResponseBillingProviderDto, handled, { excludeExtraneousValues: true }) : null;
         } finally {
             await queryRunner.release();
         }
     }
 
-    async update(id: string, updateDto: UpdateBillingProviderDto): Promise<BillingProvider | null> {
+    async update(id: string, updateDto: UpdateBillingProviderDto): Promise<ResponseBillingProviderDto | null> {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
         try {
-            const provider = await this.findOne(id);
-            if (!provider) return null;
+            const provider = await this.billingProviderRepository.findOne({
+                where: { id }
+            });
+            if (!provider) {
+                throw new NotFoundException(`${this.ENTITY_NAME} not found`);
+            }
 
             // Check name uniqueness if name is being updated
             if (updateDto.name && updateDto.name !== provider.name) {
@@ -122,7 +129,7 @@ export class BillingProviderService {
             
             await queryRunner.commitTransaction();
             this.logger.log(`Updated ${this.ENTITY_NAME}: ${id}`);
-            return result;
+            return plainToClass(ResponseBillingProviderDto, result, { excludeExtraneousValues: true });
         } catch (error) {
             await queryRunner.rollbackTransaction();
             const handled = handleError<BillingProvider>(this.logger, error, createErrorContext(
@@ -131,7 +138,7 @@ export class BillingProviderService {
                 id,
                 { dto: updateDto }
             ));
-            return handled === undefined ? null : handled;
+            return handled === undefined ? null : handled ? plainToClass(ResponseBillingProviderDto, handled, { excludeExtraneousValues: true }) : null;
         } finally {
             await queryRunner.release();
         }
@@ -143,8 +150,12 @@ export class BillingProviderService {
         await queryRunner.startTransaction();
 
         try {
-            const provider = await this.findOne(id);
-            if (!provider) return false;
+            const provider = await this.billingProviderRepository.findOne({
+                where: { id }
+            });
+            if (!provider) {
+                throw new NotFoundException(`${this.ENTITY_NAME} not found`);
+            }
 
             await queryRunner.manager.remove(BillingProvider, provider);
             
