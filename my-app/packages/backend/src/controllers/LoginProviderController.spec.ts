@@ -4,7 +4,7 @@ import { LoginProviderService } from '../services/LoginProviderService';
 import { CreateLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/CreateLoginProviderDto';
 import { UpdateLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/UpdateLoginProviderDto';
 import { ResponseLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/ResponseLoginProviderDto';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { auth } from '../test/__mocks__/auth.mock';
 import { core } from '../test/__mocks__/core.mock';
 import { DataSource } from 'typeorm';
@@ -78,7 +78,7 @@ describe('LoginProviderController', () => {
             jest.spyOn(service, 'findAll').mockRejectedValue(new Error());
             
             await expect(controller.findAll()).rejects.toThrow(
-                new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR)
+                new InternalServerErrorException('An unexpected error occurred')
             );
         });
     });
@@ -97,7 +97,7 @@ describe('LoginProviderController', () => {
             jest.spyOn(service, 'findOne').mockResolvedValue(null);
             
             await expect(controller.findOne('nonexistent-id')).rejects.toThrow(
-                new HttpException('LoginProvider not found', HttpStatus.NOT_FOUND)
+                new NotFoundException('LoginProvider with ID nonexistent-id not found')
             );
         });
 
@@ -105,7 +105,7 @@ describe('LoginProviderController', () => {
             jest.spyOn(service, 'findOne').mockRejectedValue(new Error());
             
             await expect(controller.findOne(mockLoginProvider.id)).rejects.toThrow(
-                new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR)
+                new InternalServerErrorException('An unexpected error occurred')
             );
         });
     });
@@ -130,7 +130,7 @@ describe('LoginProviderController', () => {
             jest.spyOn(service, 'create').mockRejectedValue(new Error());
             
             await expect(controller.create(createDto)).rejects.toThrow(
-                new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR)
+                new InternalServerErrorException('An unexpected error occurred')
             );
         });
     });

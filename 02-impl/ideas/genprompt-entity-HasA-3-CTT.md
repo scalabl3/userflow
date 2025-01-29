@@ -178,75 +178,150 @@ export class EntityNameController extends ControllerBase {
 Required Imports:
 ```typescript
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
-import { ExampleController } from './ExampleController';
-import { ExampleService } from '../services/ExampleService';
+import { EntityNameController } from './EntityNameController';
+import { EntityNameService } from '../services/EntityNameService';
+import { CreateEntityNameDto, UpdateEntityNameDto, ResponseEntityNameDto } from '@my-app/shared';
+import { NotFoundException, InternalServerErrorException, ConflictException } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
+import { entityName as entityMock } from '../test/__mocks__/entityName.mock';
+import { ownerEntityName as ownerMock } from '../test/__mocks__/ownerEntityName.mock';
+import { DataSource } from 'typeorm';
 ```
 
 Key Points:
-- Mock service dependencies
-- Test relationship endpoints
-- Cover relationship validation
-- Test relationship responses
-- Use proper assertions
+- Mock service and DataSource dependencies
+- Use shared mock files for test data
+- Test all endpoints comprehensively
+- Cover all error scenarios
+- Test response transformations
 - Follow AAA pattern
 - Include relationship edge cases
-- Test relationship errors
+- Consistent error handling
+- Clear test descriptions
+- Reset mocks between tests
+- Test relationship-specific endpoints
+- Verify relationship constraints
 
 Example Pattern:
 ```typescript
-describe('ExampleController', () => {
-    let controller: ExampleController;
-    let service: ExampleService;
+describe('EntityNameController', () => {
+    let controller: EntityNameController;
+    let service: EntityNameService;
 
-    const mockEntity = {
-        id: '123',
-        owner_id: '456',
-        field: 'Test Value',
-        created_at: new Date(),
-        modified_at: new Date()
+    const mockQueryRunner = {
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+            save: jest.fn()
+        }
     };
+
+    const mockDataSource = {
+        createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
+    };
+
+    // Use shared mock data
+    const mockEntity = entityMock.standard;
+    const mockOwner = ownerMock.standard;
+    const mockEntityDto = plainToClass(ResponseEntityNameDto, mockEntity, { excludeExtraneousValues: true });
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            controllers: [ExampleController],
+            controllers: [EntityNameController],
             providers: [
                 {
-                    provide: ExampleService,
+                    provide: EntityNameService,
                     useValue: {
-                        findById: jest.fn(),
+                        create: jest.fn(),
+                        findAll: jest.fn(),
+                        findOne: jest.fn(),
                         findByOwnerId: jest.fn(),
-                        update: jest.fn()
-                    }
-                }
-            ]
+                        update: jest.fn(),
+                        updateOwner: jest.fn(),
+                        remove: jest.fn(),
+                    },
+                },
+                {
+                    provide: DataSource,
+                    useValue: mockDataSource,
+                },
+            ],
         }).compile();
 
-        controller = module.get<ExampleController>(ExampleController);
-        service = module.get<ExampleService>(ExampleService);
+        controller = module.get<EntityNameController>(EntityNameController);
+        service = module.get<EntityNameService>(EntityNameService);
+
+        // Reset mocks between tests
+        jest.clearAllMocks();
+    });
+
+    describe('Controller Setup', () => {
+        it('should be defined', () => {
+            expect(controller).toBeDefined();
+            expect(service).toBeDefined();
+        });
     });
 
     describe('findByOwnerId', () => {
         it('should return entities by owner ID', async () => {
             const entities = [mockEntity];
-            
             jest.spyOn(service, 'findByOwnerId').mockResolvedValue(entities);
             
-            const result = await controller.findByOwnerId('456');
+            const result = await controller.findByOwnerId(mockOwner.id);
             
-            expect(result).toBeDefined();
-            expect(result).toEqual(entities);
-            expect(service.findByOwnerId).toHaveBeenCalledWith('456');
+            expect(result).toEqual([mockEntityDto]);
+            expect(service.findByOwnerId).toHaveBeenCalledWith(mockOwner.id);
         });
 
-        it('should handle empty result for owner ID', async () => {
+        it('should return empty array when no entities exist for owner', async () => {
             jest.spyOn(service, 'findByOwnerId').mockResolvedValue([]);
             
-            const result = await controller.findByOwnerId('999');
+            const result = await controller.findByOwnerId(mockOwner.id);
             
             expect(result).toEqual([]);
         });
+
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'findByOwnerId').mockRejectedValue(new Error());
+            
+            await expect(controller.findByOwnerId(mockOwner.id)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
     });
+
+    describe('updateOwner', () => {
+        it('should update entity owner', async () => {
+            const updatedEntity = { ...mockEntity, ownerId: mockOwner.id };
+            jest.spyOn(service, 'updateOwner').mockResolvedValue(updatedEntity);
+            
+            const result = await controller.updateOwner(mockEntity.id, mockOwner.id);
+            
+            expect(result).toEqual(plainToClass(ResponseEntityNameDto, updatedEntity, { excludeExtraneousValues: true }));
+            expect(service.updateOwner).toHaveBeenCalledWith(mockEntity.id, mockOwner.id);
+        });
+
+        it('should throw NotFoundException when entity does not exist', async () => {
+            jest.spyOn(service, 'updateOwner').mockResolvedValue(null);
+            
+            await expect(controller.updateOwner('nonexistent-id', mockOwner.id)).rejects.toThrow(
+                new NotFoundException('EntityName with ID nonexistent-id not found')
+            );
+        });
+
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'updateOwner').mockRejectedValue(new Error());
+            
+            await expect(controller.updateOwner(mockEntity.id, mockOwner.id)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
+    });
+
+    // Include standard CRUD test cases as well...
 });
 ```
 

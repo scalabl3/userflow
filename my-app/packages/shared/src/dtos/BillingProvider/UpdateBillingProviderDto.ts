@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEnum, IsBoolean } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsBoolean, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { BillingProviderType } from '../../enums/BillingProviderType';
 
@@ -6,9 +6,12 @@ export class UpdateBillingProviderDto {
     @ApiProperty({
         description: 'Name of the billing provider',
         example: 'Stripe',
-        required: false
+        required: false,
+        minLength: 2,
+        maxLength: 255
     })
     @IsString()
+    @Length(2, 255, { message: 'Name must be between 2 and 255 characters' })
     @IsOptional()
     name?: string;
 

@@ -19,10 +19,23 @@ export class BillingProviderService {
         private readonly dataSource: DataSource,
     ) {}
 
+    private transformResponse(data: BillingProvider[]): ResponseBillingProviderDto[];
+    private transformResponse(data: BillingProvider): ResponseBillingProviderDto;
+    private transformResponse(data: BillingProvider | BillingProvider[]): ResponseBillingProviderDto | ResponseBillingProviderDto[] {
+        if (Array.isArray(data)) {
+            return data.map(item => plainToClass(ResponseBillingProviderDto, item, { excludeExtraneousValues: true }));
+        }
+        return plainToClass(ResponseBillingProviderDto, data, { excludeExtraneousValues: true });
+    }
+
+    private transformResponseOrNull(data: BillingProvider | null): ResponseBillingProviderDto | null {
+        return data ? this.transformResponse(data) : null;
+    }
+
     async findAll(): Promise<ResponseBillingProviderDto[]> {
         try {
             const providers = await this.billingProviderRepository.find();
-            return providers.map(provider => plainToClass(ResponseBillingProviderDto, provider, { excludeExtraneousValues: true }));
+            return this.transformResponse(providers);
         } catch (error) {
             const handled = handleError<BillingProvider[]>(this.logger, error, createErrorContext(
                 'findAll',
@@ -31,7 +44,7 @@ export class BillingProviderService {
             if (handled === undefined) {
                 throw error;
             }
-            return (handled ?? []).map(provider => plainToClass(ResponseBillingProviderDto, provider, { excludeExtraneousValues: true }));
+            return this.transformResponse(handled ?? []);
         }
     }
 
@@ -42,17 +55,17 @@ export class BillingProviderService {
             });
 
             if (!provider) {
-                throw new NotFoundException(`${this.ENTITY_NAME} not found`);
+                throw new NotFoundException(`${this.ENTITY_NAME} with ID ${id} not found`);
             }
 
-            return plainToClass(ResponseBillingProviderDto, provider, { excludeExtraneousValues: true });
+            return this.transformResponse(provider);
         } catch (error) {
             const handled = handleError<BillingProvider>(this.logger, error, createErrorContext(
                 'findOne',
                 this.ENTITY_NAME,
                 id
             ));
-            return handled === undefined ? null : handled ? plainToClass(ResponseBillingProviderDto, handled, { excludeExtraneousValues: true }) : null;
+            return handled === undefined ? null : this.transformResponseOrNull(handled);
         }
     }
 
@@ -62,20 +75,14 @@ export class BillingProviderService {
         await queryRunner.startTransaction();
 
         try {
-            // Check for existing provider with same name
-            const existing = await this.billingProviderRepository.findOne({
-                where: { name: createDto.name }
-            });
-            if (existing) {
-                throw new ConflictException(`${this.ENTITY_NAME} with name ${createDto.name} already exists`);
-            }
-
+            await this.validateUnique(createDto.name);
+            
             const provider = this.billingProviderRepository.create(createDto);
             const result = await queryRunner.manager.save(BillingProvider, provider);
             
             await queryRunner.commitTransaction();
             this.logger.log(`Created ${this.ENTITY_NAME}: ${result.id}`);
-            return plainToClass(ResponseBillingProviderDto, result, { excludeExtraneousValues: true });
+            return this.transformResponse(result);
         } catch (error) {
             await queryRunner.rollbackTransaction();
             const handled = handleError<BillingProvider>(this.logger, error, createErrorContext(
@@ -84,10 +91,7 @@ export class BillingProviderService {
                 undefined,
                 { dto: createDto }
             ));
-            if (handled === undefined || handled === null) {
-                throw error;
-            }
-            return handled ? plainToClass(ResponseBillingProviderDto, handled, { excludeExtraneousValues: true }) : null;
+            return handled === undefined ? null : this.transformResponseOrNull(handled);
         } finally {
             await queryRunner.release();
         }
@@ -99,37 +103,17 @@ export class BillingProviderService {
         await queryRunner.startTransaction();
 
         try {
-            const provider = await this.billingProviderRepository.findOne({
-                where: { id }
-            });
-            if (!provider) {
-                throw new NotFoundException(`${this.ENTITY_NAME} not found`);
-            }
-
-            // Check name uniqueness if name is being updated
-            if (updateDto.name && updateDto.name !== provider.name) {
-                const existing = await this.billingProviderRepository.findOne({
-                    where: { name: updateDto.name }
-                });
-                if (existing) {
-                    throw new ConflictException(`${this.ENTITY_NAME} with name ${updateDto.name} already exists`);
-                }
-            }
-
-            // Log status changes
-            if (updateDto.isEnabled !== undefined && updateDto.isEnabled !== provider.isEnabled) {
-                this.logger.log(`${this.ENTITY_NAME} ${id} enabled status changed to: ${updateDto.isEnabled}`);
-            }
-            if (updateDto.visible !== undefined && updateDto.visible !== provider.visible) {
-                this.logger.log(`${this.ENTITY_NAME} ${id} visibility changed to: ${updateDto.visible}`);
-            }
-
-            Object.assign(provider, updateDto);
-            const result = await queryRunner.manager.save(BillingProvider, provider);
+            const provider = await this.findOneOrFail(id);
+            await this.validateUpdate(id, updateDto);
             
+            this.logChanges(id, provider, updateDto);
+            Object.assign(provider, updateDto);
+            
+            const result = await queryRunner.manager.save(BillingProvider, provider);
             await queryRunner.commitTransaction();
+            
             this.logger.log(`Updated ${this.ENTITY_NAME}: ${id}`);
-            return plainToClass(ResponseBillingProviderDto, result, { excludeExtraneousValues: true });
+            return this.transformResponse(result);
         } catch (error) {
             await queryRunner.rollbackTransaction();
             const handled = handleError<BillingProvider>(this.logger, error, createErrorContext(
@@ -138,7 +122,7 @@ export class BillingProviderService {
                 id,
                 { dto: updateDto }
             ));
-            return handled === undefined ? null : handled ? plainToClass(ResponseBillingProviderDto, handled, { excludeExtraneousValues: true }) : null;
+            return handled === undefined ? null : this.transformResponseOrNull(handled);
         } finally {
             await queryRunner.release();
         }
@@ -150,13 +134,7 @@ export class BillingProviderService {
         await queryRunner.startTransaction();
 
         try {
-            const provider = await this.billingProviderRepository.findOne({
-                where: { id }
-            });
-            if (!provider) {
-                throw new NotFoundException(`${this.ENTITY_NAME} not found`);
-            }
-
+            const provider = await this.findOneOrFail(id);
             await queryRunner.manager.remove(BillingProvider, provider);
             
             await queryRunner.commitTransaction();
@@ -172,6 +150,45 @@ export class BillingProviderService {
             return handled ?? false;
         } finally {
             await queryRunner.release();
+        }
+    }
+
+    private async findOneOrFail(id: string): Promise<BillingProvider> {
+        const entity = await this.billingProviderRepository.findOne({
+            where: { id }
+        });
+        if (!entity) {
+            throw new NotFoundException(`${this.ENTITY_NAME} with ID ${id} not found`);
+        }
+        return entity;
+    }
+
+    private async validateUnique(name: string): Promise<void> {
+        const existing = await this.billingProviderRepository.findOne({
+            where: { name }
+        });
+        if (existing) {
+            throw new ConflictException(`${this.ENTITY_NAME} with name ${name} already exists`);
+        }
+    }
+
+    private async validateUpdate(id: string, updateDto: UpdateBillingProviderDto): Promise<void> {
+        if (updateDto.name) {
+            const existing = await this.billingProviderRepository.findOne({
+                where: { name: updateDto.name }
+            });
+            if (existing && existing.id !== id) {
+                throw new ConflictException(`${this.ENTITY_NAME} with name ${updateDto.name} already exists`);
+            }
+        }
+    }
+
+    private logChanges(id: string, entity: BillingProvider, updateDto: UpdateBillingProviderDto): void {
+        if (updateDto.isEnabled !== undefined && updateDto.isEnabled !== entity.isEnabled) {
+            this.logger.log(`${this.ENTITY_NAME} ${id} enabled status changed to: ${updateDto.isEnabled}`);
+        }
+        if (updateDto.visible !== undefined && updateDto.visible !== entity.visible) {
+            this.logger.log(`${this.ENTITY_NAME} ${id} visibility changed to: ${updateDto.visible}`);
         }
     }
 }
