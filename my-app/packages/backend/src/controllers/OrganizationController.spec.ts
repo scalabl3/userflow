@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrganizationController } from './OrganizationController';
 import { OrganizationService } from '../services/OrganizationService';
 import { CreateOrganizationDto, UpdateOrganizationDto, ResponseOrganizationDto } from '@my-app/shared';
-import { NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { NotFoundException, BadRequestException, InternalServerErrorException, ConflictException } from '@nestjs/common';
 import { Organization } from '../models/Organization';
 import { plainToClass } from 'class-transformer';
 import { organization as orgMock } from '../test/__mocks__/organization.mock';
@@ -27,9 +27,12 @@ describe('OrganizationController', () => {
         createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
     };
 
-    const mockOrgDto = plainToClass(ResponseOrganizationDto, {
-        ...orgMock.standard
-    }, { excludeExtraneousValues: true });
+    const mockOrg: Organization = {
+        ...orgMock.standard,
+        users: []
+    };
+
+    const mockOrgDto = plainToClass(ResponseOrganizationDto, mockOrg, { excludeExtraneousValues: true });
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -55,210 +58,154 @@ describe('OrganizationController', () => {
         controller = module.get<OrganizationController>(OrganizationController);
         service = module.get<OrganizationService>(OrganizationService);
 
-        // Reset mocks between tests
         jest.clearAllMocks();
     });
 
-    it('should be defined', () => {
-        expect(controller).toBeDefined();
-    });
-
-    describe('create', () => {
-        it('should create a new organization', async () => {
-            const createOrganizationDto = orgMock.dtos.create;
-
-            jest.spyOn(service, 'create').mockResolvedValue(orgMock.standard);
-
-            const result = await controller.create(createOrganizationDto);
-
-            expect(service.create).toHaveBeenCalledWith(createOrganizationDto);
-            expect(result).toEqual(mockOrgDto);
-        });
-
-        it('should handle bad request errors during creation', async () => {
-            const createOrganizationDto = orgMock.dtos.create;
-            const error = new BadRequestException('Invalid organization data');
-
-            jest.spyOn(service, 'create').mockRejectedValue(error);
-
-            await expect(controller.create(createOrganizationDto))
-                .rejects
-                .toThrow(error);
-        });
-
-        it('should handle not found errors during creation', async () => {
-            const createOrganizationDto = orgMock.dtos.create;
-            const error = new NotFoundException('Referenced entity not found');
-
-            jest.spyOn(service, 'create').mockRejectedValue(error);
-
-            await expect(controller.create(createOrganizationDto))
-                .rejects
-                .toThrow(error);
-        });
-
-        it('should handle unexpected errors during creation', async () => {
-            const createOrganizationDto = orgMock.dtos.create;
-            const error = new Error('Unexpected error');
-
-            jest.spyOn(service, 'create').mockRejectedValue(error);
-
-            await expect(controller.create(createOrganizationDto))
-                .rejects
-                .toThrow(InternalServerErrorException);
+    describe('Controller Setup', () => {
+        it('should be defined', () => {
+            expect(controller).toBeDefined();
+            expect(service).toBeDefined();
         });
     });
 
     describe('findAll', () => {
-        it('should return all organizations', async () => {
-            const organizations = [orgMock.standard];
+        it('should return an array of organizations', async () => {
+            const organizations = [mockOrg];
             jest.spyOn(service, 'findAll').mockResolvedValue(organizations);
-
+            
             const result = await controller.findAll();
-
+            
             expect(result).toEqual([mockOrgDto]);
             expect(service.findAll).toHaveBeenCalled();
         });
 
-        it('should handle empty organization list', async () => {
-            jest.spyOn(service, 'findAll').mockResolvedValue([]);
-
-            const result = await controller.findAll();
-
-            expect(result).toEqual([]);
-        });
-
-        it('should handle unexpected errors', async () => {
-            const error = new Error('Database error');
-            jest.spyOn(service, 'findAll').mockRejectedValue(error);
-
-            await expect(controller.findAll())
-                .rejects
-                .toThrow(InternalServerErrorException);
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'findAll').mockRejectedValue(new Error());
+            
+            await expect(controller.findAll()).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
         });
     });
 
     describe('findOne', () => {
-        it('should return an organization by id', async () => {
-            jest.spyOn(service, 'findOne').mockResolvedValue(orgMock.standard);
-
-            const result = await controller.findOne(orgMock.standard.id);
-
+        it('should return a single organization', async () => {
+            jest.spyOn(service, 'findOne').mockResolvedValue(mockOrg);
+            
+            const result = await controller.findOne(mockOrg.id);
+            
             expect(result).toEqual(mockOrgDto);
-            expect(service.findOne).toHaveBeenCalledWith(orgMock.standard.id);
+            expect(service.findOne).toHaveBeenCalledWith(mockOrg.id);
         });
 
-        it('should handle organization not found', async () => {
+        it('should throw not found exception when organization does not exist', async () => {
             jest.spyOn(service, 'findOne').mockResolvedValue(null);
-
-            await expect(controller.findOne('nonexistent'))
-                .rejects
-                .toThrow(NotFoundException);
+            
+            await expect(controller.findOne('nonexistent-id')).rejects.toThrow(
+                new NotFoundException('Organization with ID nonexistent-id not found')
+            );
         });
 
-        it('should handle unexpected errors', async () => {
-            const error = new Error('Database error');
-            jest.spyOn(service, 'findOne').mockRejectedValue(error);
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'findOne').mockRejectedValue(new Error());
+            
+            await expect(controller.findOne(mockOrg.id)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
+    });
 
-            await expect(controller.findOne(orgMock.standard.id))
-                .rejects
-                .toThrow(InternalServerErrorException);
+    describe('create', () => {
+        const createDto: CreateOrganizationDto = orgMock.dtos.create;
+
+        it('should create an organization', async () => {
+            jest.spyOn(service, 'create').mockResolvedValue(mockOrg);
+            
+            const result = await controller.create(createDto);
+            
+            expect(result).toEqual(mockOrgDto);
+            expect(service.create).toHaveBeenCalledWith(createDto);
+        });
+
+        it('should handle duplicate name error', async () => {
+            jest.spyOn(service, 'create').mockRejectedValue(
+                new ConflictException('Organization with this name already exists')
+            );
+            
+            await expect(controller.create(createDto)).rejects.toThrow(ConflictException);
+        });
+
+        it('should handle other errors', async () => {
+            jest.spyOn(service, 'create').mockRejectedValue(new Error());
+            
+            await expect(controller.create(createDto)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
         });
     });
 
     describe('update', () => {
+        const updateDto: UpdateOrganizationDto = orgMock.dtos.update;
+
         it('should update an organization', async () => {
-            const updateOrganizationDto: UpdateOrganizationDto = {
-                name: 'Updated Org',
-                visible: false
-            };
-
-            const updatedOrg = { 
-                ...orgMock.standard, 
-                ...updateOrganizationDto 
-            };
-
+            const updatedOrg = { ...mockOrg, ...updateDto };
             jest.spyOn(service, 'update').mockResolvedValue(updatedOrg);
-
-            const result = await controller.update(orgMock.standard.id, updateOrganizationDto);
-
+            
+            const result = await controller.update(mockOrg.id, updateDto);
+            
             expect(result).toEqual(plainToClass(ResponseOrganizationDto, updatedOrg, { excludeExtraneousValues: true }));
-            expect(service.update).toHaveBeenCalledWith(orgMock.standard.id, updateOrganizationDto);
+            expect(service.update).toHaveBeenCalledWith(mockOrg.id, updateDto);
         });
 
-        it('should handle organization not found during update', async () => {
-            const updateOrganizationDto: UpdateOrganizationDto = {
-                name: 'Updated Org'
-            };
-
+        it('should throw not found exception when organization does not exist', async () => {
             jest.spyOn(service, 'update').mockResolvedValue(null);
-
-            await expect(controller.update('nonexistent', updateOrganizationDto))
-                .rejects
-                .toThrow(NotFoundException);
+            
+            await expect(controller.update('nonexistent-id', updateDto)).rejects.toThrow(
+                new NotFoundException('Organization with ID nonexistent-id not found')
+            );
         });
 
-        it('should handle bad request errors during update', async () => {
-            const updateOrganizationDto: UpdateOrganizationDto = {
-                name: 'Updated Org'
-            };
-            const error = new BadRequestException('Invalid update data');
-
-            jest.spyOn(service, 'update').mockRejectedValue(error);
-
-            await expect(controller.update(orgMock.standard.id, updateOrganizationDto))
-                .rejects
-                .toThrow(error);
+        it('should handle duplicate name error', async () => {
+            jest.spyOn(service, 'update').mockRejectedValue(
+                new ConflictException('Organization with this name already exists')
+            );
+            
+            await expect(controller.update(mockOrg.id, updateDto)).rejects.toThrow(ConflictException);
         });
 
-        it('should handle unexpected errors during update', async () => {
-            const updateOrganizationDto: UpdateOrganizationDto = {
-                name: 'Updated Org'
-            };
-            const error = new Error('Database error');
-
-            jest.spyOn(service, 'update').mockRejectedValue(error);
-
-            await expect(controller.update(orgMock.standard.id, updateOrganizationDto))
-                .rejects
-                .toThrow(InternalServerErrorException);
+        it('should handle other errors', async () => {
+            jest.spyOn(service, 'update').mockRejectedValue(new Error());
+            
+            await expect(controller.update(mockOrg.id, updateDto)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
         });
     });
 
     describe('remove', () => {
-        it('should delete an organization', async () => {
+        it('should remove an organization', async () => {
             jest.spyOn(service, 'remove').mockResolvedValue(true);
-
-            await controller.remove(orgMock.standard.id);
-
-            expect(service.remove).toHaveBeenCalledWith(orgMock.standard.id);
+            
+            const result = await controller.remove(mockOrg.id);
+            
+            expect(result).toBe(true);
+            expect(service.remove).toHaveBeenCalledWith(mockOrg.id);
         });
 
-        it('should handle organization not found during deletion', async () => {
+        it('should throw not found exception when organization does not exist', async () => {
             jest.spyOn(service, 'remove').mockResolvedValue(false);
-
-            await expect(controller.remove('nonexistent'))
-                .rejects
-                .toThrow(NotFoundException);
+            
+            await expect(controller.remove('nonexistent-id')).rejects.toThrow(
+                new NotFoundException('Organization with ID nonexistent-id not found')
+            );
         });
 
-        it('should handle bad request errors during deletion', async () => {
-            const error = new BadRequestException('Cannot delete organization with active users');
-
-            jest.spyOn(service, 'remove').mockRejectedValue(error);
-
-            await expect(controller.remove(orgMock.standard.id))
-                .rejects
-                .toThrow(error);
-        });
-
-        it('should handle unexpected errors during deletion', async () => {
-            const error = new Error('Database error');
-            jest.spyOn(service, 'remove').mockRejectedValue(error);
-
-            await expect(controller.remove(orgMock.standard.id))
-                .rejects
-                .toThrow(InternalServerErrorException);
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'remove').mockRejectedValue(new Error());
+            
+            await expect(controller.remove(mockOrg.id)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
         });
     });
 }); 

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './UserController';
 import { UserService } from '../services/UserService';
 import { CreateUserDto, UpdateUserDto, ResponseUserDto } from '@my-app/shared';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ConflictException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { User } from '../models/User';
 import { plainToClass } from 'class-transformer';
 import { user as userMock } from '../test/__mocks__/user.mock';
@@ -27,10 +27,7 @@ describe('UserController', () => {
         createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
     };
 
-    const mockUserDto = plainToClass(ResponseUserDto, {
-        ...userMock.standard,
-        preferences: userMock.standard.preferences
-    }, { excludeExtraneousValues: true });
+    const mockUserDto = plainToClass(ResponseUserDto, userMock.standard, { excludeExtraneousValues: true });
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -57,7 +54,6 @@ describe('UserController', () => {
         controller = module.get<UserController>(UserController);
         service = module.get<UserService>(UserService);
 
-        // Reset mocks between tests
         jest.clearAllMocks();
     });
 
@@ -75,22 +71,6 @@ describe('UserController', () => {
 
             expect(service.create).toHaveBeenCalledWith(createUserDto);
             expect(result).toEqual(mockUserDto);
-        });
-
-        it('should create a user with default preferences when none provided', async () => {
-            const createUserDto = { ...userMock.dtos.create };
-            const userWithoutPrefs = new User();
-            Object.assign(userWithoutPrefs, { ...userMock.standard, preferences: undefined });
-
-            jest.spyOn(service, 'create').mockResolvedValue(userWithoutPrefs);
-
-            const result = await controller.create(createUserDto);
-
-            expect(service.create).toHaveBeenCalledWith(createUserDto);
-            expect(result.preferences).toEqual({
-                theme: 'light',
-                notifications: { email: true, push: true }
-            });
         });
     });
 
@@ -130,21 +110,6 @@ describe('UserController', () => {
             expect(service.findByUsername).toHaveBeenCalledWith('nonexistent');
             expect(result).toEqual([]);
         });
-
-        it('should handle users with missing preferences when searching by username', async () => {
-            const userWithoutPrefs = new User();
-            Object.assign(userWithoutPrefs, { ...userMock.standard, preferences: undefined });
-
-            jest.spyOn(service, 'findByUsername').mockResolvedValue(userWithoutPrefs);
-
-            const result = await controller.findAll(userMock.standard.username);
-
-            expect(service.findByUsername).toHaveBeenCalledWith(userMock.standard.username);
-            expect(result[0].preferences).toEqual({
-                theme: 'light',
-                notifications: { email: true, push: true }
-            });
-        });
     });
 
     describe('findOne', () => {
@@ -155,21 +120,6 @@ describe('UserController', () => {
 
             expect(service.findOne).toHaveBeenCalledWith(userMock.standard.id);
             expect(result).toEqual(mockUserDto);
-        });
-
-        it('should return user with default preferences when none exist', async () => {
-            const userWithoutPrefs = new User();
-            Object.assign(userWithoutPrefs, { ...userMock.standard, preferences: undefined });
-
-            jest.spyOn(service, 'findOne').mockResolvedValue(userWithoutPrefs);
-
-            const result = await controller.findOne(userMock.standard.id);
-
-            expect(service.findOne).toHaveBeenCalledWith(userMock.standard.id);
-            expect(result.preferences).toEqual({
-                theme: 'light',
-                notifications: { email: true, push: true }
-            });
         });
     });
 
@@ -190,21 +140,6 @@ describe('UserController', () => {
                 new NotFoundException('User with username nonexistent not found')
             );
         });
-
-        it('should return user with default preferences when none exist', async () => {
-            const userWithoutPrefs = new User();
-            Object.assign(userWithoutPrefs, { ...userMock.standard, preferences: undefined });
-
-            jest.spyOn(service, 'findByUsername').mockResolvedValue(userWithoutPrefs);
-
-            const result = await controller.findByUsername(userMock.standard.username);
-
-            expect(service.findByUsername).toHaveBeenCalledWith(userMock.standard.username);
-            expect(result.preferences).toEqual({
-                theme: 'light',
-                notifications: { email: true, push: true }
-            });
-        });
     });
 
     describe('update', () => {
@@ -215,37 +150,13 @@ describe('UserController', () => {
             if (updateUserDto.displayname) {
                 updatedUser.displayname = updateUserDto.displayname;
             }
-            if (updateUserDto.preferences) {
-                updatedUser.preferences = updateUserDto.preferences;
-            }
-
-            const updatedUserDto = plainToClass(ResponseUserDto, {
-                ...updatedUser,
-                preferences: updatedUser.preferences
-            }, { excludeExtraneousValues: true });
 
             jest.spyOn(service, 'update').mockResolvedValue(updatedUser);
 
             const result = await controller.update(userMock.standard.id, updateUserDto);
 
             expect(service.update).toHaveBeenCalledWith(userMock.standard.id, updateUserDto);
-            expect(result).toEqual(updatedUserDto);
-        });
-
-        it('should update a user and set default preferences when none exist', async () => {
-            const updateUserDto = userMock.dtos.update;
-            const userWithoutPrefs = new User();
-            Object.assign(userWithoutPrefs, { ...userMock.standard, preferences: undefined });
-
-            jest.spyOn(service, 'update').mockResolvedValue(userWithoutPrefs);
-
-            const result = await controller.update(userMock.standard.id, updateUserDto);
-
-            expect(service.update).toHaveBeenCalledWith(userMock.standard.id, updateUserDto);
-            expect(result.preferences).toEqual({
-                theme: 'light',
-                notifications: { email: true, push: true }
-            });
+            expect(result).toEqual(plainToClass(ResponseUserDto, updatedUser, { excludeExtraneousValues: true }));
         });
     });
 
@@ -253,17 +164,66 @@ describe('UserController', () => {
         it('should remove a user', async () => {
             jest.spyOn(service, 'remove').mockResolvedValue(true);
 
-            await controller.remove('test-id');
+            const result = await controller.remove(userMock.standard.id);
 
-            expect(service.remove).toHaveBeenCalledWith('test-id');
+            expect(service.remove).toHaveBeenCalledWith(userMock.standard.id);
+            expect(result).toBe(true);
         });
 
-        it('should throw NotFoundException when user not found', async () => {
+        it('should throw NotFoundException when user does not exist', async () => {
             jest.spyOn(service, 'remove').mockResolvedValue(false);
 
-            await expect(controller.remove('nonexistent')).rejects.toThrow(
-                new NotFoundException('User with ID nonexistent not found')
+            await expect(controller.remove('nonexistent-id')).rejects.toThrow(
+                new NotFoundException('User with ID nonexistent-id not found')
+            );
+        });
+
+        it('should handle unexpected errors', async () => {
+            jest.spyOn(service, 'remove').mockRejectedValue(new Error());
+
+            await expect(controller.remove(userMock.standard.id)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
             );
         });
     });
-}); 
+
+    describe('error handling', () => {
+        it('should handle ConflictException in create', async () => {
+            jest.spyOn(service, 'create').mockRejectedValue(
+                new ConflictException('User with this username already exists')
+            );
+
+            await expect(controller.create(userMock.dtos.create)).rejects.toThrow(ConflictException);
+        });
+
+        it('should handle BadRequestException in create', async () => {
+            jest.spyOn(service, 'create').mockResolvedValue(null);
+
+            await expect(controller.create(userMock.dtos.create)).rejects.toThrow(BadRequestException);
+        });
+
+        it('should handle NotFoundException in findOne', async () => {
+            jest.spyOn(service, 'findOne').mockResolvedValue(null);
+
+            await expect(controller.findOne('nonexistent-id')).rejects.toThrow(
+                new NotFoundException('User with ID nonexistent-id not found')
+            );
+        });
+
+        it('should handle unexpected errors in update', async () => {
+            jest.spyOn(service, 'update').mockRejectedValue(new Error());
+
+            await expect(controller.update(userMock.standard.id, userMock.dtos.update)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
+
+        it('should handle ConflictException in update', async () => {
+            jest.spyOn(service, 'update').mockRejectedValue(
+                new ConflictException('User with this username already exists')
+            );
+
+            await expect(controller.update(userMock.standard.id, userMock.dtos.update)).rejects.toThrow(ConflictException);
+        });
+    });
+});

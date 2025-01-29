@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpCode, HttpStatus, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, HttpCode, HttpStatus, Query, Logger, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserService } from '../services/UserService';
 import { CreateUserDto } from '@my-app/shared/dist/dtos/User/CreateUserDto';
@@ -27,13 +27,7 @@ export class UserController extends ControllerBase {
             if (!response) {
                 this.handleBadRequest('Failed to create user', 'create', { dto: createUserDto });
             }
-            return {
-                ...response,
-                preferences: response.preferences || {
-                    theme: 'light',
-                    notifications: { email: true, push: true }
-                }
-            };
+            return response;
         } catch (error) {
             this.handleError(error, 'create', undefined, { dto: createUserDto });
         }
@@ -51,14 +45,7 @@ export class UserController extends ControllerBase {
             } else {
                 users = await this.userService.findAll();
             }
-            const responses = this.toResponseDtoArray(users, ResponseUserDto);
-            return responses.map(response => ({
-                ...response,
-                preferences: response.preferences || {
-                    theme: 'light',
-                    notifications: { email: true, push: true }
-                }
-            }));
+            return this.toResponseDtoArray(users, ResponseUserDto);
         } catch (error) {
             this.handleError(error, 'findAll', undefined, { username });
         }
@@ -75,13 +62,7 @@ export class UserController extends ControllerBase {
             if (!response) {
                 this.handleNotFound(id, 'findOne');
             }
-            return {
-                ...response,
-                preferences: response.preferences || {
-                    theme: 'light',
-                    notifications: { email: true, push: true }
-                }
-            };
+            return response;
         } catch (error) {
             this.handleError(error, 'findOne', id);
         }
@@ -96,15 +77,9 @@ export class UserController extends ControllerBase {
             const user = await this.userService.findByUsername(username);
             const response = this.toResponseDto(user, ResponseUserDto);
             if (!response) {
-                this.handleNotFound(username, 'findByUsername');
+                throw new NotFoundException(`User with username ${username} not found`);
             }
-            return {
-                ...response,
-                preferences: response.preferences || {
-                    theme: 'light',
-                    notifications: { email: true, push: true }
-                }
-            };
+            return response;
         } catch (error) {
             this.handleError(error, 'findByUsername', username);
         }
@@ -124,13 +99,7 @@ export class UserController extends ControllerBase {
             if (!response) {
                 this.handleNotFound(id, 'update');
             }
-            return {
-                ...response,
-                preferences: response.preferences || {
-                    theme: 'light',
-                    notifications: { email: true, push: true }
-                }
-            };
+            return response;
         } catch (error) {
             this.handleError(error, 'update', id, { dto: updateUserDto });
         }
@@ -138,15 +107,15 @@ export class UserController extends ControllerBase {
 
     @Delete(':id')
     @ApiOperation({ summary: 'Delete user' })
-    @ApiResponse({ status: 204, description: 'User deleted successfully' })
+    @ApiResponse({ status: 200, description: 'User deleted successfully' })
     @ApiResponse({ status: 404, description: 'User not found' })
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async remove(@Param('id') id: string): Promise<void> {
+    async remove(@Param('id') id: string): Promise<boolean> {
         try {
             const result = await this.userService.remove(id);
             if (!result) {
                 this.handleNotFound(id, 'remove');
             }
+            return result;
         } catch (error) {
             this.handleError(error, 'remove', id);
         }

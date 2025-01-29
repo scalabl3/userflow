@@ -83,14 +83,15 @@ export class OrganizationController extends ControllerBase {
 
     @Delete(':id')
     @ApiOperation({ summary: 'Delete organization' })
-    @ApiResponse({ status: 204, description: 'Organization deleted successfully' })
+    @ApiResponse({ status: 200, description: 'Organization deleted successfully' })
     @ApiResponse({ status: 404, description: 'Organization not found' })
-    async remove(@Param('id') id: string): Promise<void> {
+    async remove(@Param('id') id: string): Promise<boolean> {
         try {
             const result = await this.organizationService.remove(id);
             if (!result) {
                 this.handleNotFound(id, 'remove');
             }
+            return result;
         } catch (error) {
             this.handleError(error, 'remove', id);
         }

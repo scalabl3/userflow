@@ -83,14 +83,15 @@ export class BaseUserController extends ControllerBase {
 
     @Delete(':id')
     @ApiOperation({ summary: 'Delete base user' })
-    @ApiResponse({ status: 204, description: 'Base user deleted successfully' })
+    @ApiResponse({ status: 200, description: 'Base user deleted successfully' })
     @ApiResponse({ status: 404, description: 'Base user not found' })
-    async remove(@Param('id') id: string): Promise<void> {
+    async remove(@Param('id') id: string): Promise<boolean> {
         try {
             const result = await this.baseUserService.remove(id);
             if (!result) {
                 this.handleNotFound(id, 'remove');
             }
+            return result;
         } catch (error) {
             this.handleError(error, 'remove', id);
         }
