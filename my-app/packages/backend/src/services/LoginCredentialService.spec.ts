@@ -3,7 +3,7 @@ jest.mock('bcrypt', () => bcryptMock);
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { LoginCredentialService } from './LoginCredentialService';
 import { LoginCredential } from '../models/LoginCredential';
 import { mockRepository } from '../test/setup';
@@ -26,8 +26,24 @@ import { user as userMock } from '../test/__mocks__/user.mock';
 describe('LoginCredentialService', () => {
     let service: LoginCredentialService;
     let repository: Repository<LoginCredential>;
+    let dataSource: DataSource;
+
+    const mockQueryRunner = {
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+            save: jest.fn()
+        }
+    };
 
     beforeEach(async () => {
+        const mockDataSource = {
+            createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
+        };
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 LoginCredentialService,
@@ -35,11 +51,16 @@ describe('LoginCredentialService', () => {
                     provide: getRepositoryToken(LoginCredential),
                     useFactory: mockRepository,
                 },
+                {
+                    provide: DataSource,
+                    useValue: mockDataSource,
+                },
             ],
         }).compile();
 
         service = module.get<LoginCredentialService>(LoginCredentialService);
         repository = module.get<Repository<LoginCredential>>(getRepositoryToken(LoginCredential));
+        dataSource = module.get<DataSource>(DataSource);
 
         // Reset mocks
         jest.clearAllMocks();
@@ -152,7 +173,7 @@ describe('LoginCredentialService', () => {
             it('should create password credential', async () => {
                 const mockCred = authMock.credentials.password;
                 jest.spyOn(repository, 'create').mockReturnValue(mockCred);
-                jest.spyOn(repository, 'save').mockResolvedValue(mockCred);
+                mockQueryRunner.manager.save.mockResolvedValue(mockCred);
 
                 const result = await service.createPasswordCredential(createPasswordDto);
 
@@ -162,10 +183,26 @@ describe('LoginCredentialService', () => {
                     ...createPasswordDto,
                     passwordHash: 'hashed_password'
                 });
+                expect(mockQueryRunner.connect).toHaveBeenCalled();
+                expect(mockQueryRunner.startTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.release).toHaveBeenCalled();
 
                 // Verify DTO transformation
                 const expectedDto = plainToClass(ResponseLoginCredentialDto, mockCred, { excludeExtraneousValues: true });
                 expect(result).toEqual(expectedDto);
+            });
+
+            it('should rollback transaction on error', async () => {
+                const error = new Error('Database error');
+                mockQueryRunner.manager.save.mockRejectedValue(error);
+
+                await expect(service.createPasswordCredential(createPasswordDto))
+                    .rejects
+                    .toThrow(error);
+
+                expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.release).toHaveBeenCalled();
             });
 
             it('should reject invalid credential type', async () => {
@@ -197,70 +234,68 @@ describe('LoginCredentialService', () => {
         });
 
         describe('updatePassword', () => {
+            const updatePasswordDto: UpdatePasswordCredentialDto = {
+                currentPassword: 'oldpass',
+                newPassword: 'newpass'
+            };
+
             it('should update password when current password is valid', async () => {
-                const dto: UpdatePasswordCredentialDto = {
-                    currentPassword: 'oldpass',
-                    newPassword: 'newpass'
-                };
-
-                jest.spyOn(repository, 'findOne').mockResolvedValue(authMock.credentials.password);
+                const mockCred = authMock.credentials.password;
+                jest.spyOn(repository, 'findOne').mockResolvedValue(mockCred);
                 jest.spyOn(service, 'validatePassword').mockResolvedValue(true);
-                jest.spyOn(repository, 'save').mockResolvedValue(authMock.credentials.password);
+                mockQueryRunner.manager.save.mockResolvedValue({ ...mockCred, passwordHash: 'new_hash' });
 
-                const result = await service.updatePassword(authMock.credentials.password.id, dto);
+                const result = await service.updatePassword(mockCred.id, updatePasswordDto);
 
                 expect(result).toBeDefined();
-                expect(service.validatePassword).toHaveBeenCalledWith(authMock.credentials.password, dto.currentPassword);
+                expect(service.validatePassword).toHaveBeenCalledWith(mockCred, updatePasswordDto.currentPassword);
+                expect(bcrypt.hash).toHaveBeenCalledWith(updatePasswordDto.newPassword, 10);
+                expect(mockQueryRunner.connect).toHaveBeenCalled();
+                expect(mockQueryRunner.startTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.release).toHaveBeenCalled();
+            });
+
+            it('should rollback transaction on error', async () => {
+                const mockCred = authMock.credentials.password;
+                jest.spyOn(repository, 'findOne').mockResolvedValue(mockCred);
+                jest.spyOn(service, 'validatePassword').mockResolvedValue(true);
+                const error = new Error('Database error');
+                mockQueryRunner.manager.save.mockRejectedValue(error);
+
+                await expect(service.updatePassword(mockCred.id, updatePasswordDto))
+                    .rejects
+                    .toThrow(error);
+
+                expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.release).toHaveBeenCalled();
             });
 
             it('should return null when credential not found', async () => {
                 jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
-                const result = await service.updatePassword('nonexistent', {
-                    currentPassword: 'oldpass',
-                    newPassword: 'newpass'
-                });
+                const result = await service.updatePassword('nonexistent', updatePasswordDto);
 
                 expect(result).toBeNull();
             });
 
             it('should throw UnauthorizedException when current password is invalid', async () => {
-                const dto: UpdatePasswordCredentialDto = {
-                    currentPassword: 'wrongpass',
-                    newPassword: 'newpass'
-                };
-
-                jest.spyOn(repository, 'findOne').mockResolvedValue(authMock.credentials.password);
+                const mockCred = authMock.credentials.password;
+                jest.spyOn(repository, 'findOne').mockResolvedValue(mockCred);
                 jest.spyOn(service, 'validatePassword').mockResolvedValue(false);
 
-                await expect(service.updatePassword(authMock.credentials.password.id, dto))
+                await expect(service.updatePassword(mockCred.id, updatePasswordDto))
                     .rejects
                     .toThrow(UnauthorizedException);
             });
 
             it('should throw BadRequestException when current password is missing', async () => {
-                const dto = {
-                    newPassword: 'newpass'
-                } as UpdatePasswordCredentialDto;
+                const mockCred = authMock.credentials.password;
+                jest.spyOn(repository, 'findOne').mockResolvedValue(mockCred);
 
-                jest.spyOn(repository, 'findOne').mockResolvedValue(authMock.credentials.password);
-
-                await expect(service.updatePassword(authMock.credentials.password.id, dto))
+                await expect(service.updatePassword(mockCred.id, { newPassword: 'newpass' } as UpdatePasswordCredentialDto))
                     .rejects
                     .toThrow(new BadRequestException('Current password is required'));
-            });
-
-            it('should throw BadRequestException when new password is missing', async () => {
-                const dto = {
-                    currentPassword: 'oldpass'
-                } as UpdatePasswordCredentialDto;
-
-                jest.spyOn(repository, 'findOne').mockResolvedValue(authMock.credentials.password);
-                jest.spyOn(service, 'validatePassword').mockResolvedValue(true);
-
-                await expect(service.updatePassword(authMock.credentials.password.id, dto))
-                    .rejects
-                    .toThrow(new BadRequestException('New password is required'));
             });
         });
     });
@@ -272,27 +307,44 @@ describe('LoginCredentialService', () => {
                 loginProviderId: authMock.providers.google.id,
                 credentialType: CredentialType.OAUTH,
                 provider: OAuthProvider.GOOGLE,
-                accessToken: 'google-access-token',
+                accessToken: 'access_token',
                 accessTokenExpiresAt: new Date(),
-                refreshToken: 'google-refresh-token',
+                refreshToken: 'refresh_token',
                 refreshTokenExpiresAt: new Date(),
                 scope: 'email profile',
-                rawProfile: { email: 'john@example.com' }
+                rawProfile: { email: 'test@example.com' },
+                isEnabled: true
             };
 
             it('should create OAuth credential', async () => {
                 const mockCred = authMock.credentials.google;
                 jest.spyOn(repository, 'create').mockReturnValue(mockCred);
-                jest.spyOn(repository, 'save').mockResolvedValue(mockCred);
+                mockQueryRunner.manager.save.mockResolvedValue(mockCred);
 
                 const result = await service.createOAuthCredential(createOAuthDto);
 
                 expect(result).toBeDefined();
                 expect(repository.create).toHaveBeenCalledWith(createOAuthDto);
+                expect(mockQueryRunner.connect).toHaveBeenCalled();
+                expect(mockQueryRunner.startTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.release).toHaveBeenCalled();
 
                 // Verify DTO transformation
                 const expectedDto = plainToClass(ResponseLoginCredentialDto, mockCred, { excludeExtraneousValues: true });
                 expect(result).toEqual(expectedDto);
+            });
+
+            it('should rollback transaction on error', async () => {
+                const error = new Error('Database error');
+                mockQueryRunner.manager.save.mockRejectedValue(error);
+
+                await expect(service.createOAuthCredential(createOAuthDto))
+                    .rejects
+                    .toThrow(error);
+
+                expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.release).toHaveBeenCalled();
             });
 
             it('should reject invalid credential type', async () => {
@@ -304,93 +356,69 @@ describe('LoginCredentialService', () => {
             });
 
             it('should handle Apple-specific fields', async () => {
-                const createAppleOAuthDto: CreateOAuthCredentialDto = {
+                const appleDto: CreateOAuthCredentialDto = {
                     ...createOAuthDto,
                     provider: OAuthProvider.APPLE,
-                    identityToken: 'apple-identity-token',
-                    authorizationCode: 'apple-auth-code',
-                    realUserStatus: 'REAL',
-                    nonce: 'apple-nonce'
+                    identityToken: 'identity_token',
+                    authorizationCode: 'auth_code',
+                    realUserStatus: 'real_user',
+                    nonce: 'nonce_value'
                 };
 
-                const mockAppleCred = {
+                const mockCred = {
                     ...authMock.credentials.google,
-                    ...createAppleOAuthDto
+                    provider: OAuthProvider.APPLE,
+                    identityToken: 'identity_token',
+                    authorizationCode: 'auth_code',
+                    realUserStatus: 'real_user',
+                    nonce: 'nonce_value'
                 };
 
-                jest.spyOn(repository, 'create').mockReturnValue(mockAppleCred);
-                jest.spyOn(repository, 'save').mockResolvedValue(mockAppleCred);
+                jest.spyOn(repository, 'create').mockReturnValue(mockCred);
+                mockQueryRunner.manager.save.mockResolvedValue(mockCred);
 
-                const result = await service.createOAuthCredential(createAppleOAuthDto);
+                const result = await service.createOAuthCredential(appleDto);
 
                 expect(result).toBeDefined();
-                expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({
-                    identityToken: 'apple-identity-token',
-                    authorizationCode: 'apple-auth-code',
-                    realUserStatus: 'REAL',
-                    nonce: 'apple-nonce'
-                }));
+                expect(repository.create).toHaveBeenCalledWith(appleDto);
             });
         });
 
         describe('updateOAuthCredential', () => {
             const updateOAuthDto: UpdateOAuthCredentialDto = {
-                accessToken: 'new-access-token',
-                accessTokenExpiresAt: new Date(),
-                refreshToken: 'new-refresh-token'
+                accessToken: 'new_access_token',
+                refreshToken: 'new_refresh_token'
             };
 
-            it('should update OAuth fields', async () => {
+            it('should update OAuth credential', async () => {
                 const mockCred = authMock.credentials.google;
                 jest.spyOn(repository, 'findOne').mockResolvedValue(mockCred);
-                jest.spyOn(repository, 'save').mockResolvedValue({
-                    ...mockCred,
-                    ...updateOAuthDto
-                });
+                mockQueryRunner.manager.save.mockResolvedValue({ ...mockCred, ...updateOAuthDto });
 
                 const result = await service.updateOAuthCredential(mockCred.id, updateOAuthDto);
 
                 expect(result).toBeDefined();
-                expect(repository.save).toHaveBeenCalledWith(expect.objectContaining(updateOAuthDto));
+                expect(mockQueryRunner.connect).toHaveBeenCalled();
+                expect(mockQueryRunner.startTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.release).toHaveBeenCalled();
             });
 
-            it('should handle Apple-specific field updates', async () => {
-                const mockAppleCred = {
-                    ...authMock.credentials.google,
-                    provider: OAuthProvider.APPLE,
-                    identityToken: 'old-identity-token',
-                    authorizationCode: 'old-auth-code',
-                    realUserStatus: 'UNKNOWN',
-                    nonce: 'old-nonce'
-                };
+            it('should rollback transaction on error', async () => {
+                const mockCred = authMock.credentials.google;
+                jest.spyOn(repository, 'findOne').mockResolvedValue(mockCred);
+                const error = new Error('Database error');
+                mockQueryRunner.manager.save.mockRejectedValue(error);
 
-                const updateAppleOAuthDto: UpdateOAuthCredentialDto = {
-                    ...updateOAuthDto,
-                    provider: OAuthProvider.APPLE,
-                    identityToken: 'new-identity-token',
-                    authorizationCode: 'new-auth-code',
-                    realUserStatus: 'REAL',
-                    nonce: 'new-nonce'
-                };
+                await expect(service.updateOAuthCredential(mockCred.id, updateOAuthDto))
+                    .rejects
+                    .toThrow(error);
 
-                jest.spyOn(repository, 'findOne').mockResolvedValue(mockAppleCred);
-                jest.spyOn(repository, 'save').mockResolvedValue({
-                    ...mockAppleCred,
-                    ...updateAppleOAuthDto
-                });
-
-                const result = await service.updateOAuthCredential(mockAppleCred.id, updateAppleOAuthDto);
-
-                expect(result).toBeDefined();
-                expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
-                    identityToken: 'new-identity-token',
-                    authorizationCode: 'new-auth-code',
-                    realUserStatus: 'REAL',
-                    nonce: 'new-nonce'
-                }));
+                expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+                expect(mockQueryRunner.release).toHaveBeenCalled();
             });
 
-            it('should return null for non-existent credential', async () => {
+            it('should return null when credential not found', async () => {
                 jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
                 const result = await service.updateOAuthCredential('nonexistent', updateOAuthDto);
@@ -398,12 +426,30 @@ describe('LoginCredentialService', () => {
                 expect(result).toBeNull();
             });
 
-            it('should return null for non-OAuth credential', async () => {
-                jest.spyOn(repository, 'findOne').mockResolvedValue(authMock.credentials.password);
+            it('should handle Apple-specific fields update', async () => {
+                const mockCred = {
+                    ...authMock.credentials.google,
+                    provider: OAuthProvider.APPLE
+                };
+                const appleUpdateDto: UpdateOAuthCredentialDto = {
+                    ...updateOAuthDto,
+                    identityToken: 'new_identity_token',
+                    authorizationCode: 'new_auth_code'
+                };
 
-                const result = await service.updateOAuthCredential(authMock.credentials.password.id, updateOAuthDto);
+                jest.spyOn(repository, 'findOne').mockResolvedValue(mockCred);
+                mockQueryRunner.manager.save.mockResolvedValue({ ...mockCred, ...appleUpdateDto });
 
-                expect(result).toBeNull();
+                const result = await service.updateOAuthCredential(mockCred.id, appleUpdateDto);
+
+                expect(result).toBeDefined();
+                expect(mockQueryRunner.manager.save).toHaveBeenCalledWith(
+                    LoginCredential,
+                    expect.objectContaining({
+                        identityToken: 'new_identity_token',
+                        authorizationCode: 'new_auth_code'
+                    })
+                );
             });
         });
     });

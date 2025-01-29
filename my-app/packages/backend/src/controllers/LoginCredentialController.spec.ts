@@ -20,10 +20,27 @@ import { BadRequestException, UnauthorizedException, NotFoundException } from '@
 import { auth } from '../test/__mocks__/auth.mock';
 import { user } from '../test/__mocks__/user.mock';
 import { core } from '../test/__mocks__/core.mock';
+import { plainToClass } from 'class-transformer';
+import { DataSource } from 'typeorm';
 
 describe('LoginCredentialController', () => {
     let controller: LoginCredentialController;
     let service: LoginCredentialService;
+
+    const mockQueryRunner = {
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+            save: jest.fn()
+        }
+    };
+
+    const mockDataSource = {
+        createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
+    };
 
     // Mock data setup
     const mockLoginProvider: LoginProvider = {
@@ -49,47 +66,76 @@ describe('LoginCredentialController', () => {
     } as BaseUser;
 
     // Mock DTO responses using shared mocks
-    const mockPasswordCredentialResponse: ResponseLoginCredentialDto = {
+    const mockPasswordCredentialResponse = plainToClass(ResponseLoginCredentialDto, {
         id: auth.credentials.password.id,
         identifier: auth.credentials.password.identifier,
         loginProviderId: auth.credentials.password.loginProviderId,
-        loginProvider: auth.credentials.password.loginProvider,
-        credentialType: auth.credentials.password.credentialType,
+        credentialType: CredentialType.PASSWORD,
+        isEnabled: true,
         hasPassword: true,
-        isEnabled: auth.credentials.password.isEnabled,
         baseUserId: auth.credentials.password.baseUserId,
         createdAt: auth.credentials.password.createdAt,
-        modifiedAt: auth.credentials.password.modifiedAt
-    };
+        modifiedAt: auth.credentials.password.modifiedAt,
+        loginProvider: {
+            id: auth.providers.email.id,
+            code: auth.providers.email.code,
+            name: auth.providers.email.name,
+            isEnabled: auth.providers.email.isEnabled,
+            createdAt: auth.providers.email.createdAt,
+            modifiedAt: auth.providers.email.modifiedAt
+        }
+    });
 
-    const mockGoogleCredentialResponse: ResponseLoginCredentialDto = {
+    const mockGoogleCredentialResponse = plainToClass(ResponseLoginCredentialDto, {
         id: auth.credentials.google.id,
         identifier: auth.credentials.google.identifier,
         loginProviderId: auth.credentials.google.loginProviderId,
-        loginProvider: auth.credentials.google.loginProvider,
-        credentialType: auth.credentials.google.credentialType,
-        provider: auth.credentials.google.provider,
-        accessTokenExpiresAt: core.timestamps.future,
+        credentialType: CredentialType.OAUTH,
+        provider: OAuthProvider.GOOGLE,
+        isEnabled: true,
         hasRefreshToken: true,
-        refreshTokenExpiresAt: core.timestamps.future,
+        baseUserId: auth.credentials.google.baseUserId,
+        createdAt: auth.credentials.google.createdAt,
+        modifiedAt: auth.credentials.google.modifiedAt,
+        accessTokenExpiresAt: auth.credentials.google.accessTokenExpiresAt,
+        refreshTokenExpiresAt: auth.credentials.google.refreshTokenExpiresAt,
         scope: auth.credentials.google.scope,
         rawProfile: auth.credentials.google.rawProfile,
-        isEnabled: auth.credentials.google.isEnabled,
-        baseUserId: auth.credentials.google.baseUserId,
-        createdAt: core.timestamps.past,
-        modifiedAt: core.timestamps.now
-    };
+        loginProvider: {
+            id: auth.providers.google.id,
+            code: auth.providers.google.code,
+            name: auth.providers.google.name,
+            isEnabled: auth.providers.google.isEnabled,
+            createdAt: auth.providers.google.createdAt,
+            modifiedAt: auth.providers.google.modifiedAt
+        }
+    });
 
-    const mockAppleCredentialResponse: ResponseLoginCredentialDto = {
-        ...mockGoogleCredentialResponse,
+    const mockAppleCredentialResponse = plainToClass(ResponseLoginCredentialDto, {
         id: 'cred789',
         identifier: 'apple123',
         loginProviderId: 'apple-provider-id',
+        credentialType: CredentialType.OAUTH,
         provider: OAuthProvider.APPLE,
+        isEnabled: true,
+        hasRefreshToken: true,
         hasIdentityToken: true,
         hasAuthorizationCode: true,
-        realUserStatus: 'REAL'
-    };
+        baseUserId: auth.credentials.google.baseUserId,
+        createdAt: auth.credentials.google.createdAt,
+        modifiedAt: auth.credentials.google.modifiedAt,
+        accessTokenExpiresAt: auth.credentials.google.accessTokenExpiresAt,
+        refreshTokenExpiresAt: auth.credentials.google.refreshTokenExpiresAt,
+        rawProfile: { email: 'john@example.com' },
+        loginProvider: {
+            id: 'apple-provider-id',
+            code: 'apple',
+            name: 'Apple OAuth',
+            isEnabled: true,
+            createdAt: auth.credentials.google.createdAt,
+            modifiedAt: auth.credentials.google.modifiedAt
+        }
+    });
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -108,13 +154,17 @@ describe('LoginCredentialController', () => {
                         remove: jest.fn(),
                     },
                 },
+                {
+                    provide: DataSource,
+                    useValue: mockDataSource,
+                },
             ],
         }).compile();
 
         controller = module.get<LoginCredentialController>(LoginCredentialController);
         service = module.get<LoginCredentialService>(LoginCredentialService);
 
-        // Reset mocks
+        // Reset mocks between tests
         jest.clearAllMocks();
     });
 
@@ -160,7 +210,7 @@ describe('LoginCredentialController', () => {
                 jest.spyOn(service, 'findOne').mockResolvedValue(null);
 
                 await expect(controller.findOne('nonexistent')).rejects.toThrow(
-                    new NotFoundException('Login credential not found')
+                    new NotFoundException('LoginCredential with ID nonexistent not found')
                 );
             });
         });
@@ -172,31 +222,38 @@ describe('LoginCredentialController', () => {
                 jest.spyOn(service, 'createPasswordCredential').mockResolvedValue(mockPasswordCredentialResponse);
 
                 const result = await controller.create({
-                    ...auth.credentials.password,
+                    identifier: 'test@example.com',
+                    loginProviderId: 'provider123',
                     credentialType: CredentialType.PASSWORD,
-                    password: 'testpass'
+                    password: 'password123',
+                    isEnabled: true
                 } as CreatePasswordCredentialDto);
 
                 expect(result).toEqual(mockPasswordCredentialResponse);
             });
 
             it('should throw BadRequestException for invalid credential type', async () => {
-                await expect(controller.create({
-                    credentialType: 'INVALID' as CredentialType
-                } as CreateLoginCredentialDto)).rejects.toThrow(
-                    new BadRequestException('Invalid credential type')
-                );
+                const invalidDto = {
+                    identifier: 'test@example.com',
+                    loginProviderId: 'provider123',
+                    credentialType: CredentialType.OAUTH,
+                    password: 'password123'
+                } as CreatePasswordCredentialDto;
+
+                await expect(controller.create(invalidDto))
+                    .rejects
+                    .toThrow(BadRequestException);
             });
         });
 
         describe('update', () => {
             it('should update password', async () => {
                 const updatePasswordDto: UpdatePasswordCredentialDto = {
-                    currentPassword: auth.requests.login.email.password,
-                    newPassword: 'newpass123'
+                    currentPassword: 'oldpass',
+                    newPassword: 'newpass'
                 };
 
-                const updatedResponse = { ...mockPasswordCredentialResponse };
+                const updatedResponse = mockPasswordCredentialResponse;
                 jest.spyOn(service, 'update').mockResolvedValue(updatedResponse);
 
                 const result = await controller.update(auth.credentials.password.id, updatePasswordDto);
@@ -205,17 +262,17 @@ describe('LoginCredentialController', () => {
                 expect(service.update).toHaveBeenCalledWith(auth.credentials.password.id, updatePasswordDto);
             });
 
-            it('should throw BadRequestException if password update fails', async () => {
+            it('should throw NotFoundException if password update fails', async () => {
                 const updatePasswordDto: UpdatePasswordCredentialDto = {
-                    currentPassword: 'wrongpass',
-                    newPassword: 'newpass123'
+                    currentPassword: 'oldpass',
+                    newPassword: 'newpass'
                 };
 
                 jest.spyOn(service, 'update').mockResolvedValue(null);
 
                 await expect(controller.update(auth.credentials.password.id, updatePasswordDto))
                     .rejects
-                    .toThrow(BadRequestException);
+                    .toThrow(new NotFoundException(`LoginCredential with ID ${auth.credentials.password.id} not found`));
             });
         });
     });
@@ -224,16 +281,16 @@ describe('LoginCredentialController', () => {
         describe('create', () => {
             it('should create a Google OAuth credential', async () => {
                 const createOAuthDto: CreateOAuthCredentialDto = {
-                    identifier: auth.credentials.google.identifier,
-                    loginProviderId: auth.credentials.google.loginProviderId,
+                    identifier: 'google-user',
+                    loginProviderId: 'google-provider',
                     credentialType: CredentialType.OAUTH,
                     provider: OAuthProvider.GOOGLE,
-                    accessToken: 'google_access_token',
-                    accessTokenExpiresAt: core.timestamps.future,
-                    refreshToken: 'new_refresh_token',
-                    refreshTokenExpiresAt: core.timestamps.future,
-                    scope: auth.credentials.google.scope,
-                    rawProfile: auth.credentials.google.rawProfile,
+                    accessToken: 'access-token',
+                    accessTokenExpiresAt: new Date(),
+                    refreshToken: 'refresh-token',
+                    refreshTokenExpiresAt: new Date(),
+                    scope: 'email profile',
+                    rawProfile: { email: 'test@example.com' },
                     isEnabled: true
                 };
 
@@ -251,11 +308,14 @@ describe('LoginCredentialController', () => {
                     loginProviderId: 'apple-provider-id',
                     credentialType: CredentialType.OAUTH,
                     provider: OAuthProvider.APPLE,
-                    accessToken: 'apple_access_token',
+                    accessToken: 'access-token',
                     accessTokenExpiresAt: new Date(),
-                    identityToken: 'apple_identity_token',
-                    authorizationCode: 'apple_auth_code',
-                    realUserStatus: 'REAL',
+                    refreshToken: 'refresh-token',
+                    refreshTokenExpiresAt: new Date(),
+                    identityToken: 'identity-token',
+                    authorizationCode: 'auth-code',
+                    realUserStatus: 'real',
+                    nonce: 'nonce',
                     isEnabled: true
                 };
 
@@ -270,18 +330,12 @@ describe('LoginCredentialController', () => {
 
         describe('update', () => {
             it('should update OAuth credential', async () => {
-                const updateOAuthDto = {
-                    credentialType: CredentialType.OAUTH,
-                    provider: OAuthProvider.GOOGLE,
-                    accessToken: 'new_access_token',
-                    accessTokenExpiresAt: core.timestamps.future,
-                    refreshToken: 'new_refresh_token',
-                    refreshTokenExpiresAt: core.timestamps.future,
-                    scope: auth.credentials.google.scope,
-                    rawProfile: auth.credentials.google.rawProfile
+                const updateOAuthDto: UpdateOAuthCredentialDto = {
+                    accessToken: 'new-access-token',
+                    refreshToken: 'new-refresh-token'
                 };
 
-                const updatedResponse = { ...mockGoogleCredentialResponse };
+                const updatedResponse = mockGoogleCredentialResponse;
                 jest.spyOn(service, 'update').mockResolvedValue(updatedResponse);
 
                 const result = await controller.update(auth.credentials.google.id, updateOAuthDto);
@@ -290,18 +344,17 @@ describe('LoginCredentialController', () => {
                 expect(service.update).toHaveBeenCalledWith(auth.credentials.google.id, updateOAuthDto);
             });
 
-            it('should throw BadRequestException if OAuth update fails', async () => {
-                const updateDto: UpdateLoginCredentialDto = {
-                    credentialType: CredentialType.OAUTH,
-                    isEnabled: true,
-                    loginProviderId: auth.credentials.google.loginProviderId
+            it('should throw NotFoundException if OAuth update fails', async () => {
+                const updateDto: UpdateOAuthCredentialDto = {
+                    accessToken: 'new-access-token',
+                    refreshToken: 'new-refresh-token'
                 };
 
                 jest.spyOn(service, 'update').mockResolvedValue(null);
 
                 await expect(controller.update(auth.credentials.google.id, updateDto))
                     .rejects
-                    .toThrow(BadRequestException);
+                    .toThrow(new NotFoundException(`LoginCredential with ID ${auth.credentials.google.id} not found`));
             });
         });
     });
@@ -312,11 +365,7 @@ describe('LoginCredentialController', () => {
                 isEnabled: false
             };
 
-            const updatedResponse = {
-                ...mockPasswordCredentialResponse,
-                isEnabled: false
-            };
-
+            const updatedResponse = { ...mockPasswordCredentialResponse, isEnabled: false };
             jest.spyOn(service, 'update').mockResolvedValue(updatedResponse);
 
             const result = await controller.update('cred123', updateDto);
@@ -325,12 +374,12 @@ describe('LoginCredentialController', () => {
             expect(service.update).toHaveBeenCalledWith('cred123', updateDto);
         });
 
-        it('should throw BadRequestException if update fails', async () => {
+        it('should throw NotFoundException if update fails', async () => {
             jest.spyOn(service, 'update').mockResolvedValue(null);
 
             await expect(controller.update('nonexistent', { isEnabled: false }))
                 .rejects
-                .toThrow(BadRequestException);
+                .toThrow(new NotFoundException('LoginCredential with ID nonexistent not found'));
         });
     });
 
@@ -348,7 +397,7 @@ describe('LoginCredentialController', () => {
             jest.spyOn(service, 'remove').mockResolvedValue(false);
 
             await expect(controller.remove('nonexistent')).rejects.toThrow(
-                new NotFoundException('Login credential not found')
+                new NotFoundException('LoginCredential with ID nonexistent not found')
             );
         });
     });

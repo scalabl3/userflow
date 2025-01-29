@@ -6,10 +6,26 @@ import { UpdateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/UpdateBaseU
 import { user as userMock } from '../test/__mocks__/user.mock';
 import { auth as authMock } from '../test/__mocks__/auth.mock';
 import { NotFoundException } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 
 describe('BaseUserController', () => {
     let controller: BaseUserController;
     let service: BaseUserService;
+
+    const mockQueryRunner = {
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+            save: jest.fn()
+        }
+    };
+
+    const mockDataSource = {
+        createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
+    };
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -25,11 +41,18 @@ describe('BaseUserController', () => {
                         remove: jest.fn(),
                     },
                 },
+                {
+                    provide: DataSource,
+                    useValue: mockDataSource,
+                },
             ],
         }).compile();
 
         controller = module.get<BaseUserController>(BaseUserController);
         service = module.get<BaseUserService>(BaseUserService);
+
+        // Reset mocks between tests
+        jest.clearAllMocks();
     });
 
     it('should be defined', () => {

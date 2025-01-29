@@ -102,12 +102,13 @@ export class LoginCredentialController extends ControllerBase {
     @ApiOperation({ summary: 'Delete login credential' })
     @ApiResponse({ status: 204, description: 'Login credential deleted successfully' })
     @ApiResponse({ status: 404, description: 'Login credential not found' })
-    async remove(@Param('id') id: string): Promise<void> {
+    async remove(@Param('id') id: string): Promise<boolean> {
         try {
             const result = await this.loginCredentialService.remove(id);
             if (!result) {
                 this.handleNotFound(id, 'remove');
             }
+            return result;
         } catch (error) {
             this.handleError(error, 'remove', id);
         }

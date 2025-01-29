@@ -67,10 +67,7 @@ export class BillingProviderController extends ControllerBase {
     @ApiResponse({ status: 200, type: ResponseBillingProviderDto })
     @ApiResponse({ status: 404, description: 'Billing provider not found' })
     @ApiResponse({ status: 409, description: 'Billing provider with this name already exists' })
-    async update(
-        @Param('id') id: string,
-        @Body() updateBillingProviderDto: UpdateBillingProviderDto
-    ): Promise<ResponseBillingProviderDto> {
+    async update(@Param('id') id: string, @Body() updateBillingProviderDto: UpdateBillingProviderDto): Promise<ResponseBillingProviderDto> {
         try {
             const provider = await this.billingProviderService.update(id, updateBillingProviderDto);
             const response = this.toResponseDto(provider, ResponseBillingProviderDto);
@@ -85,14 +82,15 @@ export class BillingProviderController extends ControllerBase {
 
     @Delete(':id')
     @ApiOperation({ summary: 'Delete billing provider' })
-    @ApiResponse({ status: 204, description: 'Billing provider deleted successfully' })
+    @ApiResponse({ status: 200, description: 'Billing provider deleted successfully' })
     @ApiResponse({ status: 404, description: 'Billing provider not found' })
-    async remove(@Param('id') id: string): Promise<void> {
+    async remove(@Param('id') id: string): Promise<boolean> {
         try {
             const result = await this.billingProviderService.remove(id);
             if (!result) {
                 this.handleNotFound(id, 'remove');
             }
+            return result;
         } catch (error) {
             this.handleError(error, 'remove', id);
         }

@@ -7,10 +7,26 @@ import { ResponseLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { auth } from '../test/__mocks__/auth.mock';
 import { core } from '../test/__mocks__/core.mock';
+import { DataSource } from 'typeorm';
 
 describe('LoginProviderController', () => {
     let controller: LoginProviderController;
     let service: LoginProviderService;
+
+    const mockQueryRunner = {
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+            save: jest.fn()
+        }
+    };
+
+    const mockDataSource = {
+        createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
+    };
 
     // Use shared mock data
     const mockLoginProvider = auth.providers.email;
@@ -29,11 +45,18 @@ describe('LoginProviderController', () => {
                         remove: jest.fn(),
                     },
                 },
+                {
+                    provide: DataSource,
+                    useValue: mockDataSource,
+                },
             ],
         }).compile();
 
         controller = module.get<LoginProviderController>(LoginProviderController);
         service = module.get<LoginProviderService>(LoginProviderService);
+
+        // Reset mocks between tests
+        jest.clearAllMocks();
     });
 
     it('should be defined', () => {

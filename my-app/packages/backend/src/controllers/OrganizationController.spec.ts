@@ -6,10 +6,26 @@ import { NotFoundException, BadRequestException, InternalServerErrorException } 
 import { Organization } from '../models/Organization';
 import { plainToClass } from 'class-transformer';
 import { organization as orgMock } from '../test/__mocks__/organization.mock';
+import { DataSource } from 'typeorm';
 
 describe('OrganizationController', () => {
     let controller: OrganizationController;
     let service: OrganizationService;
+
+    const mockQueryRunner = {
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+            save: jest.fn()
+        }
+    };
+
+    const mockDataSource = {
+        createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
+    };
 
     const mockOrgDto = plainToClass(ResponseOrganizationDto, {
         ...orgMock.standard
@@ -29,11 +45,18 @@ describe('OrganizationController', () => {
                         remove: jest.fn(),
                     },
                 },
+                {
+                    provide: DataSource,
+                    useValue: mockDataSource,
+                },
             ],
         }).compile();
 
         controller = module.get<OrganizationController>(OrganizationController);
         service = module.get<OrganizationService>(OrganizationService);
+
+        // Reset mocks between tests
+        jest.clearAllMocks();
     });
 
     it('should be defined', () => {

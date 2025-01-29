@@ -5,10 +5,27 @@ import { CreateBillingProviderDto } from '@my-app/shared/dist/dtos/BillingProvid
 import { UpdateBillingProviderDto } from '@my-app/shared/dist/dtos/BillingProvider/UpdateBillingProviderDto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { BillingProviderType } from '@my-app/shared/dist/enums/BillingProviderType';
+import { InternalServerErrorException, NotFoundException, ConflictException } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 
 describe('BillingProviderController', () => {
     let controller: BillingProviderController;
     let service: BillingProviderService;
+
+    const mockQueryRunner = {
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+            save: jest.fn()
+        }
+    };
+
+    const mockDataSource = {
+        createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
+    };
 
     const mockBillingProvider = {
         id: '123',
@@ -34,15 +51,25 @@ describe('BillingProviderController', () => {
                         remove: jest.fn(),
                     },
                 },
+                {
+                    provide: DataSource,
+                    useValue: mockDataSource,
+                },
             ],
         }).compile();
 
         controller = module.get<BillingProviderController>(BillingProviderController);
         service = module.get<BillingProviderService>(BillingProviderService);
+
+        // Reset mocks between tests
+        jest.clearAllMocks();
     });
 
-    it('should be defined', () => {
-        expect(controller).toBeDefined();
+    describe('Controller Setup', () => {
+        it('should be defined', () => {
+            expect(controller).toBeDefined();
+            expect(service).toBeDefined();
+        });
     });
 
     describe('findAll', () => {
@@ -60,7 +87,7 @@ describe('BillingProviderController', () => {
             jest.spyOn(service, 'findAll').mockRejectedValue(new Error());
             
             await expect(controller.findAll()).rejects.toThrow(
-                new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR)
+                new InternalServerErrorException('An unexpected error occurred')
             );
         });
     });
@@ -79,7 +106,7 @@ describe('BillingProviderController', () => {
             jest.spyOn(service, 'findOne').mockResolvedValue(null);
             
             await expect(controller.findOne('nonexistent-id')).rejects.toThrow(
-                new HttpException('BillingProvider not found', HttpStatus.NOT_FOUND)
+                new NotFoundException('BillingProvider with ID nonexistent-id not found')
             );
         });
 
@@ -87,7 +114,7 @@ describe('BillingProviderController', () => {
             jest.spyOn(service, 'findOne').mockRejectedValue(new Error());
             
             await expect(controller.findOne(mockBillingProvider.id)).rejects.toThrow(
-                new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR)
+                new InternalServerErrorException('An unexpected error occurred')
             );
         });
     });
@@ -111,17 +138,17 @@ describe('BillingProviderController', () => {
 
         it('should handle duplicate name error', async () => {
             jest.spyOn(service, 'create').mockRejectedValue(
-                new HttpException('BillingProvider with this name already exists', HttpStatus.CONFLICT)
+                new ConflictException('BillingProvider with this name already exists')
             );
             
-            await expect(controller.create(createDto)).rejects.toThrow(HttpException);
+            await expect(controller.create(createDto)).rejects.toThrow(ConflictException);
         });
 
         it('should handle other errors', async () => {
             jest.spyOn(service, 'create').mockRejectedValue(new Error());
             
             await expect(controller.create(createDto)).rejects.toThrow(
-                new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR)
+                new InternalServerErrorException('An unexpected error occurred')
             );
         });
     });
@@ -146,23 +173,23 @@ describe('BillingProviderController', () => {
             jest.spyOn(service, 'update').mockResolvedValue(null);
             
             await expect(controller.update('nonexistent-id', updateDto)).rejects.toThrow(
-                new HttpException('BillingProvider not found', HttpStatus.NOT_FOUND)
+                new NotFoundException('BillingProvider with ID nonexistent-id not found')
             );
         });
 
         it('should handle duplicate name error', async () => {
             jest.spyOn(service, 'update').mockRejectedValue(
-                new HttpException('BillingProvider with this name already exists', HttpStatus.CONFLICT)
+                new ConflictException('BillingProvider with this name already exists')
             );
             
-            await expect(controller.update(mockBillingProvider.id, updateDto)).rejects.toThrow(HttpException);
+            await expect(controller.update(mockBillingProvider.id, updateDto)).rejects.toThrow(ConflictException);
         });
 
         it('should handle other errors', async () => {
             jest.spyOn(service, 'update').mockRejectedValue(new Error());
             
             await expect(controller.update(mockBillingProvider.id, updateDto)).rejects.toThrow(
-                new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR)
+                new InternalServerErrorException('An unexpected error occurred')
             );
         });
     });
@@ -180,7 +207,7 @@ describe('BillingProviderController', () => {
             jest.spyOn(service, 'remove').mockResolvedValue(false);
             
             await expect(controller.remove('nonexistent-id')).rejects.toThrow(
-                new HttpException('BillingProvider not found', HttpStatus.NOT_FOUND)
+                new NotFoundException('BillingProvider with ID nonexistent-id not found')
             );
         });
 
@@ -188,7 +215,7 @@ describe('BillingProviderController', () => {
             jest.spyOn(service, 'remove').mockRejectedValue(new Error());
             
             await expect(controller.remove(mockBillingProvider.id)).rejects.toThrow(
-                new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR)
+                new InternalServerErrorException('An unexpected error occurred')
             );
         });
     });

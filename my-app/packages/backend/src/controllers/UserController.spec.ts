@@ -6,10 +6,26 @@ import { NotFoundException } from '@nestjs/common';
 import { User } from '../models/User';
 import { plainToClass } from 'class-transformer';
 import { user as userMock } from '../test/__mocks__/user.mock';
+import { DataSource } from 'typeorm';
 
 describe('UserController', () => {
     let controller: UserController;
     let service: UserService;
+
+    const mockQueryRunner = {
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+            save: jest.fn()
+        }
+    };
+
+    const mockDataSource = {
+        createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
+    };
 
     const mockUserDto = plainToClass(ResponseUserDto, {
         ...userMock.standard,
@@ -31,11 +47,18 @@ describe('UserController', () => {
                         remove: jest.fn(),
                     },
                 },
+                {
+                    provide: DataSource,
+                    useValue: mockDataSource,
+                },
             ],
         }).compile();
 
         controller = module.get<UserController>(UserController);
         service = module.get<UserService>(UserService);
+
+        // Reset mocks between tests
+        jest.clearAllMocks();
     });
 
     it('should be defined', () => {

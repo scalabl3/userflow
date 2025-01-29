@@ -85,12 +85,13 @@ export class LoginProviderController extends ControllerBase {
     @ApiOperation({ summary: 'Delete login provider' })
     @ApiResponse({ status: 204, description: 'Login provider deleted successfully' })
     @ApiResponse({ status: 404, description: 'Login provider not found' })
-    async remove(@Param('id') id: string): Promise<void> {
+    async remove(@Param('id') id: string): Promise<boolean> {
         try {
             const result = await this.loginProviderService.remove(id);
             if (!result) {
                 this.handleNotFound(id, 'remove');
             }
+            return result;
         } catch (error) {
             this.handleError(error, 'remove', id);
         }
