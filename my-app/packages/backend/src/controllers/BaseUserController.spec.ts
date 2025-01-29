@@ -5,7 +5,7 @@ import { CreateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/CreateBaseU
 import { UpdateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/UpdateBaseUserDto';
 import { user as userMock } from '../test/__mocks__/user.mock';
 import { auth as authMock } from '../test/__mocks__/auth.mock';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
 describe('BaseUserController', () => {
@@ -96,6 +96,14 @@ describe('BaseUserController', () => {
             expect(result).toEqual([]);
             expect(service.findAll).toHaveBeenCalled();
         });
+
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'findAll').mockRejectedValue(new Error());
+            
+            await expect(controller.findAll()).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
     });
 
     describe('findOne', () => {
@@ -108,13 +116,20 @@ describe('BaseUserController', () => {
             expect(service.findOne).toHaveBeenCalledWith(userMock.base.id);
         });
 
-        it('should return null when user not found', async () => {
+        it('should throw NotFoundException when user not found', async () => {
             jest.spyOn(service, 'findOne').mockResolvedValue(null);
 
-            const result = await controller.findOne('nonexistent-id');
+            await expect(controller.findOne('nonexistent-id')).rejects.toThrow(
+                new NotFoundException('BaseUser with ID nonexistent-id not found')
+            );
+        });
 
-            expect(result).toBeNull();
-            expect(service.findOne).toHaveBeenCalledWith('nonexistent-id');
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'findOne').mockRejectedValue(new Error());
+            
+            await expect(controller.findOne(userMock.base.id)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
         });
     });
 
@@ -138,17 +153,28 @@ describe('BaseUserController', () => {
             expect(service.update).toHaveBeenCalledWith(userMock.base.id, updateBaseUserDto);
         });
 
-        it('should return null when user not found', async () => {
+        it('should throw NotFoundException when user not found', async () => {
             const updateBaseUserDto: UpdateBaseUserDto = {
                 firstname: 'Updated'
             };
 
             jest.spyOn(service, 'update').mockResolvedValue(null);
 
-            const result = await controller.update('nonexistent-id', updateBaseUserDto);
+            await expect(controller.update('nonexistent-id', updateBaseUserDto)).rejects.toThrow(
+                new NotFoundException('BaseUser with ID nonexistent-id not found')
+            );
+        });
 
-            expect(result).toBeNull();
-            expect(service.update).toHaveBeenCalledWith('nonexistent-id', updateBaseUserDto);
+        it('should handle errors', async () => {
+            const updateBaseUserDto: UpdateBaseUserDto = {
+                firstname: 'Updated'
+            };
+
+            jest.spyOn(service, 'update').mockRejectedValue(new Error());
+            
+            await expect(controller.update(userMock.base.id, updateBaseUserDto)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
         });
     });
 

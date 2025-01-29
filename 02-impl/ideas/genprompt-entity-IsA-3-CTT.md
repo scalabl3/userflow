@@ -163,74 +163,149 @@ export class SpecializedEntityNameController extends BaseEntityNameController {
 Required Imports:
 ```typescript
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
-import { ExampleController } from './ExampleController';
-import { ExampleService } from '../services/ExampleService';
+import { EntityNameController } from './EntityNameController';
+import { EntityNameService } from '../services/EntityNameService';
+import { CreateEntityNameDto, UpdateEntityNameDto, ResponseEntityNameDto } from '@my-app/shared';
+import { NotFoundException, InternalServerErrorException, ConflictException } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
+import { entityName as entityMock } from '../test/__mocks__/entityName.mock';
+import { parentEntity as parentMock } from '../test/__mocks__/parentEntity.mock';
+import { DataSource } from 'typeorm';
 ```
 
 Key Points:
-- Mock service dependencies
-- Test inherited endpoints
-- Cover inheritance validation
-- Test inheritance responses
-- Use proper assertions
+- Mock service and DataSource dependencies
+- Use shared mock files for test data
+- Test all endpoints comprehensively
+- Cover all error scenarios
+- Test response transformations
 - Follow AAA pattern
 - Include inheritance edge cases
-- Test inheritance errors
+- Consistent error handling
+- Clear test descriptions
+- Reset mocks between tests
+- Test inheritance-specific behavior
+- Verify type constraints
 
 Example Pattern:
 ```typescript
-describe('ExampleController', () => {
-    let controller: ExampleController;
-    let service: ExampleService;
+describe('EntityNameController', () => {
+    let controller: EntityNameController;
+    let service: EntityNameService;
 
-    const mockEntity = {
-        id: '123',
-        base_field: 'Base Value',
-        additional_field: 'Additional Value',
-        type: 'example'
+    const mockQueryRunner = {
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+            save: jest.fn()
+        }
     };
+
+    const mockDataSource = {
+        createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
+    };
+
+    // Use shared mock data
+    const mockEntity = entityMock.standard;
+    const mockParent = parentMock.standard;
+    const mockEntityDto = plainToClass(ResponseEntityNameDto, mockEntity, { excludeExtraneousValues: true });
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            controllers: [ExampleController],
+            controllers: [EntityNameController],
             providers: [
                 {
-                    provide: ExampleService,
+                    provide: EntityNameService,
                     useValue: {
-                        findById: jest.fn(),
+                        create: jest.fn(),
+                        findAll: jest.fn(),
+                        findOne: jest.fn(),
                         findByType: jest.fn(),
-                        update: jest.fn()
-                    }
-                }
-            ]
+                        update: jest.fn(),
+                        remove: jest.fn(),
+                    },
+                },
+                {
+                    provide: DataSource,
+                    useValue: mockDataSource,
+                },
+            ],
         }).compile();
 
-        controller = module.get<ExampleController>(ExampleController);
-        service = module.get<ExampleService>(ExampleService);
+        controller = module.get<EntityNameController>(EntityNameController);
+        service = module.get<EntityNameService>(EntityNameService);
+
+        // Reset mocks between tests
+        jest.clearAllMocks();
+    });
+
+    describe('Controller Setup', () => {
+        it('should be defined', () => {
+            expect(controller).toBeDefined();
+            expect(service).toBeDefined();
+        });
     });
 
     describe('findByType', () => {
         it('should return entities by type', async () => {
             const entities = [mockEntity];
-            
             jest.spyOn(service, 'findByType').mockResolvedValue(entities);
             
-            const result = await controller.findByType('example');
+            const result = await controller.findByType(mockEntity.type);
             
-            expect(result).toBeDefined();
-            expect(result).toEqual(entities);
-            expect(service.findByType).toHaveBeenCalledWith('example');
+            expect(result).toEqual([mockEntityDto]);
+            expect(service.findByType).toHaveBeenCalledWith(mockEntity.type);
         });
 
-        it('should handle empty result for type', async () => {
+        it('should return empty array when no entities exist for type', async () => {
             jest.spyOn(service, 'findByType').mockResolvedValue([]);
             
-            const result = await controller.findByType('unknown');
+            const result = await controller.findByType('nonexistent-type');
             
             expect(result).toEqual([]);
         });
+
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'findByType').mockRejectedValue(new Error());
+            
+            await expect(controller.findByType(mockEntity.type)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
     });
+
+    describe('create', () => {
+        const createDto: CreateEntityNameDto = entityMock.dtos.create;
+
+        it('should create a new entity with inheritance type', async () => {
+            jest.spyOn(service, 'create').mockResolvedValue(mockEntity);
+            
+            const result = await controller.create(createDto);
+            
+            expect(result).toEqual(mockEntityDto);
+            expect(service.create).toHaveBeenCalledWith(createDto);
+        });
+
+        it('should handle type validation errors', async () => {
+            const invalidDto = { ...createDto, type: 'invalid-type' };
+            jest.spyOn(service, 'create').mockRejectedValue(new BadRequestException('Invalid type'));
+            
+            await expect(controller.create(invalidDto)).rejects.toThrow(BadRequestException);
+        });
+
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'create').mockRejectedValue(new Error());
+            
+            await expect(controller.create(createDto)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
+    });
+
+    // Include standard CRUD test cases as well...
 });
 ```
 

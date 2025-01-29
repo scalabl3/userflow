@@ -156,67 +156,215 @@ export class EntityNameController extends ControllerBase {
 Required Imports:
 ```typescript
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
-import { ExampleController } from './ExampleController';
-import { ExampleService } from '../services/ExampleService';
+import { EntityNameController } from './EntityNameController';
+import { EntityNameService } from '../services/EntityNameService';
+import { CreateEntityNameDto, UpdateEntityNameDto, ResponseEntityNameDto } from '@my-app/shared';
+import { NotFoundException, InternalServerErrorException, ConflictException } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
+import { entityName as entityMock } from '../test/__mocks__/entityName.mock';
+import { DataSource } from 'typeorm';
 ```
 
 Key Points:
-- Mock service dependencies
-- Test all endpoints
-- Cover validation errors
-- Test response formats
-- Use proper assertions
+- Mock service and DataSource dependencies
+- Use shared mock files for test data
+- Test all endpoints comprehensively
+- Cover all error scenarios
+- Test response transformations
 - Follow AAA pattern
 - Include edge cases
-- Test error responses
+- Consistent error handling
+- Clear test descriptions
+- Reset mocks between tests
 
 Example Pattern:
 ```typescript
-describe('ExampleController', () => {
-    let controller: ExampleController;
-    let service: ExampleService;
+describe('EntityNameController', () => {
+    let controller: EntityNameController;
+    let service: EntityNameService;
 
-    const mockEntity = {
-        id: '123',
-        name: 'Test'
+    const mockQueryRunner = {
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+            save: jest.fn()
+        }
     };
+
+    const mockDataSource = {
+        createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
+    };
+
+    // Use shared mock data
+    const mockEntity = entityMock.standard;
+    const mockEntityDto = plainToClass(ResponseEntityNameDto, mockEntity, { excludeExtraneousValues: true });
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            controllers: [ExampleController],
+            controllers: [EntityNameController],
             providers: [
                 {
-                    provide: ExampleService,
+                    provide: EntityNameService,
                     useValue: {
-                        findById: jest.fn(),
-                        update: jest.fn()
-                    }
-                }
-            ]
+                        create: jest.fn(),
+                        findAll: jest.fn(),
+                        findOne: jest.fn(),
+                        update: jest.fn(),
+                        remove: jest.fn(),
+                    },
+                },
+                {
+                    provide: DataSource,
+                    useValue: mockDataSource,
+                },
+            ],
         }).compile();
 
-        controller = module.get<ExampleController>(ExampleController);
-        service = module.get<ExampleService>(ExampleService);
+        controller = module.get<EntityNameController>(EntityNameController);
+        service = module.get<EntityNameService>(EntityNameService);
+
+        // Reset mocks between tests
+        jest.clearAllMocks();
     });
 
-    describe('findById', () => {
-        it('should return entity by id', async () => {
-            jest.spyOn(service, 'findById').mockResolvedValue(mockEntity);
+    describe('Controller Setup', () => {
+        it('should be defined', () => {
+            expect(controller).toBeDefined();
+            expect(service).toBeDefined();
+        });
+    });
 
-            const result = await controller.findById('123');
+    describe('create', () => {
+        const createDto: CreateEntityNameDto = entityMock.dtos.create;
 
-            expect(result).toBeDefined();
-            expect(result).toEqual(mockEntity);
-            expect(service.findById).toHaveBeenCalledWith('123');
+        it('should create a new entity', async () => {
+            jest.spyOn(service, 'create').mockResolvedValue(mockEntity);
+            
+            const result = await controller.create(createDto);
+            
+            expect(result).toEqual(mockEntityDto);
+            expect(service.create).toHaveBeenCalledWith(createDto);
         });
 
-        it('should throw NotFoundException when entity not found', async () => {
-            jest.spyOn(service, 'findById').mockRejectedValue(new NotFoundException());
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'create').mockRejectedValue(new Error());
+            
+            await expect(controller.create(createDto)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
+    });
 
-            await expect(controller.findById('999'))
-                .rejects
-                .toThrow(NotFoundException);
+    describe('findAll', () => {
+        it('should return an array of entities', async () => {
+            jest.spyOn(service, 'findAll').mockResolvedValue([mockEntity]);
+            
+            const result = await controller.findAll();
+            
+            expect(result).toEqual([mockEntityDto]);
+            expect(service.findAll).toHaveBeenCalled();
+        });
+
+        it('should return empty array when no entities exist', async () => {
+            jest.spyOn(service, 'findAll').mockResolvedValue([]);
+            
+            const result = await controller.findAll();
+            
+            expect(result).toEqual([]);
+        });
+
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'findAll').mockRejectedValue(new Error());
+            
+            await expect(controller.findAll()).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
+    });
+
+    describe('findOne', () => {
+        it('should return a single entity', async () => {
+            jest.spyOn(service, 'findOne').mockResolvedValue(mockEntity);
+            
+            const result = await controller.findOne(mockEntity.id);
+            
+            expect(result).toEqual(mockEntityDto);
+            expect(service.findOne).toHaveBeenCalledWith(mockEntity.id);
+        });
+
+        it('should throw NotFoundException when entity does not exist', async () => {
+            jest.spyOn(service, 'findOne').mockResolvedValue(null);
+            
+            await expect(controller.findOne('nonexistent-id')).rejects.toThrow(
+                new NotFoundException('EntityName with ID nonexistent-id not found')
+            );
+        });
+
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'findOne').mockRejectedValue(new Error());
+            
+            await expect(controller.findOne(mockEntity.id)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
+    });
+
+    describe('update', () => {
+        const updateDto: UpdateEntityNameDto = entityMock.dtos.update;
+
+        it('should update an entity', async () => {
+            const updatedEntity = { ...mockEntity, ...updateDto };
+            jest.spyOn(service, 'update').mockResolvedValue(updatedEntity);
+            
+            const result = await controller.update(mockEntity.id, updateDto);
+            
+            expect(result).toEqual(plainToClass(ResponseEntityNameDto, updatedEntity, { excludeExtraneousValues: true }));
+            expect(service.update).toHaveBeenCalledWith(mockEntity.id, updateDto);
+        });
+
+        it('should throw NotFoundException when entity does not exist', async () => {
+            jest.spyOn(service, 'update').mockResolvedValue(null);
+            
+            await expect(controller.update('nonexistent-id', updateDto)).rejects.toThrow(
+                new NotFoundException('EntityName with ID nonexistent-id not found')
+            );
+        });
+
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'update').mockRejectedValue(new Error());
+            
+            await expect(controller.update(mockEntity.id, updateDto)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
+        });
+    });
+
+    describe('remove', () => {
+        it('should remove an entity', async () => {
+            jest.spyOn(service, 'remove').mockResolvedValue(true);
+            
+            await controller.remove(mockEntity.id);
+            
+            expect(service.remove).toHaveBeenCalledWith(mockEntity.id);
+        });
+
+        it('should throw NotFoundException when entity does not exist', async () => {
+            jest.spyOn(service, 'remove').mockResolvedValue(false);
+            
+            await expect(controller.remove('nonexistent-id')).rejects.toThrow(
+                new NotFoundException('EntityName with ID nonexistent-id not found')
+            );
+        });
+
+        it('should handle errors', async () => {
+            jest.spyOn(service, 'remove').mockRejectedValue(new Error());
+            
+            await expect(controller.remove(mockEntity.id)).rejects.toThrow(
+                new InternalServerErrorException('An unexpected error occurred')
+            );
         });
     });
 });
