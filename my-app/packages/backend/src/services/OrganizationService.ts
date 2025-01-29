@@ -1,180 +1,90 @@
-import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, DeepPartial } from 'typeorm';
 import { Organization } from '../models/Organization';
 import { CreateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/CreateOrganizationDto';
 import { UpdateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/UpdateOrganizationDto';
-import { handleError, createErrorContext } from '../utils/error-handling';
+import { ResponseOrganizationDto } from '@my-app/shared/dist/dtos/Organization/ResponseOrganizationDto';
+import { ServiceBase } from '../utils/service-utils';
 
 @Injectable()
-export class OrganizationService {
-    private readonly logger = new Logger(OrganizationService.name);
-    private readonly ENTITY_NAME = 'Organization';
+export class OrganizationService extends ServiceBase<Organization> {
+    protected readonly ENTITY_NAME = 'Organization';
+    protected readonly logger = new Logger(OrganizationService.name);
 
     constructor(
         @InjectRepository(Organization)
-        private readonly organizationRepository: Repository<Organization>,
-        private readonly dataSource: DataSource,
-    ) {}
-
-    async findAll(): Promise<Organization[]> {
-        try {
-            return await this.organizationRepository.find({
-                relations: ['users', 'adminUser']
-            });
-        } catch (error) {
-            const handled = handleError<Organization[]>(this.logger, error, createErrorContext(
-                'findAll',
-                this.ENTITY_NAME
-            ));
-            if (handled === undefined) {
-                throw error;
-            }
-            return handled ?? [];
-        }
+        protected readonly repository: Repository<Organization>,
+        protected readonly dataSource: DataSource,
+    ) {
+        super();
     }
 
-    async findOne(id: string): Promise<Organization | null> {
-        try {
-            const organization = await this.organizationRepository.findOne({
-                where: { id },
-                relations: ['users', 'adminUser']
-            });
-
-            if (!organization) {
-                throw new NotFoundException(`${this.ENTITY_NAME} not found`);
-            }
-
-            return organization;
-        } catch (error) {
-            const handled = handleError<Organization>(this.logger, error, createErrorContext(
-                'findOne',
-                this.ENTITY_NAME,
-                id
-            ));
-            return handled === undefined ? null : handled;
-        }
+    async findAllOrganizations(): Promise<ResponseOrganizationDto[]> {
+        const organizations = await this.repository.find({
+            relations: ['users', 'adminUser']
+        });
+        return this.toResponseDtoArray(organizations, ResponseOrganizationDto);
     }
 
-    async create(createOrganizationDto: CreateOrganizationDto): Promise<Organization> {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
+    async findOneOrganization(id: string): Promise<ResponseOrganizationDto> {
+        const organization = await this.repository.findOne({
+            where: { id },
+            relations: ['users', 'adminUser']
+        });
+        
+        await this.validateExists(id);
+        return this.toResponseDto(organization, ResponseOrganizationDto)!;
+    }
 
-        try {
-            // Check for existing organization with same name
-            const existing = await this.organizationRepository.findOne({
-                where: { name: createOrganizationDto.name }
-            });
-            if (existing) {
-                throw new ConflictException(`${this.ENTITY_NAME} with name ${createOrganizationDto.name} already exists`);
-            }
-
-            const organization = this.organizationRepository.create(createOrganizationDto);
-            const result = await queryRunner.manager.save(Organization, organization);
+    async createOrganization(createDto: CreateOrganizationDto): Promise<ResponseOrganizationDto> {
+        return this.withTransaction(async (queryRunner) => {
+            // Validate name uniqueness
+            await this.validateUniqueness('name', createDto.name);
             
-            await queryRunner.commitTransaction();
-            this.logger.log(`Created ${this.ENTITY_NAME}: ${result.id}`);
-            return result;
-        } catch (error) {
-            await queryRunner.rollbackTransaction();
-            const handled = handleError<Organization>(this.logger, error, createErrorContext(
-                'create',
-                this.ENTITY_NAME,
-                undefined,
-                { dto: createOrganizationDto }
-            ));
-            if (handled === undefined || handled === null) {
-                throw error;
-            }
-            return handled;
-        } finally {
-            await queryRunner.release();
-        }
+            const entity = await super.create(createDto as DeepPartial<Organization>, queryRunner);
+            return this.toResponseDto(entity, ResponseOrganizationDto)!;
+        }, 'create', undefined, { dto: createDto });
     }
 
-    async update(id: string, updateOrganizationDto: UpdateOrganizationDto): Promise<Organization | null> {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-
-        try {
-            const organization = await this.findOne(id);
-            if (!organization) return null;
+    async updateOrganization(id: string, updateDto: UpdateOrganizationDto): Promise<ResponseOrganizationDto> {
+        return this.withTransaction(async (queryRunner) => {
+            const organization = await this.validateExists(id);
 
             // Check name uniqueness if name is being updated
-            if (updateOrganizationDto.name && updateOrganizationDto.name !== organization.name) {
-                const existing = await this.organizationRepository.findOne({
-                    where: { name: updateOrganizationDto.name }
-                });
-                if (existing) {
-                    throw new ConflictException(`${this.ENTITY_NAME} with name ${updateOrganizationDto.name} already exists`);
-                }
+            if (updateDto.name && updateDto.name !== organization.name) {
+                await this.validateUniqueness('name', updateDto.name, id);
             }
 
             // Verify new admin user exists in organization if being updated
-            if (updateOrganizationDto.adminUser && updateOrganizationDto.adminUser !== organization.adminUser) {
-                const adminExists = organization.users.some(user => user.id === updateOrganizationDto.adminUser);
+            if (updateDto.adminUser && updateDto.adminUser !== organization.adminUser) {
+                const adminExists = organization.users.some(user => user.id === updateDto.adminUser);
                 if (!adminExists) {
                     throw new BadRequestException('Admin user must be a member of the organization');
                 }
-                this.logger.log(`${this.ENTITY_NAME} ${id} admin changed to user: ${updateOrganizationDto.adminUser}`);
+                this.logger.log(`${this.ENTITY_NAME} ${id} admin changed to user: ${updateDto.adminUser}`);
             }
 
             // Log visibility changes
-            if (updateOrganizationDto.visible !== undefined && updateOrganizationDto.visible !== organization.visible) {
-                this.logger.log(`${this.ENTITY_NAME} ${id} visibility changed to: ${updateOrganizationDto.visible}`);
+            if (updateDto.visible !== undefined && updateDto.visible !== organization.visible) {
+                this.logger.log(`${this.ENTITY_NAME} ${id} visibility changed to: ${updateDto.visible}`);
             }
 
-            Object.assign(organization, updateOrganizationDto);
-            const result = await queryRunner.manager.save(Organization, organization);
-            
-            await queryRunner.commitTransaction();
-            this.logger.log(`Updated ${this.ENTITY_NAME}: ${id}`);
-            return result;
-        } catch (error) {
-            await queryRunner.rollbackTransaction();
-            const handled = handleError<Organization>(this.logger, error, createErrorContext(
-                'update',
-                this.ENTITY_NAME,
-                id,
-                { dto: updateOrganizationDto }
-            ));
-            return handled === undefined ? null : handled;
-        } finally {
-            await queryRunner.release();
-        }
+            const entity = await super.update(id, updateDto as DeepPartial<Organization>, queryRunner);
+            return this.toResponseDto(entity, ResponseOrganizationDto)!;
+        }, 'update', id, { dto: updateDto });
     }
 
-    async remove(id: string): Promise<boolean> {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-
-        try {
-            const organization = await this.findOne(id);
-            if (!organization) return false;
+    async removeOrganization(id: string): Promise<void> {
+        await this.withTransaction(async (queryRunner) => {
+            const organization = await this.validateExists(id);
 
             // Check if organization has active users
             if (organization.users.length > 0) {
                 throw new BadRequestException('Cannot delete organization with active users');
             }
 
-            await queryRunner.manager.remove(Organization, organization);
-            
-            await queryRunner.commitTransaction();
-            this.logger.log(`Removed ${this.ENTITY_NAME}: ${id}`);
-            return true;
-        } catch (error) {
-            await queryRunner.rollbackTransaction();
-            const handled = handleError<boolean>(this.logger, error, createErrorContext(
-                'remove',
-                this.ENTITY_NAME,
-                id
-            ));
-            return handled ?? false;
-        } finally {
-            await queryRunner.release();
-        }
+            await super.remove(id, queryRunner);
+        }, 'remove', id);
     }
 }

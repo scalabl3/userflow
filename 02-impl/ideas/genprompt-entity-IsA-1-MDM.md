@@ -60,76 +60,177 @@ You are a seasoned veteran software engineer focused on implementing Is-A relati
 #### Model Structure
 Required Imports:
 ```typescript
-import { Entity, Column, ChildEntity } from 'typeorm';
-import { IsNotEmpty, IsOptional } from 'class-validator';
-import { BaseEntityName } from './BaseEntityName';
+import { Entity, PrimaryGeneratedColumn, Column, TableInheritance, ChildEntity } from 'typeorm';
+import { IsString, IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { BaseEntity } from './BaseEntity';
 ```
 
 Key Points:
-- Use @ChildEntity decorator with discriminator
-- Extend base entity class
-- Add only new fields
-- Override methods when needed
+- Use TableInheritance for base entity
+- Configure discriminator column
+- Add proper validation for inherited fields
 - Document inheritance behavior
-- Handle validation properly
-- Respect base entity contract
+- Handle type-specific fields appropriately
+- Include proper validation
 
 Example Pattern:
 ```typescript
-@ChildEntity('example')
-export class Example extends BaseEntity {
-    @Column()
-    @IsNotEmpty()
-    additional_field: string;
+/**
+ * Base entity that defines common properties for all derived types.
+ * Uses single table inheritance with a discriminator column.
+ */
+@Entity('base')
+@TableInheritance({ column: { type: 'varchar', name: 'type' } })
+export class BaseEntity {
+    /** Unique identifier for the entity */
+    @PrimaryGeneratedColumn('uuid')
+    id!: string;
 
-    @Column({ nullable: true })
+    /** Common name field for all derived types */
+    @Column({ 
+        type: 'varchar',
+        length: 255 
+    })
+    @IsString()
+    @IsNotEmpty({ message: 'Name is required' })
+    name!: string;
+
+    /** Flag indicating if the entity is enabled */
+    @Column({ 
+        type: 'boolean',
+        default: true 
+    })
+    @IsBoolean()
+    isEnabled!: boolean;
+
+    /** Timestamp of when the entity was created */
+    @CreateDateColumn({ type: 'datetime' })
+    createdAt!: Date;
+
+    /** Timestamp of when the entity was last modified */
+    @UpdateDateColumn({ type: 'datetime' })
+    modifiedAt!: Date;
+}
+
+/**
+ * Specialized entity that extends the base entity with additional properties.
+ * Identified by the discriminator value 'specialized'.
+ */
+@ChildEntity('specialized')
+export class SpecializedEntity extends BaseEntity {
+    /** Additional field specific to specialized entities */
+    @Column({ 
+        type: 'varchar',
+        length: 255,
+        nullable: true 
+    })
+    @IsString()
     @IsOptional()
-    optional_field?: string;
-
-    // Override base method if needed
-    override someMethod(): string {
-        return `Example: ${super.someMethod()}`;
-    }
+    specialField?: string;
 }
 ```
 
 #### DTO Structure
 Required Imports:
 ```typescript
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { CreateBaseEntityDto, ResponseBaseEntityDto } from '../BaseEntity';
 ```
 
 Key Points:
-- Extend base entity DTOs
-- Add only new fields
-- Include inheritance documentation
-- Handle validation properly
+- Include base fields in DTOs
+- Add proper validation
 - Use clear field descriptions
+- Document inheritance behavior
+- Handle type-specific fields
 - Follow naming conventions
 
 Example Pattern:
 ```typescript
-// Create DTO
-export class CreateExampleDto extends CreateBaseEntityDto {
+// Create DTO for Base Entity
+export class CreateBaseDto {
     @ApiProperty({
-        description: 'Additional field specific to Example',
-        example: 'example value'
+        description: 'Name of the entity',
+        example: 'Example Name',
+        minLength: 1,
+        maxLength: 255
     })
-    @IsNotEmpty()
-    additional_field: string;
+    @IsString()
+    @IsNotEmpty({ message: 'Name is required' })
+    name!: string;
+
+    @ApiProperty({
+        description: 'Flag indicating if the entity is enabled',
+        example: true,
+        default: true
+    })
+    @IsBoolean()
+    isEnabled!: boolean;
 }
 
-// Response DTO
-export class ResponseExampleDto extends ResponseBaseEntityDto {
+// Create DTO for Specialized Entity
+export class CreateSpecializedDto extends CreateBaseDto {
+    @ApiProperty({
+        description: 'Additional field for specialized entities',
+        example: 'Special Value',
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    specialField?: string;
+}
+
+// Response DTO for Base Entity
+@Exclude()
+export class ResponseBaseDto {
     @Expose()
     @ApiProperty({
-        description: 'Additional field specific to Example',
-        example: 'example value'
+        description: 'Unique identifier',
+        example: '123e4567-e89b-12d3-a456-426614174000'
     })
-    additional_field: string;
+    id!: string;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Name of the entity',
+        example: 'Example Name'
+    })
+    name!: string;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Flag indicating if the entity is enabled',
+        example: true
+    })
+    isEnabled!: boolean;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Creation timestamp',
+        example: '2024-01-28T12:00:00.000Z'
+    })
+    createdAt!: Date;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Last modification timestamp',
+        example: '2024-01-28T12:00:00.000Z'
+    })
+    modifiedAt!: Date;
+}
+
+// Response DTO for Specialized Entity
+@Exclude()
+export class ResponseSpecializedDto extends ResponseBaseDto {
+    @Expose()
+    @ApiProperty({
+        description: 'Additional field for specialized entities',
+        example: 'Special Value',
+        required: false
+    })
+    specialField?: string;
 }
 ```
 

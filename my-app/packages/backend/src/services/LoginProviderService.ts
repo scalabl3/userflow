@@ -1,23 +1,26 @@
 import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, DeepPartial } from 'typeorm';
 import { LoginProvider } from '../models/LoginProvider';
 import { CreateLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/CreateLoginProviderDto';
 import { UpdateLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/UpdateLoginProviderDto';
 import { ResponseLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/ResponseLoginProviderDto';
 import { handleError, createErrorContext } from '../utils/error-handling';
 import { plainToClass } from 'class-transformer';
+import { ServiceBase } from '../utils/service-utils';
 
 @Injectable()
-export class LoginProviderService {
-    private readonly logger = new Logger(LoginProviderService.name);
-    private readonly ENTITY_NAME = 'LoginProvider';
+export class LoginProviderService extends ServiceBase<LoginProvider> {
+    protected readonly ENTITY_NAME = 'LoginProvider';
+    protected readonly logger = new Logger(LoginProviderService.name);
 
     constructor(
         @InjectRepository(LoginProvider)
-        private readonly loginProviderRepository: Repository<LoginProvider>,
-        private readonly dataSource: DataSource,
-    ) {}
+        protected readonly repository: Repository<LoginProvider>,
+        protected readonly dataSource: DataSource,
+    ) {
+        super();
+    }
 
     private transformResponse(data: LoginProvider[]): ResponseLoginProviderDto[];
     private transformResponse(data: LoginProvider): ResponseLoginProviderDto;
@@ -32,129 +35,59 @@ export class LoginProviderService {
         return data ? this.transformResponse(data) : null;
     }
 
-    async findAll(): Promise<ResponseLoginProviderDto[]> {
-        try {
-            const providers = await this.loginProviderRepository.find();
-            return this.transformResponse(providers);
-        } catch (error) {
-            const handled = handleError<LoginProvider[]>(this.logger, error, createErrorContext(
-                'findAll',
-                this.ENTITY_NAME
-            ));
-            if (handled === undefined) {
-                throw error;
+    async createLoginProvider(createDto: CreateLoginProviderDto): Promise<ResponseLoginProviderDto> {
+        return this.withTransaction(async (queryRunner) => {
+            await this.validateUniqueness('code', createDto.code);
+            
+            const entity = await this.create(createDto as DeepPartial<LoginProvider>, queryRunner);
+            return this.toResponseDto(entity, ResponseLoginProviderDto)!;
+        }, 'create', undefined, { dto: createDto });
+    }
+
+    async findAllLoginProviders(): Promise<ResponseLoginProviderDto[]> {
+        const providers = await this.findAll();
+        return this.toResponseDtoArray(providers, ResponseLoginProviderDto);
+    }
+
+    async findOneLoginProvider(id: string): Promise<ResponseLoginProviderDto | null> {
+        const provider = await this.findOne(id);
+        return provider ? this.toResponseDto(provider, ResponseLoginProviderDto)! : null;
+    }
+
+    async updateLoginProvider(id: string, updateDto: UpdateLoginProviderDto): Promise<ResponseLoginProviderDto | null> {
+        return this.withTransaction(async (queryRunner) => {
+            const existing = await this.findOne(id);
+            if (!existing) {
+                return null;
             }
-            return this.transformResponse(handled ?? []);
-        }
-    }
 
-    async findOne(id: string): Promise<ResponseLoginProviderDto | null> {
-        try {
-            const provider = await this.loginProviderRepository.findOne({
-                where: { id }
-            });
-
-            if (!provider) {
-                throw new NotFoundException(`${this.ENTITY_NAME} with ID ${id} not found`);
+            // Validate code uniqueness if it's being updated
+            if (updateDto.code) {
+                await this.validateUniqueness('code', updateDto.code, id);
             }
 
-            return this.transformResponse(provider);
-        } catch (error) {
-            const handled = handleError<LoginProvider>(this.logger, error, createErrorContext(
-                'findOne',
-                this.ENTITY_NAME,
-                id
-            ));
-            return handled === undefined ? null : this.transformResponseOrNull(handled);
-        }
+            const entity = await this.update(id, updateDto as DeepPartial<LoginProvider>, queryRunner);
+            if (!entity) {
+                return null;
+            }
+
+            // Log enabled status change specifically
+            if (updateDto.isEnabled !== undefined && updateDto.isEnabled !== existing.isEnabled) {
+                this.logger.log(`${this.ENTITY_NAME} ${id} enabled status changed to: ${updateDto.isEnabled}`);
+            }
+
+            return this.toResponseDto(entity, ResponseLoginProviderDto)!;
+        }, 'update', id, { dto: updateDto });
     }
 
-    async create(createDto: CreateLoginProviderDto): Promise<ResponseLoginProviderDto | null> {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-
-        try {
-            await this.validateUnique('code', createDto.code);
-            
-            const provider = this.loginProviderRepository.create(createDto);
-            const result = await queryRunner.manager.save(LoginProvider, provider);
-            
-            await queryRunner.commitTransaction();
-            this.logger.log(`Created ${this.ENTITY_NAME}: ${result.id}`);
-            return this.transformResponse(result);
-        } catch (error) {
-            await queryRunner.rollbackTransaction();
-            const handled = handleError<LoginProvider>(this.logger, error, createErrorContext(
-                'create',
-                this.ENTITY_NAME,
-                undefined,
-                { dto: createDto }
-            ));
-            return handled === undefined ? null : this.transformResponseOrNull(handled);
-        } finally {
-            await queryRunner.release();
-        }
-    }
-
-    async update(id: string, updateDto: UpdateLoginProviderDto): Promise<ResponseLoginProviderDto | null> {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-
-        try {
-            const provider = await this.findOneOrFail(id);
-            await this.validateUpdate(id, updateDto);
-            
-            this.logChanges(id, provider, updateDto);
-            Object.assign(provider, updateDto);
-            
-            const result = await queryRunner.manager.save(LoginProvider, provider);
-            await queryRunner.commitTransaction();
-            
-            this.logger.log(`Updated ${this.ENTITY_NAME}: ${id}`);
-            return this.transformResponse(result);
-        } catch (error) {
-            await queryRunner.rollbackTransaction();
-            const handled = handleError<LoginProvider>(this.logger, error, createErrorContext(
-                'update',
-                this.ENTITY_NAME,
-                id,
-                { dto: updateDto }
-            ));
-            return handled === undefined ? null : this.transformResponseOrNull(handled);
-        } finally {
-            await queryRunner.release();
-        }
-    }
-
-    async remove(id: string): Promise<boolean> {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-
-        try {
-            const provider = await this.findOneOrFail(id);
-            await queryRunner.manager.remove(LoginProvider, provider);
-            
-            await queryRunner.commitTransaction();
-            this.logger.log(`Removed ${this.ENTITY_NAME}: ${id}`);
-            return true;
-        } catch (error) {
-            await queryRunner.rollbackTransaction();
-            const handled = handleError<boolean>(this.logger, error, createErrorContext(
-                'remove',
-                this.ENTITY_NAME,
-                id
-            ));
-            return handled ?? false;
-        } finally {
-            await queryRunner.release();
-        }
+    async removeLoginProvider(id: string): Promise<boolean> {
+        return this.withTransaction(async (queryRunner) => {
+            return this.remove(id, queryRunner);
+        }, 'remove', id);
     }
 
     private async findOneOrFail(id: string): Promise<LoginProvider> {
-        const entity = await this.loginProviderRepository.findOne({
+        const entity = await this.repository.findOne({
             where: { id }
         });
         if (!entity) {
@@ -164,7 +97,7 @@ export class LoginProviderService {
     }
 
     private async validateUnique(field: string, value: string): Promise<void> {
-        const existing = await this.loginProviderRepository.findOne({
+        const existing = await this.repository.findOne({
             where: { [field]: value }
         });
         if (existing) {
@@ -174,7 +107,7 @@ export class LoginProviderService {
 
     private async validateUpdate(id: string, updateDto: UpdateLoginProviderDto): Promise<void> {
         if (updateDto.code) {
-            const existing = await this.loginProviderRepository.findOne({
+            const existing = await this.repository.findOne({
                 where: { code: updateDto.code }
             });
             if (existing && existing.id !== id) {
@@ -183,9 +116,9 @@ export class LoginProviderService {
         }
     }
 
-    private logChanges(id: string, entity: LoginProvider, updateDto: UpdateLoginProviderDto): void {
-        if (updateDto.isEnabled !== undefined && updateDto.isEnabled !== entity.isEnabled) {
-            this.logger.log(`${this.ENTITY_NAME} ${id} enabled status changed to: ${updateDto.isEnabled}`);
+    protected logChanges(original: LoginProvider, updated: DeepPartial<LoginProvider>, context: string): void {
+        if (updated.isEnabled !== undefined && updated.isEnabled !== original.isEnabled) {
+            this.logger.log(`${this.ENTITY_NAME} ${original.id} enabled status changed to: ${updated.isEnabled}`);
         }
     }
 }

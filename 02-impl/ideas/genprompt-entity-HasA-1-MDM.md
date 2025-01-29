@@ -61,9 +61,10 @@ You are a seasoned veteran software engineer focused on implementing Has-A relat
 #### Model Structure
 Required Imports:
 ```typescript
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { IsNotEmpty, IsOptional } from 'class-validator';
-import { OwnerEntityName } from './OwnerEntityName';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
+import { IsString, IsUUID, IsNotEmpty, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { OwnerEntity } from './OwnerEntity';
 ```
 
 Key Points:
@@ -77,36 +78,58 @@ Key Points:
 
 Example Pattern:
 ```typescript
-@Entity()
+/**
+ * Example entity represents a child entity with a Has-A relationship to OwnerEntity.
+ * Each example must belong to an owner and maintains its own lifecycle.
+ */
+@Entity('example')
+@Index(['ownerId'])
 export class Example {
+    /** Unique identifier for the example */
     @PrimaryGeneratedColumn('uuid')
-    id: string;
+    id!: string;
 
+    /** The owner of this example */
     @ManyToOne(() => OwnerEntity, owner => owner.examples, {
         nullable: false,
         onDelete: 'CASCADE'
     })
-    @JoinColumn({ name: 'owner_id' })
-    owner: OwnerEntity;
+    @JoinColumn({ name: 'ownerId' })
+    owner!: OwnerEntity;
 
-    @Column()
-    @Index()
-    owner_id: string;
+    /** ID of the associated owner */
+    @Column({ type: 'uuid' })
+    @IsUUID()
+    @IsNotEmpty({ message: 'Owner ID is required' })
+    ownerId!: string;
 
-    @CreateDateColumn()
-    created_at: Date;
+    /** Optional field specific to this example */
+    @Column({ 
+        type: 'varchar',
+        length: 255,
+        nullable: true 
+    })
+    @IsString()
+    @IsOptional()
+    description?: string;
 
-    @UpdateDateColumn()
-    updated_at: Date;
+    /** Timestamp of when the example was created */
+    @CreateDateColumn({ type: 'datetime' })
+    createdAt!: Date;
+
+    /** Timestamp of when the example was last modified */
+    @UpdateDateColumn({ type: 'datetime' })
+    modifiedAt!: Date;
 }
 ```
 
 #### DTO Structure
 Required Imports:
 ```typescript
-import { IsNotEmpty, IsUUID } from 'class-validator';
+import { IsString, IsUUID, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+import { ResponseOwnerDto } from '../Owner/ResponseOwnerDto';
 ```
 
 Key Points:
@@ -122,29 +145,69 @@ Example Pattern:
 // Create DTO
 export class CreateExampleDto {
     @ApiProperty({
-        description: 'The ID of the owner entity',
+        description: 'ID of the associated owner',
         example: '123e4567-e89b-12d3-a456-426614174000'
     })
-    @IsNotEmpty()
     @IsUUID()
-    owner_id: string;
+    @IsNotEmpty({ message: 'Owner ID is required' })
+    ownerId!: string;
+
+    @ApiProperty({
+        description: 'Optional description of the example',
+        example: 'Detailed description',
+        required: false
+    })
+    @IsString()
+    @IsOptional()
+    description?: string;
 }
 
 // Response DTO
+@Exclude()
 export class ResponseExampleDto {
     @Expose()
     @ApiProperty({
-        description: 'The unique identifier',
+        description: 'Unique identifier',
         example: '123e4567-e89b-12d3-a456-426614174000'
     })
-    id: string;
+    id!: string;
 
     @Expose()
     @ApiProperty({
-        description: 'The owner of this entity',
+        description: 'ID of the associated owner',
+        example: '123e4567-e89b-12d3-a456-426614174000'
+    })
+    ownerId!: string;
+
+    @Expose()
+    @Type(() => ResponseOwnerDto)
+    @ApiProperty({
+        description: 'The owner of this example',
         type: () => ResponseOwnerDto
     })
-    owner: ResponseOwnerDto;
+    owner?: ResponseOwnerDto;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Optional description of the example',
+        example: 'Detailed description',
+        required: false
+    })
+    description?: string;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Creation timestamp',
+        example: '2024-01-28T12:00:00.000Z'
+    })
+    createdAt!: Date;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Last modification timestamp',
+        example: '2024-01-28T12:00:00.000Z'
+    })
+    modifiedAt!: Date;
 }
 ```
 
@@ -248,4 +311,5 @@ export class ModifyOwnerWithExample implements MigrationInterface {
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.dropColumn('owner', 'example_id');
     }
+}
 }

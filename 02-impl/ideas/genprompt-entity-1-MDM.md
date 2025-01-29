@@ -60,107 +60,166 @@ You are a seasoned veteran software engineer that understands the problems cause
 #### Model Structure
 Required Imports:
 ```typescript
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { IsString, IsBoolean, IsNotEmpty, Length, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 ```
 
 Key Points:
-- Use appropriate TypeORM decorators for entity and columns
-- Include class-validator decorators for validation
-- Add indices for unique constraints
+- Use descriptive entity names
+- Add proper validation decorators
+- Include comprehensive documentation
+- Configure column types explicitly
+- Handle nullable fields appropriately
 - Follow consistent naming conventions
-- Include comprehensive JSDoc documentation
-- Handle null/undefined cases properly
-- Use proper column types and constraints
-- Follow established patterns for timestamps
 
 Example Pattern:
 ```typescript
-@Entity('example_table')
-@Index(['uniqueField'], { unique: true })
-export class ExampleEntity {
+/**
+ * Example entity representing a basic data model.
+ * Contains standard fields and validation patterns.
+ */
+@Entity('example')
+export class Example {
+    /** Unique identifier for the example */
     @PrimaryGeneratedColumn('uuid')
-    id: string;
+    id!: string;
 
-    @Column({ type: 'varchar', nullable: false })
-    @IsNotEmpty({ message: 'Field is required' })
-    requiredField: string;
+    /** Name of the example with length constraints */
+    @Column({ 
+        type: 'varchar',
+        length: 255 
+    })
+    @IsString()
+    @IsNotEmpty({ message: 'Name is required' })
+    @Length(1, 255, { message: 'Name must be between 1 and 255 characters' })
+    name!: string;
 
-    @Column({ type: 'varchar', nullable: true })
+    /** Description of the example */
+    @Column({ 
+        type: 'varchar',
+        length: 1000,
+        nullable: true 
+    })
+    @IsString()
     @IsOptional()
-    optionalField?: string;
+    @Length(0, 1000, { message: 'Description must not exceed 1000 characters' })
+    description?: string;
 
-    @CreateDateColumn()
-    createdAt: Date;
+    /** Flag indicating if the example is enabled */
+    @Column({ 
+        type: 'boolean',
+        default: true 
+    })
+    @IsBoolean()
+    isEnabled!: boolean;
+
+    /** Timestamp of when the example was created */
+    @CreateDateColumn({ type: 'datetime' })
+    createdAt!: Date;
+
+    /** Timestamp of when the example was last modified */
+    @UpdateDateColumn({ type: 'datetime' })
+    modifiedAt!: Date;
 }
 ```
 
 #### DTO Structure
 Required Imports:
 ```typescript
-// For Create DTO
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsBoolean, IsNotEmpty, Length, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-
-// For Response DTO
-import { ApiProperty } from '@nestjs/swagger';
-import { Exclude, Expose } from 'class-transformer';
+import { Expose } from 'class-transformer';
 ```
 
-Create DTO Key Points:
-- Include all required fields with proper validation
-- Add comprehensive OpenAPI documentation
-- Use appropriate class-validator decorators
-- Handle optional fields correctly
-- Include meaningful examples
-- Add clear validation messages
-- Follow consistent naming patterns
+Key Points:
+- Use clear field descriptions
+- Add proper validation
+- Include example values
+- Document required vs optional fields
+- Follow consistent naming
+- Handle nullable fields appropriately
 
-Example Create DTO Pattern:
+Example Pattern:
 ```typescript
+// Create DTO
 export class CreateExampleDto {
     @ApiProperty({
-        description: 'Clear description of the field purpose',
-        example: 'Example value'
+        description: 'Name of the example',
+        example: 'Example Name',
+        minLength: 1,
+        maxLength: 255
     })
-    @IsNotEmpty({ message: 'Clear validation message' })
-    requiredField: string;
+    @IsString()
+    @IsNotEmpty({ message: 'Name is required' })
+    @Length(1, 255, { message: 'Name must be between 1 and 255 characters' })
+    name!: string;
 
     @ApiProperty({
-        description: 'Optional field description',
-        required: false
+        description: 'Description of the example',
+        example: 'Detailed description of the example',
+        required: false,
+        maxLength: 1000
     })
+    @IsString()
     @IsOptional()
-    optionalField?: string;
+    @Length(0, 1000, { message: 'Description must not exceed 1000 characters' })
+    description?: string;
+
+    @ApiProperty({
+        description: 'Flag indicating if the example is enabled',
+        example: true,
+        default: true
+    })
+    @IsBoolean()
+    isEnabled!: boolean;
 }
-```
 
-Response DTO Key Points:
-- Use class-transformer decorators appropriately
-- Expose only necessary fields
-- Include comprehensive OpenAPI documentation
-- Handle date formatting consistently
-- Manage sensitive data appropriately
-- Follow established response patterns
-- Include meaningful examples
-
-Example Response DTO Pattern:
-```typescript
+// Response DTO
 @Exclude()
 export class ResponseExampleDto {
     @Expose()
     @ApiProperty({
-        description: 'Clear field description',
-        example: 'Meaningful example'
+        description: 'Unique identifier',
+        example: '123e4567-e89b-12d3-a456-426614174000'
     })
-    field: string;
+    id!: string;
 
     @Expose()
     @ApiProperty({
-        description: 'Timestamp field',
-        example: '2024-01-01T00:00:00Z'
+        description: 'Name of the example',
+        example: 'Example Name'
     })
-    createdAt: Date;
+    name!: string;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Description of the example',
+        example: 'Detailed description of the example',
+        required: false
+    })
+    description?: string;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Flag indicating if the example is enabled',
+        example: true
+    })
+    isEnabled!: boolean;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Creation timestamp',
+        example: '2024-01-28T12:00:00.000Z'
+    })
+    createdAt!: Date;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Last modification timestamp',
+        example: '2024-01-28T12:00:00.000Z'
+    })
+    modifiedAt!: Date;
 }
 ```
 

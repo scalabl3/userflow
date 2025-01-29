@@ -28,32 +28,88 @@ describe('LoginCredentialService', () => {
     let repository: Repository<LoginCredential>;
     let dataSource: DataSource;
 
-    const mockQueryRunner = {
-        connect: jest.fn(),
-        startTransaction: jest.fn(),
-        commitTransaction: jest.fn(),
-        rollbackTransaction: jest.fn(),
-        release: jest.fn(),
-        manager: {
-            save: jest.fn()
-        }
+    const mockCred: LoginCredential = {
+        id: 'cred123',
+        identifier: 'test@example.com',
+        loginProviderId: 'provider123',
+        loginProvider: {
+            id: 'provider123',
+            code: 'email',
+            name: 'Email Provider',
+            isEnabled: true,
+            createdAt: new Date(),
+            modifiedAt: new Date()
+        },
+        credentialType: CredentialType.PASSWORD,
+        passwordHash: 'hashedpassword',
+        isEnabled: true,
+        createdAt: new Date(),
+        modifiedAt: new Date()
+    };
+
+    const mockPasswordCredential: LoginCredential = {
+        id: 'cred123',
+        identifier: 'test@example.com',
+        loginProviderId: 'provider123',
+        loginProvider: {
+            id: 'provider123',
+            code: 'email',
+            name: 'Email Provider',
+            isEnabled: true,
+            createdAt: new Date(),
+            modifiedAt: new Date()
+        },
+        credentialType: CredentialType.PASSWORD,
+        passwordHash: 'hashedpassword',
+        isEnabled: true,
+        createdAt: new Date(),
+        modifiedAt: new Date()
+    };
+
+    const mockOAuthCredential: LoginCredential = {
+        id: 'cred456',
+        identifier: 'oauth-user',
+        loginProviderId: 'provider456',
+        loginProvider: {
+            id: 'provider456',
+            code: 'google',
+            name: 'Google',
+            isEnabled: true,
+            createdAt: new Date(),
+            modifiedAt: new Date()
+        },
+        credentialType: CredentialType.OAUTH,
+        provider: OAuthProvider.GOOGLE,
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        isEnabled: true,
+        createdAt: new Date(),
+        modifiedAt: new Date()
     };
 
     beforeEach(async () => {
-        const mockDataSource = {
-            createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner)
-        };
-
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 LoginCredentialService,
                 {
                     provide: getRepositoryToken(LoginCredential),
-                    useFactory: mockRepository,
+                    useClass: Repository,
                 },
                 {
                     provide: DataSource,
-                    useValue: mockDataSource,
+                    useValue: {
+                        createQueryRunner: jest.fn().mockReturnValue({
+                            connect: jest.fn(),
+                            startTransaction: jest.fn(),
+                            commitTransaction: jest.fn(),
+                            rollbackTransaction: jest.fn(),
+                            release: jest.fn(),
+                            manager: {
+                                save: jest.fn(),
+                                remove: jest.fn(),
+                            },
+                        }),
+                    },
                 },
             ],
         }).compile();
@@ -61,9 +117,6 @@ describe('LoginCredentialService', () => {
         service = module.get<LoginCredentialService>(LoginCredentialService);
         repository = module.get<Repository<LoginCredential>>(getRepositoryToken(LoginCredential));
         dataSource = module.get<DataSource>(DataSource);
-
-        // Reset mocks
-        jest.clearAllMocks();
     });
 
     describe('Service Setup', () => {

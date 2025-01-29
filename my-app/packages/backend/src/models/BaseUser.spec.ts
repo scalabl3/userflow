@@ -1,5 +1,6 @@
-import { BaseUser, UserState } from './BaseUser';
+import { BaseUser } from './BaseUser';
 import { LoginCredential } from './LoginCredential';
+import { UserState } from '@my-app/shared/dist/enums/UserState';
 
 describe('BaseUser', () => {
     let user: BaseUser;
