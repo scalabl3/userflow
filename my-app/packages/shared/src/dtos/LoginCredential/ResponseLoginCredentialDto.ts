@@ -1,8 +1,9 @@
-import { Expose, Type } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { CredentialType, OAuthProvider } from '../../enums/CredentialType';
 import { ResponseLoginProviderDto } from '../LoginProvider/ResponseLoginProviderDto';
 
+@Exclude()
 export class ResponseLoginCredentialDto {
     @Expose()
     @ApiProperty({

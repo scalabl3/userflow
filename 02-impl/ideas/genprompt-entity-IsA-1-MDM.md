@@ -134,18 +134,21 @@ export class SpecializedEntity extends BaseEntity {
 #### DTO Structure
 Required Imports:
 ```typescript
-import { IsString, IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsBoolean, IsNotEmpty, IsOptional, IsObject } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 ```
 
 Key Points:
 - Include base fields in DTOs
-- Add proper validation
+- Add proper validation for Create DTOs
 - Use clear field descriptions
 - Document inheritance behavior
 - Handle type-specific fields
 - Follow naming conventions
+- Use @Exclude() for Response DTOs
+- Use @Type() for nested objects/dates
+- No validation decorators in Response DTOs
 
 Example Pattern:
 ```typescript
@@ -162,12 +165,20 @@ export class CreateBaseDto {
     name!: string;
 
     @ApiProperty({
-        description: 'Flag indicating if the entity is enabled',
-        example: true,
-        default: true
+        description: 'Settings for the entity',
+        example: {
+            theme: 'light',
+            notifications: true
+        },
+        required: false
     })
-    @IsBoolean()
-    isEnabled!: boolean;
+    @IsOptional()
+    @IsObject()
+    @Type(() => Object)
+    settings?: {
+        theme?: string;
+        notifications?: boolean;
+    };
 }
 
 // Create DTO for Specialized Entity
@@ -201,16 +212,25 @@ export class ResponseBaseDto {
 
     @Expose()
     @ApiProperty({
-        description: 'Flag indicating if the entity is enabled',
-        example: true
+        description: 'Settings for the entity',
+        example: {
+            theme: 'light',
+            notifications: true
+        },
+        required: false
     })
-    isEnabled!: boolean;
+    @Type(() => Object)
+    settings?: {
+        theme?: string;
+        notifications?: boolean;
+    };
 
     @Expose()
     @ApiProperty({
         description: 'Creation timestamp',
         example: '2024-01-28T12:00:00.000Z'
     })
+    @Type(() => Date)
     createdAt!: Date;
 
     @Expose()
@@ -218,6 +238,7 @@ export class ResponseBaseDto {
         description: 'Last modification timestamp',
         example: '2024-01-28T12:00:00.000Z'
     })
+    @Type(() => Date)
     modifiedAt!: Date;
 }
 

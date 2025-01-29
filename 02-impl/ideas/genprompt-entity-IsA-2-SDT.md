@@ -134,8 +134,9 @@ export class ExampleService extends BaseEntityService {
 #### Update DTO Structure
 Required Imports:
 ```typescript
-import { IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsObject } from 'class-validator';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { CreateExampleDto } from './CreateExampleDto';
 ```
 
@@ -146,18 +147,49 @@ Key Points:
 - Include meaningful examples
 - Follow consistent naming patterns
 - Handle discriminator field
+- Make all fields optional with @IsOptional()
+- Use @Type() for nested objects/dates
+- Document required: false for all properties
 
 Example Pattern:
 ```typescript
 export class UpdateExampleDto extends PartialType(CreateExampleDto) {
     @ApiProperty({
-        description: 'Additional field specific to this entity type',
+        description: 'Name of the example',
+        example: 'Updated Example Name',
         required: false
     })
     @IsOptional()
-    additional_field?: string;
+    @IsString()
+    name?: string;
 
-    // Inherited fields are automatically included through PartialType
+    @ApiProperty({
+        description: 'Settings for the example',
+        example: {
+            theme: 'dark',
+            notifications: false
+        },
+        required: false
+    })
+    @IsOptional()
+    @IsObject()
+    @Type(() => Object)
+    settings?: {
+        theme?: string;
+        notifications?: boolean;
+    };
+
+    // Additional fields specific to this entity type
+    @ApiProperty({
+        description: 'Additional field specific to this entity type',
+        example: 'Special Value',
+        required: false
+    })
+    @IsOptional()
+    @IsString()
+    specialField?: string;
+
+    // Note: Inherited fields are automatically included through PartialType
 }
 ```
 

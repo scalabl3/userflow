@@ -1,6 +1,7 @@
 import { IsOptional, IsString, IsUUID, IsObject } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UpdateBaseUserDto } from '../BaseUser/UpdateBaseUserDto';
+import { Type } from 'class-transformer';
 
 export class UpdateUserDto extends UpdateBaseUserDto {
     @ApiProperty({
@@ -43,6 +44,7 @@ export class UpdateUserDto extends UpdateBaseUserDto {
     })
     @IsOptional()
     @IsObject()
+    @Type(() => Object)
     preferences?: {
         theme?: 'light' | 'dark';
         notifications?: {

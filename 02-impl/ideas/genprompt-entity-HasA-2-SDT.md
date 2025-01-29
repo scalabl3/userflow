@@ -110,12 +110,12 @@ export class ExampleService {
         try {
             const entity = await this.findById(id);
             
-            if (dto.owner_id) {
+            if (dto.ownerId) {
                 const owner = await this.ownerRepository.findOne({
-                    where: { id: dto.owner_id }
+                    where: { id: dto.ownerId }
                 });
                 if (!owner) {
-                    throw new NotFoundException(`Owner with ID ${dto.owner_id} not found`);
+                    throw new NotFoundException(`Owner with ID ${dto.ownerId} not found`);
                 }
                 entity.owner = owner;
             }
@@ -137,8 +137,9 @@ export class ExampleService {
 #### Update DTO Structure
 Required Imports:
 ```typescript
-import { IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsOptional, IsUUID, IsObject } from 'class-validator';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { CreateExampleDto } from './CreateExampleDto';
 ```
 
@@ -149,6 +150,9 @@ Key Points:
 - Add comprehensive relationship documentation
 - Include meaningful relationship examples
 - Follow consistent naming patterns
+- Make all fields optional with @IsOptional()
+- Use @Type() for nested objects/dates/relationships
+- Document required: false for all properties
 
 Example Pattern:
 ```typescript
@@ -160,7 +164,32 @@ export class UpdateExampleDto extends PartialType(CreateExampleDto) {
     })
     @IsOptional()
     @IsUUID()
-    owner_id?: string;
+    ownerId?: string;
+
+    @ApiProperty({
+        description: 'Settings for the example',
+        example: {
+            theme: 'dark',
+            notifications: false
+        },
+        required: false
+    })
+    @IsOptional()
+    @IsObject()
+    @Type(() => Object)
+    settings?: {
+        theme?: string;
+        notifications?: boolean;
+    };
+
+    @ApiProperty({
+        description: 'Optional description of the example',
+        example: 'Updated description',
+        required: false
+    })
+    @IsOptional()
+    @IsString()
+    description?: string;
 }
 ```
 
@@ -193,7 +222,7 @@ describe('ExampleService', () => {
 
     const mockEntity = {
         id: '123',
-        owner_id: '456',
+        ownerId: '456',
         owner: {
             id: '456',
             name: 'Owner'
@@ -243,7 +272,7 @@ describe('ExampleService', () => {
 
     describe('update', () => {
         it('should update entity with new owner and commit transaction', async () => {
-            const dto = { owner_id: '789' };
+            const dto = { ownerId: '789' };
             const newOwner = { id: '789', name: 'New Owner' };
             
             jest.spyOn(repository, 'findOne').mockResolvedValue(mockEntity);
@@ -252,11 +281,11 @@ describe('ExampleService', () => {
             const result = await service.update('123', dto);
             
             expect(result).toBeDefined();
-            expect(result.owner.id).toBe(dto.owner_id);
+            expect(result.owner.id).toBe(dto.ownerId);
         });
 
         it('should rollback transaction on owner not found', async () => {
-            const dto = { owner_id: '999' };
+            const dto = { ownerId: '999' };
             
             jest.spyOn(repository, 'findOne').mockResolvedValue(mockEntity);
             jest.spyOn(ownerRepository, 'findOne').mockResolvedValue(null);

@@ -5,4 +5,4 @@ export * from './utils';
 export * from './dtos';
 
 // Export all enums
-export * from './enums'; 
+export * from './enums';

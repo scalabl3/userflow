@@ -126,19 +126,22 @@ export class Example {
 #### DTO Structure
 Required Imports:
 ```typescript
-import { IsString, IsUUID, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsUUID, IsNotEmpty, IsOptional, IsObject } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { ResponseOwnerDto } from '../Owner/ResponseOwnerDto';
 ```
 
 Key Points:
 - Include relationship fields in DTOs
-- Add proper validation for foreign keys
+- Add proper validation for Create DTOs
 - Use clear field descriptions
 - Include relationship documentation
 - Handle nested objects appropriately
 - Follow naming conventions
+- Use @Exclude() for Response DTOs
+- Use @Type() for nested objects/dates/relationships
+- No validation decorators in Response DTOs
 
 Example Pattern:
 ```typescript
@@ -151,6 +154,22 @@ export class CreateExampleDto {
     @IsUUID()
     @IsNotEmpty({ message: 'Owner ID is required' })
     ownerId!: string;
+
+    @ApiProperty({
+        description: 'Settings for the example',
+        example: {
+            theme: 'light',
+            notifications: true
+        },
+        required: false
+    })
+    @IsOptional()
+    @IsObject()
+    @Type(() => Object)
+    settings?: {
+        theme?: string;
+        notifications?: boolean;
+    };
 
     @ApiProperty({
         description: 'Optional description of the example',
@@ -189,6 +208,21 @@ export class ResponseExampleDto {
 
     @Expose()
     @ApiProperty({
+        description: 'Settings for the example',
+        example: {
+            theme: 'light',
+            notifications: true
+        },
+        required: false
+    })
+    @Type(() => Object)
+    settings?: {
+        theme?: string;
+        notifications?: boolean;
+    };
+
+    @Expose()
+    @ApiProperty({
         description: 'Optional description of the example',
         example: 'Detailed description',
         required: false
@@ -200,6 +234,7 @@ export class ResponseExampleDto {
         description: 'Creation timestamp',
         example: '2024-01-28T12:00:00.000Z'
     })
+    @Type(() => Date)
     createdAt!: Date;
 
     @Expose()
@@ -207,6 +242,7 @@ export class ResponseExampleDto {
         description: 'Last modification timestamp',
         example: '2024-01-28T12:00:00.000Z'
     })
+    @Type(() => Date)
     modifiedAt!: Date;
 }
 ```

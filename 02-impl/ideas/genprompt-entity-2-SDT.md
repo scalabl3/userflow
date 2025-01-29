@@ -114,28 +114,49 @@ export class ExampleService {
 #### Update DTO Structure
 Required Imports:
 ```typescript
-import { IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsObject } from 'class-validator';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { CreateExampleDto } from './CreateExampleDto';
 ```
 
 Key Points:
 - Extend from PartialType of Create DTO when possible
-- Make all fields optional
+- Make all fields optional with @IsOptional()
 - Keep validation rules from Create DTO
 - Add comprehensive OpenAPI documentation
 - Include meaningful examples
 - Follow consistent naming patterns
+- Use @Type() for nested objects/dates
+- Document required: false for all properties
 
 Example Pattern:
 ```typescript
 export class UpdateExampleDto extends PartialType(CreateExampleDto) {
     @ApiProperty({
-        description: 'Optional field description',
+        description: 'Name of the example',
+        example: 'Updated Example Name',
         required: false
     })
     @IsOptional()
-    optionalField?: string;
+    @IsString()
+    name?: string;
+
+    @ApiProperty({
+        description: 'Settings for the example',
+        example: {
+            theme: 'dark',
+            notifications: false
+        },
+        required: false
+    })
+    @IsOptional()
+    @IsObject()
+    @Type(() => Object)
+    settings?: {
+        theme?: string;
+        notifications?: boolean;
+    };
 }
 ```
 

@@ -1,15 +1,14 @@
-import { IsString, IsBoolean, IsUUID, IsDate, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { ResponseUserDto } from '../User/ResponseUserDto';
 
+@Exclude()
 export class ResponseOrganizationDto {
     @Expose()
     @ApiProperty({
         description: 'Unique identifier',
         example: '123e4567-e89b-12d3-a456-426614174000'
     })
-    @IsUUID()
     id!: string;
 
     @Expose()
@@ -19,8 +18,6 @@ export class ResponseOrganizationDto {
         minLength: 1,
         maxLength: 255
     })
-    @IsString()
-    @Length(1, 255)
     name!: string;
 
     @Expose()
@@ -29,7 +26,6 @@ export class ResponseOrganizationDto {
         example: true,
         default: false
     })
-    @IsBoolean()
     visible!: boolean;
 
     @Expose()
@@ -37,7 +33,6 @@ export class ResponseOrganizationDto {
         description: 'ID of the admin user',
         example: '123e4567-e89b-12d3-a456-426614174000'
     })
-    @IsUUID()
     adminUser!: string;
 
     @Expose()
@@ -54,7 +49,6 @@ export class ResponseOrganizationDto {
         description: 'Creation timestamp',
         example: '2024-01-28T12:00:00.000Z'
     })
-    @IsDate()
     createdAt!: Date;
 
     @Expose()
@@ -62,6 +56,5 @@ export class ResponseOrganizationDto {
         description: 'Last modification timestamp',
         example: '2024-01-28T12:00:00.000Z'
     })
-    @IsDate()
     modifiedAt!: Date;
 }

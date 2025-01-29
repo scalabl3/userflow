@@ -1,6 +1,8 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
 
+@Exclude()
 export class ResponseLoginProviderDto {
     @Expose()
     @ApiProperty({

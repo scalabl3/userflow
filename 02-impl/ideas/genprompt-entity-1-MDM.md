@@ -127,18 +127,21 @@ export class Example {
 #### DTO Structure
 Required Imports:
 ```typescript
-import { IsString, IsBoolean, IsNotEmpty, Length, IsOptional } from 'class-validator';
+import { IsString, IsBoolean, IsNotEmpty, Length, IsOptional, IsObject } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 ```
 
 Key Points:
 - Use clear field descriptions
-- Add proper validation
+- Add proper validation for Create DTOs
 - Include example values
 - Document required vs optional fields
 - Follow consistent naming
 - Handle nullable fields appropriately
+- Use @Exclude() for Response DTOs
+- Use @Type() for nested objects/dates
+- No validation decorators in Response DTOs
 
 Example Pattern:
 ```typescript
@@ -156,23 +159,20 @@ export class CreateExampleDto {
     name!: string;
 
     @ApiProperty({
-        description: 'Description of the example',
-        example: 'Detailed description of the example',
-        required: false,
-        maxLength: 1000
+        description: 'Settings for the example',
+        example: {
+            theme: 'light',
+            notifications: true
+        },
+        required: false
     })
-    @IsString()
     @IsOptional()
-    @Length(0, 1000, { message: 'Description must not exceed 1000 characters' })
-    description?: string;
-
-    @ApiProperty({
-        description: 'Flag indicating if the example is enabled',
-        example: true,
-        default: true
-    })
-    @IsBoolean()
-    isEnabled!: boolean;
+    @IsObject()
+    @Type(() => Object)
+    settings?: {
+        theme?: string;
+        notifications?: boolean;
+    };
 }
 
 // Response DTO
@@ -194,24 +194,25 @@ export class ResponseExampleDto {
 
     @Expose()
     @ApiProperty({
-        description: 'Description of the example',
-        example: 'Detailed description of the example',
+        description: 'Settings for the example',
+        example: {
+            theme: 'light',
+            notifications: true
+        },
         required: false
     })
-    description?: string;
-
-    @Expose()
-    @ApiProperty({
-        description: 'Flag indicating if the example is enabled',
-        example: true
-    })
-    isEnabled!: boolean;
+    @Type(() => Object)
+    settings?: {
+        theme?: string;
+        notifications?: boolean;
+    };
 
     @Expose()
     @ApiProperty({
         description: 'Creation timestamp',
         example: '2024-01-28T12:00:00.000Z'
     })
+    @Type(() => Date)
     createdAt!: Date;
 
     @Expose()
@@ -219,6 +220,7 @@ export class ResponseExampleDto {
         description: 'Last modification timestamp',
         example: '2024-01-28T12:00:00.000Z'
     })
+    @Type(() => Date)
     modifiedAt!: Date;
 }
 ```

@@ -1,6 +1,10 @@
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+
+type MockType<T> = {
+    [P in keyof T]?: jest.Mock<any>;
+};
 
 // Mock TypeORM's Repository
 export const mockRepository = () => ({
@@ -20,7 +24,7 @@ export const mockRepository = () => ({
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
   })),
-});
+}) as MockType<Repository<any>>;
 
 // Mock DataSource
 export const mockDataSource = {

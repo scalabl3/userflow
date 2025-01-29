@@ -1,5 +1,6 @@
 import { IsOptional, IsString, IsUUID, IsObject } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class CreateUserDto {
     // Base user fields
@@ -59,6 +60,7 @@ export class CreateUserDto {
     })
     @IsOptional()
     @IsObject()
+    @Type(() => Object)
     preferences?: {
         theme?: 'light' | 'dark';
         notifications?: {

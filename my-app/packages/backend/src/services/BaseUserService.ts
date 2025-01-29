@@ -2,9 +2,11 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, DeepPartial } from 'typeorm';
 import { BaseUser } from '../models/BaseUser';
-import { CreateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/CreateBaseUserDto';
-import { UpdateBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/UpdateBaseUserDto';
-import { ResponseBaseUserDto } from '@my-app/shared/dist/dtos/BaseUser/ResponseBaseUserDto';
+import { 
+    CreateBaseUserDto,
+    UpdateBaseUserDto,
+    ResponseBaseUserDto
+} from '@my-app/shared';
 import { ServiceBase } from '../utils/service-utils';
 
 @Injectable()
@@ -20,59 +22,44 @@ export class BaseUserService extends ServiceBase<BaseUser> {
         super();
     }
 
-    async createBaseUser(createBaseUserDto: CreateBaseUserDto): Promise<ResponseBaseUserDto> {
-        return this.withTransaction(async (queryRunner) => {
-            if (!createBaseUserDto.primaryLoginCredentialId) {
-                throw new BadRequestException('A user must have at least one login credential');
-            }
-
-            const entity = await super.create(createBaseUserDto as DeepPartial<BaseUser>, queryRunner);
-            return this.toResponseDto(entity, ResponseBaseUserDto)!;
-        }, 'create', undefined, { dto: createBaseUserDto });
-    }
-
     async findAllBaseUsers(): Promise<ResponseBaseUserDto[]> {
-        const users = await this.repository.find({
-            relations: {
-                loginCredentials: true,
-                primaryLoginCredential: true
-            }
-        });
+        const users = await this.findAll();
         return this.toResponseDtoArray(users, ResponseBaseUserDto);
     }
 
-    async findOneBaseUser(id: string): Promise<ResponseBaseUserDto> {
-        const user = await this.repository.findOne({
-            where: { id },
-            relations: {
-                loginCredentials: true,
-                primaryLoginCredential: true
-            }
-        });
-        
-        await this.validateExists(id);
-        return this.toResponseDto(user, ResponseBaseUserDto)!;
+    async findOneBaseUser(id: string): Promise<ResponseBaseUserDto | null> {
+        const user = await this.findOne(id);
+        return user ? this.toResponseDto(user, ResponseBaseUserDto)! : null;
     }
 
-    async updateBaseUser(id: string, updateBaseUserDto: UpdateBaseUserDto): Promise<ResponseBaseUserDto> {
+    async createBaseUser(createDto: CreateBaseUserDto): Promise<ResponseBaseUserDto> {
         return this.withTransaction(async (queryRunner) => {
-            await this.validateExists(id);
-
-            // Only check primaryLoginCredentialId if it's included in the update
-            if ('primaryLoginCredentialId' in updateBaseUserDto) {
-                if (!updateBaseUserDto.primaryLoginCredentialId) {
-                    throw new BadRequestException('A user must maintain at least one login credential');
-                }
+            if (!createDto.primaryLoginCredentialId) {
+                throw new BadRequestException('A user must have at least one login credential');
             }
 
-            const entity = await super.update(id, updateBaseUserDto as DeepPartial<BaseUser>, queryRunner);
+            const entity = await this.create(createDto as DeepPartial<BaseUser>, queryRunner);
             return this.toResponseDto(entity, ResponseBaseUserDto)!;
-        }, 'update', id, { dto: updateBaseUserDto });
+        }, 'create', undefined, { dto: createDto });
     }
 
-    async removeBaseUser(id: string): Promise<void> {
-        await this.withTransaction(async (queryRunner) => {
-            await super.remove(id, queryRunner);
+    async updateBaseUser(id: string, updateDto: UpdateBaseUserDto): Promise<ResponseBaseUserDto | null> {
+        return this.withTransaction(async (queryRunner) => {
+            // Only check primaryLoginCredentialId if it's included in the update
+            if ('primaryLoginCredentialId' in updateDto && !updateDto.primaryLoginCredentialId) {
+                throw new BadRequestException('A user must maintain at least one login credential');
+            }
+
+            const entity = await this.update(id, updateDto as DeepPartial<BaseUser>, queryRunner);
+            return entity ? this.toResponseDto(entity, ResponseBaseUserDto)! : null;
+        }, 'update', id, { dto: updateDto });
+    }
+
+    async removeBaseUser(id: string): Promise<boolean> {
+        return this.withTransaction(async (queryRunner) => {
+            return this.remove(id, queryRunner);
         }, 'remove', id);
     }
+
+    // Additional domain-specific methods can be added here
 }

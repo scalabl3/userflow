@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import { UserState } from '../../enums/UserState';
 
+@Exclude()
 export class ResponseBaseUserDto {
     @Expose()
     @ApiProperty({
@@ -23,13 +24,6 @@ export class ResponseBaseUserDto {
         example: 'Doe'
     })
     lastname!: string;
-
-    @Expose()
-    @ApiProperty({
-        description: 'User\'s display name',
-        example: 'John Doe'
-    })
-    displayname!: string;
 
     @Expose()
     @ApiProperty({
