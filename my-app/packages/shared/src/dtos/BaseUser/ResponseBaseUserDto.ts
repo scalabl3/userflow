@@ -42,14 +42,6 @@ export class ResponseBaseUserDto {
 
     @Expose()
     @ApiProperty({
-        description: 'ID of primary login credential',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-        required: false
-    })
-    primaryLoginCredentialId?: string;
-
-    @Expose()
-    @ApiProperty({
         description: 'Last login timestamp',
         example: '2024-01-28T12:00:00.000Z',
         required: false

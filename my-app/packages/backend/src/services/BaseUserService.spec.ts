@@ -9,6 +9,7 @@ import { BadRequestException } from '@nestjs/common';
 import { user as userMock } from '../test/__mocks__/user.mock';
 import { auth as authMock } from '../test/__mocks__/auth.mock';
 import { mockRepository } from '../test/setup';
+import { plainToClass } from 'class-transformer';
 
 type MockType<T> = {
     [P in keyof T]?: jest.Mock<any>;
@@ -69,15 +70,14 @@ describe('BaseUserService', () => {
     describe('findAllBaseUsers', () => {
         it('should return all users with their credentials', async () => {
             const users = [userMock.base];
-            const responseDto = new ResponseBaseUserDto(users[0]);
+            const responseDto = plainToClass(ResponseBaseUserDto, users[0]);
             repository.find?.mockImplementation(async () => users);
 
             const result = await service.findAllBaseUsers();
             expect(result).toEqual([responseDto]);
             expect(repository.find).toHaveBeenCalledWith({
                 relations: {
-                    loginCredentials: true,
-                    primaryLoginCredential: true
+                    loginCredentials: true
                 }
             });
         });
@@ -93,7 +93,7 @@ describe('BaseUserService', () => {
     describe('findOneBaseUser', () => {
         it('should return user with login credentials', async () => {
             const user = userMock.base;
-            const responseDto = new ResponseBaseUserDto(user);
+            const responseDto = plainToClass(ResponseBaseUserDto, user);
             repository.findOne?.mockImplementation(async () => user);
 
             const result = await service.findOneBaseUser(user.id);
@@ -102,8 +102,7 @@ describe('BaseUserService', () => {
             expect(repository.findOne).toHaveBeenCalledWith({
                 where: { id: user.id },
                 relations: {
-                    loginCredentials: true,
-                    primaryLoginCredential: true
+                    loginCredentials: true
                 }
             });
         });
@@ -117,16 +116,15 @@ describe('BaseUserService', () => {
     });
 
     describe('createBaseUser', () => {
-        it('should create a user with a login credential', async () => {
+        it('should create a user', async () => {
             const createUserDto: CreateBaseUserDto = {
                 firstname: userMock.base.firstname,
                 lastname: userMock.base.lastname,
-                contactEmail: userMock.base.contactEmail,
-                primaryLoginCredentialId: authMock.credentials.password.id
+                contactEmail: userMock.base.contactEmail
             };
 
             const savedUser = userMock.base;
-            const responseDto = new ResponseBaseUserDto(savedUser);
+            const responseDto = plainToClass(ResponseBaseUserDto, savedUser);
 
             mockManager.save = jest.fn().mockResolvedValue(savedUser);
             repository.create?.mockImplementation(() => savedUser);
@@ -139,24 +137,11 @@ describe('BaseUserService', () => {
             expect(mockQueryRunner.release).toHaveBeenCalled();
         });
 
-        it('should throw error if no login credential is provided', async () => {
-            const createUserDto: CreateBaseUserDto = {
-                firstname: userMock.base.firstname,
-                lastname: userMock.base.lastname,
-                contactEmail: userMock.base.contactEmail
-            };
-
-            await expect(service.createBaseUser(createUserDto))
-                .rejects
-                .toThrow(BadRequestException);
-        });
-
         it('should rollback transaction on error', async () => {
             const createUserDto: CreateBaseUserDto = {
                 firstname: userMock.base.firstname,
                 lastname: userMock.base.lastname,
-                contactEmail: userMock.base.contactEmail,
-                primaryLoginCredentialId: authMock.credentials.password.id
+                contactEmail: userMock.base.contactEmail
             };
 
             const error = new Error('Database error');
@@ -175,7 +160,7 @@ describe('BaseUserService', () => {
         it('should update user state', async () => {
             const updateDto: UpdateBaseUserDto = { state: UserState.ACTIVE };
             const updatedUser = { ...userMock.base, ...updateDto };
-            const responseDto = new ResponseBaseUserDto(updatedUser);
+            const responseDto = plainToClass(ResponseBaseUserDto, updatedUser);
 
             mockManager.save = jest.fn().mockResolvedValue(updatedUser);
             repository.findOne?.mockImplementation(async () => updatedUser);
@@ -188,15 +173,6 @@ describe('BaseUserService', () => {
             expect(mockQueryRunner.release).toHaveBeenCalled();
         });
 
-        it('should not allow removing primary login credential', async () => {
-            const updateDto: UpdateBaseUserDto = { primaryLoginCredentialId: undefined };
-            repository.findOne?.mockImplementation(async () => userMock.base);
-
-            await expect(service.updateBaseUser(userMock.base.id, updateDto))
-                .rejects
-                .toThrow(BadRequestException);
-        });
-
         it('should return null if user not found', async () => {
             repository.findOne?.mockImplementation(async () => null);
 
@@ -204,7 +180,7 @@ describe('BaseUserService', () => {
             expect(result).toBeNull();
         });
 
-        it('should allow updating fields other than primaryLoginCredentialId', async () => {
+        it('should allow updating all user fields', async () => {
             const updateDto: UpdateBaseUserDto = {
                 firstname: 'Updated',
                 lastname: 'User',
@@ -214,7 +190,7 @@ describe('BaseUserService', () => {
             };
 
             const updatedUser = { ...userMock.base, ...updateDto };
-            const responseDto = new ResponseBaseUserDto(updatedUser);
+            const responseDto = plainToClass(ResponseBaseUserDto, updatedUser);
 
             mockManager.save = jest.fn().mockResolvedValue(updatedUser);
             repository.findOne?.mockImplementation(async () => updatedUser);

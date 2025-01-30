@@ -4,7 +4,20 @@ import { LoginCredential } from './LoginCredential';
 
 /**
  * LoginProvider entity represents authentication methods available in the system.
- * Examples include email, Google, phone, etc.
+ * 
+ * Relationships:
+ * - One LoginProvider has many LoginCredentials (1:M)
+ * - LoginCredentials are prevented from being orphaned (RESTRICT)
+ * 
+ * Core Features:
+ * - Unique code identifier for each provider (e.g., 'google', 'apple')
+ * - Human-readable name for display
+ * - Can be disabled to temporarily prevent new logins
+ * 
+ * Examples:
+ * - Email/Password
+ * - OAuth providers (Google, Apple, etc.)
+ * - Phone number
  */
 @Entity()
 export class LoginProvider {
@@ -13,12 +26,12 @@ export class LoginProvider {
     id!: string;
 
     // Required Core Fields
-    @Column({ type: 'varchar', unique: true })
+    @Column({ type: 'varchar', length: 50, unique: true })
     @IsString()
     @Length(1, 50)
     code!: string;
 
-    @Column({ type: 'varchar' })
+    @Column({ type: 'varchar', length: 255 })
     @IsString()
     @Length(1, 255)
     name!: string;
@@ -29,13 +42,21 @@ export class LoginProvider {
     isEnabled!: boolean;
 
     // Relationship Fields
-    @OneToMany(() => LoginCredential, credential => credential.loginProvider)
+    @OneToMany(() => LoginCredential, credential => credential.loginProvider, {
+        onDelete: 'RESTRICT'  // Prevent deletion if credentials exist
+    })
     credentials!: LoginCredential[];
 
     // Timestamps
-    @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    @CreateDateColumn({ 
+        type: 'datetime',
+        default: () => 'CURRENT_TIMESTAMP'
+    })
     createdAt!: Date;
 
-    @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    @UpdateDateColumn({ 
+        type: 'datetime',
+        default: () => 'CURRENT_TIMESTAMP'
+    })
     modifiedAt!: Date;
 } 

@@ -93,8 +93,6 @@ export class TestDataFactory {
     // Create base user with reference to credential
     const baseUser = this.createBaseUser(false, {
       ...overrides,
-      primaryLoginCredential: credential,
-      primaryLoginCredentialId: credential.id,
       loginCredentials: [credential]
     });
 
@@ -116,8 +114,6 @@ export class TestDataFactory {
     const user = this.createUser({
       ...overrides,
       ...baseUser,
-      primaryLoginCredential: credential,
-      primaryLoginCredentialId: credential.id,
       loginCredentials: [credential]
     });
 

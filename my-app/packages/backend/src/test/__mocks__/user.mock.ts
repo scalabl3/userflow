@@ -18,7 +18,6 @@ const baseUserDtos = {
     lastname: 'Doe',
     contactEmail: 'john@example.com',
     state: UserState.ACTIVE,
-    primaryLoginCredentialId: core.ids.passwordCred,
     isEnabled: true
   } as CreateBaseUserDto,
   update: {
@@ -33,7 +32,6 @@ const baseUserDtos = {
     contactEmail: 'john@example.com',
     state: UserState.ACTIVE,
     isEnabled: true,
-    primaryLoginCredentialId: core.ids.passwordCred,
     lastLoginAt: core.timestamps.past,
     createdAt: core.timestamps.past,
     modifiedAt: core.timestamps.now
@@ -70,7 +68,6 @@ const userDtos = {
         push: true
       }
     },
-    primaryLoginCredentialId: core.ids.passwordCred,
     lastLoginAt: core.timestamps.past,
     createdAt: core.timestamps.past,
     modifiedAt: core.timestamps.now
@@ -87,8 +84,6 @@ export const user = {
     isEnabled: true,
     createdAt: core.timestamps.past,
     modifiedAt: core.timestamps.now,
-    primaryLoginCredentialId: core.ids.passwordCred,
-    primaryLoginCredential: auth.credentials.password,
     loginCredentials: [auth.credentials.password],
     lastLoginAt: core.timestamps.past
   } as BaseUser,
@@ -101,8 +96,6 @@ export const user = {
     isEnabled: true,
     createdAt: core.timestamps.past,
     modifiedAt: core.timestamps.now,
-    primaryLoginCredentialId: core.ids.passwordCred,
-    primaryLoginCredential: auth.credentials.password,
     loginCredentials: [auth.credentials.password],
     lastLoginAt: core.timestamps.past,
     username: 'johndoe',

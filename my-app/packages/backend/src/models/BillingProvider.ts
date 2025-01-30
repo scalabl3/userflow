@@ -25,7 +25,7 @@ export class BillingProvider {
 
     /** Type of billing provider (e.g., STRIPE, PAYPAL, APPLE_PAY) */
     @Column({
-        type: 'enum',
+        type: 'varchar',
         enum: BillingProviderType
     })
     @IsEnum(BillingProviderType, { message: 'Invalid billing provider type' })

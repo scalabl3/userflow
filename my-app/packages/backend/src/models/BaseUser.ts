@@ -5,16 +5,30 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     OneToMany,
-    ManyToOne,
-    JoinColumn,
 } from 'typeorm';
 import { LoginCredential } from './LoginCredential';
-import { IsString, IsEmail, IsEnum, IsUUID, IsBoolean, IsOptional } from 'class-validator';
+import { IsString, IsEmail, IsEnum, IsBoolean } from 'class-validator';
 import { UserState } from '@my-app/shared/dist/enums/UserState';
 
 /**
- * Base user entity that contains common user properties.
- * Extended by specific user types like User.
+ * BaseUser entity represents the core user identity in the system.
+ * It contains essential user information and manages authentication state.
+ * 
+ * Key features:
+ * - Core identity separate from authentication methods
+ * - Supports multiple login credentials per user
+ * - State management for user lifecycle
+ * - Unique contact email for notifications and login
+ * 
+ * Relationships:
+ * - One-to-Many with LoginCredential (baseUser -> loginCredentials)
+ * - Each LoginCredential must belong to exactly one BaseUser
+ * - Multiple credentials allowed, but unique per provider
+ * 
+ * Constraints:
+ * - contactEmail must be unique
+ * - Must have valid state from enum
+ * - Cannot be deleted if has active LoginCredentials
  */
 @Entity()
 export class BaseUser {
@@ -49,15 +63,6 @@ export class BaseUser {
     isEnabled!: boolean;
 
     // Relationship Fields
-    @Column({ type: 'uuid', nullable: true })
-    @IsUUID()
-    @IsOptional()
-    primaryLoginCredentialId?: string;
-
-    @ManyToOne(() => LoginCredential, { nullable: true })
-    @JoinColumn({ name: 'primaryLoginCredentialId' })
-    primaryLoginCredential?: LoginCredential;
-
     @OneToMany(() => LoginCredential, credential => credential.baseUser)
     loginCredentials!: LoginCredential[];
 

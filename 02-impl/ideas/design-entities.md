@@ -86,16 +86,25 @@ The user authentication system supports multiple login methods per user while ma
   - `id`: UUID
   - `firstname`: string
   - `lastname`: string
-  - `contactEmail`: string (for notifications only)
+  - `contactEmail`: string (unique, for notifications and login)
   - `state`: enum (PENDING, ACTIVE, SUSPENDED, DEACTIVATED)
-  - `primaryLoginCredentialId`: UUID (references LoginCredential)
-  - `lastLoginAt`: datetime (nullable)
   - `isEnabled`: boolean
+  - `lastLoginAt`: datetime (nullable)
   - `createdAt`: datetime
   - `modifiedAt`: datetime
 - Relationships:
-  - One-to-Many with LoginCredential
-  - One user can have multiple credentials but only one per provider
+  - One-to-Many with LoginCredential (baseUser -> loginCredentials)
+  - Each LoginCredential must belong to exactly one BaseUser
+  - Multiple credentials allowed, but unique per provider
+- Constraints:
+  - contactEmail must be unique
+  - Must have valid state from enum
+  - Cannot be deleted if has active LoginCredentials
+- Notes:
+  - Core identity separate from authentication methods
+  - State transitions managed through service layer
+  - Supports multiple authentication methods per user
+  - Timestamps automatically managed by TypeORM
 
 ### User (✓ Implemented)
 - Extends BaseUser with organization fields and user information

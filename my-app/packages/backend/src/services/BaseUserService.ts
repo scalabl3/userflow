@@ -34,10 +34,6 @@ export class BaseUserService extends ServiceBase<BaseUser> {
 
     async createBaseUser(createDto: CreateBaseUserDto): Promise<ResponseBaseUserDto> {
         return this.withTransaction(async (queryRunner) => {
-            if (!createDto.primaryLoginCredentialId) {
-                throw new BadRequestException('A user must have at least one login credential');
-            }
-
             const entity = await this.create(createDto as DeepPartial<BaseUser>, queryRunner);
             return this.toResponseDto(entity, ResponseBaseUserDto)!;
         }, 'create', undefined, { dto: createDto });
@@ -45,11 +41,6 @@ export class BaseUserService extends ServiceBase<BaseUser> {
 
     async updateBaseUser(id: string, updateDto: UpdateBaseUserDto): Promise<ResponseBaseUserDto | null> {
         return this.withTransaction(async (queryRunner) => {
-            // Only check primaryLoginCredentialId if it's included in the update
-            if ('primaryLoginCredentialId' in updateDto && !updateDto.primaryLoginCredentialId) {
-                throw new BadRequestException('A user must maintain at least one login credential');
-            }
-
             const entity = await this.update(id, updateDto as DeepPartial<BaseUser>, queryRunner);
             return entity ? this.toResponseDto(entity, ResponseBaseUserDto)! : null;
         }, 'update', id, { dto: updateDto });

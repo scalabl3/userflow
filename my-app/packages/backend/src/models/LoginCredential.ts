@@ -10,12 +10,37 @@ import {
     IsBoolean, 
     IsDate, 
     IsObject, 
-    ValidateIf 
+    ValidateIf,
+    ValidateNested 
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { getModelRelationConfig, getEnumColumn } from '../migrations/helpers';
+
+/**
+ * Represents OAuth-specific profile data
+ */
+class OAuthProfile {
+    @IsObject()
+    @IsOptional()
+    rawData?: Record<string, any>;
+
+    @IsString()
+    @IsOptional()
+    scope?: string;
+}
 
 /**
  * LoginCredential entity represents authentication methods for users.
- * Supports both password-based and OAuth-based authentication.
+ * 
+ * Relationships:
+ * - Many LoginCredentials belong to one LoginProvider (M:1)
+ * - Many LoginCredentials belong to one BaseUser (M:1)
+ * - Both relationships are required and protected from deletion (RESTRICT)
+ * 
+ * Supports:
+ * - Password-based authentication (passwordHash)
+ * - OAuth-based authentication (provider, tokens, profile)
+ * - Apple-specific OAuth fields
  */
 @Entity()
 @Index(['identifier', 'loginProviderId'], { unique: true })
@@ -31,13 +56,14 @@ export class LoginCredential {
     @IsString()
     identifier!: string;
 
-    @Column('uuid')
+    @Column({ type: 'uuid', nullable: false })
     @IsUUID()
     loginProviderId!: string;
 
-    @Column({
+    @Column({ 
         type: 'varchar',
-        enum: CredentialType
+        enum: CredentialType,
+        enumName: 'credential_type'
     })
     @IsEnum(CredentialType)
     credentialType!: CredentialType;
@@ -48,18 +74,17 @@ export class LoginCredential {
     isEnabled!: boolean;
 
     // Relationship Fields
-    @ManyToOne(() => LoginProvider)
+    @ManyToOne(() => LoginProvider, getModelRelationConfig(true, 'RESTRICT').relationOptions)
     @JoinColumn({ name: 'loginProviderId' })
     loginProvider!: LoginProvider;
 
-    @Column('uuid', { nullable: true })
+    @Column({ type: 'uuid', nullable: false })
     @IsUUID()
-    @IsOptional()
-    baseUserId?: string;
+    baseUserId!: string;
 
-    @ManyToOne(() => BaseUser, baseUser => baseUser.loginCredentials)
+    @ManyToOne(() => BaseUser, baseUser => baseUser.loginCredentials, getModelRelationConfig(true, 'RESTRICT').relationOptions)
     @JoinColumn({ name: 'baseUserId' })
-    baseUser?: BaseUser;
+    baseUser!: BaseUser;
 
     // Password-specific Fields
     @ValidateIf(o => o.credentialType === CredentialType.PASSWORD)
@@ -70,10 +95,11 @@ export class LoginCredential {
 
     // OAuth-specific Fields
     @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
-    @Column({
+    @Column({ 
         type: 'varchar',
         enum: OAuthProvider,
-        nullable: true
+        enumName: 'oauth_provider',
+        nullable: true 
     })
     @IsEnum(OAuthProvider)
     @IsOptional()
@@ -104,16 +130,19 @@ export class LoginCredential {
     refreshTokenExpiresAt?: Date;
 
     @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
-    @Column({ nullable: true })
-    @IsString()
-    @IsOptional()
-    scope?: string;
-
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
-    @Column({ type: 'simple-json', nullable: true })
+    @Column({ 
+        type: 'simple-json', 
+        nullable: true,
+        default: {
+            scope: '',
+            rawData: {}
+        }
+    })
     @IsObject()
+    @ValidateNested()
+    @Type(() => OAuthProfile)
     @IsOptional()
-    rawProfile?: Record<string, any>;
+    profile?: OAuthProfile;
 
     // Apple-specific Fields
     @ValidateIf(o => o.provider === OAuthProvider.APPLE)
@@ -141,9 +170,15 @@ export class LoginCredential {
     nonce?: string;
 
     // Timestamps
-    @CreateDateColumn()
+    @CreateDateColumn({ 
+        type: 'datetime',
+        default: () => 'CURRENT_TIMESTAMP'
+    })
     createdAt!: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ 
+        type: 'datetime',
+        default: () => 'CURRENT_TIMESTAMP'
+    })
     modifiedAt!: Date;
 }

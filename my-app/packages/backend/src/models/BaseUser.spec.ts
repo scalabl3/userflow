@@ -29,8 +29,6 @@ describe('BaseUser', () => {
     });
 
     it('should handle optional fields', () => {
-        expect(user.primaryLoginCredentialId).toBeUndefined();
-        expect(user.primaryLoginCredential).toBeUndefined();
         expect(user.lastLoginAt).toBeUndefined();
     });
 
@@ -74,23 +72,6 @@ describe('BaseUser', () => {
         expect(user.lastLoginAt).toBe(loginTime);
     });
 
-    it('should handle login credential relationship', () => {
-        user.primaryLoginCredentialId = loginCredential.id;
-        expect(user.primaryLoginCredentialId).toBe(loginCredential.id);
-    });
-
-    it('should handle primary login credential relationship', () => {
-        const user = new BaseUser();
-        const credential = new LoginCredential();
-        credential.id = '123';
-        
-        user.primaryLoginCredentialId = credential.id;
-        user.primaryLoginCredential = credential;
-        
-        expect(user.primaryLoginCredentialId).toBe('123');
-        expect(user.primaryLoginCredential).toBe(credential);
-    });
-
     it('should handle login credentials relationship', () => {
         const user = new BaseUser();
         const credential1 = new LoginCredential();
@@ -101,15 +82,6 @@ describe('BaseUser', () => {
         expect(user.loginCredentials).toHaveLength(2);
         expect(user.loginCredentials).toContain(credential1);
         expect(user.loginCredentials).toContain(credential2);
-    });
-
-    it('should handle lastLoginAt field', () => {
-        const user = new BaseUser();
-        const now = new Date();
-        
-        user.lastLoginAt = now;
-        
-        expect(user.lastLoginAt).toBe(now);
     });
 
     it('should handle isEnabled field', () => {

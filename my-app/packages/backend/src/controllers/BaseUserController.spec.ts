@@ -64,8 +64,7 @@ describe('BaseUserController', () => {
             const createBaseUserDto: CreateBaseUserDto = {
                 firstname: userMock.base.firstname,
                 lastname: userMock.base.lastname,
-                contactEmail: userMock.base.contactEmail,
-                primaryLoginCredentialId: authMock.credentials.password.id
+                contactEmail: userMock.base.contactEmail
             };
 
             jest.spyOn(service, 'create').mockResolvedValue(userMock.base);

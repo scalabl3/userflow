@@ -41,15 +41,6 @@ export class UpdateBaseUserDto {
     state?: UserState;
 
     @ApiProperty({
-        description: 'ID of primary login credential',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-        required: false
-    })
-    @IsUUID()
-    @IsOptional()
-    primaryLoginCredentialId?: string;
-
-    @ApiProperty({
         description: 'Whether the user is enabled',
         example: true,
         required: false
