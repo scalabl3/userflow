@@ -29,7 +29,7 @@ import { getIdColumn, getTimestampColumns, getEnumColumn } from './helpers';
  * - Unique index on name for lookups
  * - Type index for filtering (common query pattern)
  */
-export class CreateBillingProvider1738084609009 implements MigrationInterface {
+export class Create_BillingProvider_1737964200_020000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({

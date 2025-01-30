@@ -12,7 +12,7 @@ import { getManyToOneRelation } from './helpers';
  * This is added separately from CREATE to ensure proper table order
  * and to maintain clear relationship dependencies.
  */
-export class AddBaseUserFkLoginCredential1737964200005 implements MigrationInterface {
+export class Add_BaseUser_Fk_LoginCredential_1737964200_003200 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Get relationship configuration
         const userRelation = getManyToOneRelation(

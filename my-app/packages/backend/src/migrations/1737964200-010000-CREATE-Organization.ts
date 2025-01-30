@@ -22,7 +22,7 @@ import { getIdColumn, getTimestampColumns, getOneToOneRelation } from './helpers
  * - Unique index on adminUserId for 1:1 relationship
  * - Name uniqueness only enforced when visible=true
  */
-export class CreateOrganization1737964200006 implements MigrationInterface {
+export class Create_Organization_1737964200_010000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Get admin user relationship configuration
         const adminUserRelation = getOneToOneRelation(

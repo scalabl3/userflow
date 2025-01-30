@@ -9,6 +9,7 @@ import {
 import { LoginCredential } from './LoginCredential';
 import { IsString, IsEmail, IsEnum, IsBoolean } from 'class-validator';
 import { UserState } from '@my-app/shared/dist/enums/UserState';
+import { IsStandardLength, IsStandardName } from '@my-app/shared/dist/decorators/validation';
 
 /**
  * BaseUser entity represents the core user identity in the system.
@@ -39,14 +40,17 @@ export class BaseUser {
     // Required Core Fields
     @Column({ type: 'varchar' })
     @IsString()
+    @IsStandardName('NAME')
     firstname!: string;
 
     @Column({ type: 'varchar' })
     @IsString()
+    @IsStandardName('NAME')
     lastname!: string;
 
     @Column({ type: 'varchar', unique: true })
     @IsEmail()
+    @IsStandardLength('EMAIL')
     contactEmail!: string;
 
     @Column({

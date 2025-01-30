@@ -32,7 +32,7 @@ import { getIdColumn, getTimestampColumns, getManyToOneRelation, getJsonColumn }
  * - Unique index on username
  * - Index on organization for filtering
  */
-export class CreateUser1737964200007 implements MigrationInterface {
+export class Create_User_1737964200_011000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Get organization relationship configuration
         const orgRelation = getManyToOneRelation(

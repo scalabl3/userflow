@@ -20,7 +20,7 @@ import { getIdColumn, getTimestampColumns } from './helpers';
  * Indices:
  * - Unique index on code for fast lookups and constraint
  */
-export class CreateLoginProvider1737964200001 implements MigrationInterface {
+export class Create_LoginProvider_1737964200_001000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({

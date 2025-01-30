@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { BillingProviderType } from '@my-app/shared/dist/enums/BillingProviderType';
-import { IsNotEmpty, IsEnum, IsBoolean } from 'class-validator';
+import { IsEnum, IsBoolean, IsString, Length } from 'class-validator';
+import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
 
 /**
  * BillingProvider entity represents a payment provider supported by the system.
@@ -17,10 +18,11 @@ export class BillingProvider {
     /** Unique name of the billing provider (e.g., 'Stripe', 'PayPal') */
     @Column({ 
         type: 'varchar',
-        length: 255,
+        length: 30,
         unique: true 
     })
-    @IsNotEmpty({ message: 'Provider name is required' })
+    @IsString()
+    @Length(1, 30)
     name!: string;
 
     /** Type of billing provider (e.g., STRIPE, PAYPAL, APPLE_PAY) */

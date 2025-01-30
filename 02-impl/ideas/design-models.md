@@ -50,6 +50,89 @@ export class CreateEntity implements MigrationInterface {
 }
 ```
 
+### 2. Migration Naming Conventions
+
+#### File Naming Pattern
+- For new entities: `<timestamp>-<order>-CREATE-<EntityPascalCase>.ts`
+  - Example: `1737964200-001000-CREATE-LoginProvider.ts`
+- For existing entities: `<timestamp>-<order>-ALTER-<OwnerEntityPascalCase>-WITH-<EntityPascalCase>.ts`
+  - Example: `1737964200-001100-ALTER-User-WITH-Organization.ts`
+- For adding foreign key to entity: `<timestamp>-<order>-ADD-<EntityPascalCase>-<FK>-<TargetEntityPascalCase>.ts`
+  - Example: `1737964200-001200-ADD-User-FK-Organization.ts`
+- For adding indices: `<timestamp>-<order>-ADD-<EntityPascalCase>-INDEX-<FieldsPascalCase>.ts`
+  - Example: `1737964200-001300-ADD-User-INDEX-UniqueFields.ts`
+
+#### Class Naming Pattern
+- For new entities: `export class Create${EntityPascalCase}${timestamp}${order} implements MigrationInterface`
+  - Example: `export class CreateLoginProvider1737964200001000 implements MigrationInterface`
+- For existing entities: `export class Alter${OwnerEntityPascalCase}With${EntityPascalCase}${timestamp}${order} implements MigrationInterface`
+  - Example: `export class AlterUserWithOrganization1737964200001100 implements MigrationInterface`
+- For adding foreign key to entity: `export class Add${EntityPascalCase}Fk${TargetEntityPascalCase}${timestamp}${order} implements MigrationInterface`
+  - Example: `export class AddUserFkOrganization1737964200001200 implements MigrationInterface`
+- For adding indices: `export class Add${EntityPascalCase}Index${FieldsPascalCase}${timestamp}${order} implements MigrationInterface`
+  - Example: `export class AddUserIndexUniqueFields1737964200001300 implements MigrationInterface`
+
+#### Best Practices
+- Use consistent timestamp format (UNIX timestamp) bash: `date +%s`
+- Document dependencies between migrations
+- Keep migrations atomic (one logical change per migration)
+- Include comments explaining complex changes
+- Test both up and down migrations
+
+#### Migration Ordering Strategy
+Format: `EEESNN`
+- `EEE`: Entity number (000-999)
+- `S`: Step type (0=core, 1=related, 2=FK, 3=indices)
+- `NN`: Sequence within step (00-99)
+
+Examples:
+```
+Entity 1:
+001000 - CREATE-EntityOne.ts
+001100 - ALTER-EntityOne-WITH-Something.ts
+001200 - ADD-EntityOne-FK-Something.ts
+001300 - ADD-EntityOne-INDEX-UniqueFields.ts
+
+Entity 2:
+002000 - CREATE-EntityTwo.ts
+002100 - ALTER-EntityTwo-WITH-Something.ts
+002200 - ADD-EntityTwo-FK-Something.ts
+002300 - ADD-EntityTwo-INDEX-UniqueFields.ts
+
+Entity 10:
+010000 - CREATE-EntityTen.ts
+010100 - ALTER-EntityTen-WITH-Something.ts
+010200 - ADD-EntityTen-FK-Something.ts
+010300 - ADD-EntityTen-INDEX-UniqueFields.ts
+
+Entity 100:
+100000 - CREATE-EntityHundred.ts
+100100 - ALTER-EntityHundred-WITH-Something.ts
+100200 - ADD-EntityHundred-FK-Something.ts
+100300 - ADD-EntityHundred-INDEX-UniqueFields.ts
+```
+
+This pattern allows for:
+- Up to 1000 core entities (000-999)
+- 4 standard step types (0-3):
+  - 0: Core entity creation
+  - 1: Related alterations
+  - 2: Foreign key relationships
+  - 3: Index additions
+- Up to 99 migrations within each step type (00-99)
+- Clear visual grouping by entity and step type
+- Easy insertion of new migrations within any step
+- Consistent 6-digit format throughout
+
+Best Practices:
+- Reserve first 10 entities (001xxx-009xxx) for core system entities
+- Use logical groupings for entity numbers (e.g., 010xxx-019xxx for auth-related entities)
+- Document entity number assignments in migration README
+- Leave gaps between entity numbers for related future entities
+- Use sequence numbers sparingly, leaving room for insertions
+
+
+
 ### 2. Model Field Standards
 
 #### Primary Keys and UUIDs
@@ -244,6 +327,39 @@ export class EntityName {
 }
 ```
 
+### 7. Model Validation Strategy
+```typescript
+// Standard validation pattern
+@Entity()
+export class EntityName {
+    // Basic string validation with standard lengths
+    @Column({ type: 'varchar', length: 30 })
+    @IsString()
+    @Length(1, 30)
+    name!: string;
+
+    // Email validation
+    @Column({ type: 'varchar', length: 255 })
+    @IsEmail()
+    @Length(5, 255)
+    email!: string;
+
+    // Conditional validation for specific types
+    @ValidateIf(o => o.type === CredentialType.PASSWORD)
+    @Column({ nullable: true })
+    @IsString()
+    @Length(1, 255)
+    passwordHash?: string;
+}
+```
+
+Key standards:
+1. Consistent length constraints (30 chars for names, 255 for emails)
+2. Required validation decorators for all fields
+3. Conditional validation using @ValidateIf
+4. Explicit nullability in both Column and validation
+5. Standard error messages through Length decorator
+
 ## Implementation Examples
 
 ### 1. Authentication System
@@ -297,47 +413,7 @@ export class EntityName {
 
 ## Pending Standards
 
-### 1. Model Validation Strategy
-Current state:
-- Using class-validator decorators inconsistently
-- Mixed validation between models and DTOs
-- Varying error message patterns
-
-Needs standardization:
-```typescript
-// Proposed pattern
-@Entity()
-export class EntityName {
-    // Basic validation
-    @Column()
-    @IsString()
-    @Length(1, 255)
-    @ValidationMessage('Field must be between 1 and 255 characters')
-    field!: string;
-
-    // Complex validation
-    @Column()
-    @IsEmail()
-    @Transform(({ value }) => value.toLowerCase())
-    @ValidationMessage('Must be a valid email address')
-    email!: string;
-
-    // Conditional validation
-    @ValidateIf(o => o.type === 'specific')
-    @Column()
-    @IsString()
-    conditionalField?: string;
-}
-```
-
-To be defined:
-1. Standard error message format
-2. Validation group usage
-3. Custom validator implementation
-4. Transform decorator usage
-5. Validation pipeline order
-
-### 2. Testing Patterns
+### 1. Testing Patterns
 Current state:
 - Basic unit tests exist
 - No standardized factory pattern
@@ -383,7 +459,7 @@ To be defined:
 4. Integration test patterns
 5. Test database handling
 
-### 3. DTO Alignment
+### 2. DTO Alignment
 Current state:
 - DTOs don't consistently match models
 - Validation duplicated between DTOs and models

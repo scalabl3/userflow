@@ -11,10 +11,12 @@ import {
     IsDate, 
     IsObject, 
     ValidateIf,
-    ValidateNested 
+    ValidateNested,
+    Length
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { getModelRelationConfig, getEnumColumn } from '../migrations/helpers';
+import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
 
 /**
  * Represents OAuth-specific profile data
@@ -54,6 +56,7 @@ export class LoginCredential {
     // Required Core Fields
     @Column()
     @IsString()
+    @IsStandardLength('IDENTIFIER')
     identifier!: string;
 
     @Column({ type: 'uuid', nullable: false })
@@ -91,6 +94,7 @@ export class LoginCredential {
     @Column({ nullable: true })
     @IsString()
     @IsOptional()
+    @IsStandardLength('PASSWORD_HASH')
     passwordHash?: string;
 
     // OAuth-specific Fields
@@ -109,6 +113,7 @@ export class LoginCredential {
     @Column({ nullable: true })
     @IsString()
     @IsOptional()
+    @IsStandardLength('TOKEN')
     accessToken?: string;
 
     @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
@@ -121,6 +126,7 @@ export class LoginCredential {
     @Column({ nullable: true })
     @IsString()
     @IsOptional()
+    @IsStandardLength('TOKEN')
     refreshToken?: string;
 
     @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
@@ -149,24 +155,28 @@ export class LoginCredential {
     @Column({ nullable: true })
     @IsString()
     @IsOptional()
+    @IsStandardLength('TOKEN')
     identityToken?: string;
 
     @ValidateIf(o => o.provider === OAuthProvider.APPLE)
     @Column({ nullable: true })
     @IsString()
     @IsOptional()
+    @IsStandardLength('AUTH_CODE')
     authorizationCode?: string;
 
     @ValidateIf(o => o.provider === OAuthProvider.APPLE)
     @Column({ nullable: true })
     @IsString()
     @IsOptional()
+    @IsStandardLength('REAL_USER_STATUS')
     realUserStatus?: string;
 
     @ValidateIf(o => o.provider === OAuthProvider.APPLE)
     @Column({ nullable: true })
     @IsString()
     @IsOptional()
+    @IsStandardLength('NONCE')
     nonce?: string;
 
     // Timestamps

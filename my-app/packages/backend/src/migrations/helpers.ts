@@ -277,4 +277,4 @@ export const getModelRelationConfig = (
             onDelete: onDelete || defaultOnDelete
         }
     };
-}; 
+};

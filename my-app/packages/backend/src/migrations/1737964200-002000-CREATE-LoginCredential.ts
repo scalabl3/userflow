@@ -45,7 +45,7 @@ import {
  * - Unique composite: (identifier, provider) for login uniqueness
  * - Foreign keys: provider and user for relationship queries
  */
-export class CreateLoginCredential1737964200002 implements MigrationInterface {
+export class Create_LoginCredential_1737964200_002000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Get relationship configurations using helpers
         const providerRelation = getManyToOneRelation(

@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { IsString, IsBoolean, Length } from 'class-validator';
 import { LoginCredential } from './LoginCredential';
+import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
 
 /**
  * LoginProvider entity represents authentication methods available in the system.
@@ -26,14 +27,14 @@ export class LoginProvider {
     id!: string;
 
     // Required Core Fields
-    @Column({ type: 'varchar', length: 50, unique: true })
+    @Column({ type: 'varchar', length: 30, unique: true })
     @IsString()
-    @Length(1, 50)
+    @Length(1, 30)
     code!: string;
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column({ type: 'varchar', length: 30 })
     @IsString()
-    @Length(1, 255)
+    @Length(1, 30)
     name!: string;
 
     // Optional Core Fields

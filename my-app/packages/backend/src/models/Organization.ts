@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { IsString, IsBoolean, IsUUID, Length } from 'class-validator';
 import { User } from './User';
 import { getModelRelationConfig } from '../migrations/helpers';
+import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
 
 /**
  * Organization entity represents a company or group in the system.
@@ -24,9 +25,9 @@ export class Organization {
     id!: string;
 
     // Required Core Fields
-    @Column({ type: 'varchar', length: 255, default: 'shadow', nullable: true })
+    @Column({ type: 'varchar', length: 50, default: 'shadow', nullable: true })
     @IsString()
-    @Length(1, 255)
+    @Length(1, 50)
     name!: string;
 
     // Admin User Relationship (1:1)

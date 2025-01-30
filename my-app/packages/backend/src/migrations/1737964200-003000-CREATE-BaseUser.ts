@@ -28,7 +28,7 @@ import { getIdColumn, getTimestampColumns, getEnumColumn } from './helpers';
  * - Unique index on contact email
  * - Index on state for filtering
  */
-export class CreateBaseUser1737964200004 implements MigrationInterface {
+export class Create_BaseUser_1737964200_003000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({

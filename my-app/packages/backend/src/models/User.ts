@@ -4,6 +4,7 @@ import { Organization } from './Organization';
 import { IsString, IsUUID, IsObject, IsOptional, ValidateNested, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { getModelRelationConfig } from '../migrations/helpers';
+import { IsStandardLength, IsStandardName } from '@my-app/shared/dist/decorators/validation';
 
 /**
  * Represents user notification preferences
@@ -46,10 +47,12 @@ export class User extends BaseUser {
     // Required Core Fields
     @Column({ type: 'varchar', unique: true })
     @IsString()
+    @IsStandardName('USERNAME')
     username!: string;
 
     @Column({ type: 'varchar' })
     @IsString()
+    @IsStandardName('DISPLAYNAME')
     displayname!: string;
 
     // Relationship Fields

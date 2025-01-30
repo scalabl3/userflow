@@ -15,7 +15,7 @@ import { getManyToOneRelation } from './helpers';
  * Note: This differs from the Organization's adminUser relationship,
  * which is One-to-One and uses RESTRICT on delete.
  */
-export class AddUserFkOrganization1737964200008 implements MigrationInterface {
+export class Add_User_Fk_Organization_1737964200_011200 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Get relationship configuration
         const orgRelation = getManyToOneRelation(
