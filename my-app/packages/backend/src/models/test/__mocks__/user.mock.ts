@@ -1,6 +1,6 @@
 import { UserState } from '@my-app/shared';
-import { BaseUser } from '../../models/BaseUser';
-import { User } from '../../models/User';
+import { BaseUser } from '../../../models/BaseUser';
+import { User } from '../../../models/User';
 import { core } from './core.mock';
 import { auth } from './auth.mock';
 import { 

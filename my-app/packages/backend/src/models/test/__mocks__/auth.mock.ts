@@ -1,7 +1,7 @@
 import { CredentialType, OAuthProvider } from '@my-app/shared';
 import { core } from './core.mock';
-import { LoginProvider } from '../../models/LoginProvider';
-import { LoginCredential } from '../../models/LoginCredential';
+import { LoginProvider } from '../../../models/LoginProvider';
+import { LoginCredential } from '../../../models/LoginCredential';
 import { 
   CreateLoginProviderDto, 
   UpdateLoginProviderDto, 

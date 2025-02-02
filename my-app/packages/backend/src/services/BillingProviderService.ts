@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, DeepPartial } from 'typeorm';
 import { BillingProvider } from '../models/BillingProvider';
@@ -20,24 +20,19 @@ export class BillingProviderService extends ServiceBase<BillingProvider> {
         super();
     }
 
-    async findAllBillingProviders(): Promise<ResponseBillingProviderDto[]> {
+    async findAll(): Promise<ResponseBillingProviderDto[]> {
         const providers = await this.repository.find();
-        return this.toResponseDtoArray(providers, ResponseBillingProviderDto);
+        return this.toResponseDtoArray(providers, ResponseBillingProviderDto)!;
     }
 
-    async findOneBillingProvider(id: string): Promise<ResponseBillingProviderDto> {
-        const provider = await this.repository.findOne({
-            where: { id }
-        });
-        
-        await this.validateExists(id);
+    async findOne(id: string): Promise<ResponseBillingProviderDto | null> {
+        const provider = await this.validateExists(id);
         return this.toResponseDto(provider, ResponseBillingProviderDto)!;
     }
 
     async createBillingProvider(createDto: CreateBillingProviderDto): Promise<ResponseBillingProviderDto> {
         return this.withTransaction(async (queryRunner) => {
-            // Validate name uniqueness
-            await this.validateUniqueness('name', createDto.name);
+            await this.validateUniqueness('type', createDto.type);
             
             const entity = await super.create(createDto as DeepPartial<BillingProvider>, queryRunner);
             return this.toResponseDto(entity, ResponseBillingProviderDto)!;
@@ -48,9 +43,8 @@ export class BillingProviderService extends ServiceBase<BillingProvider> {
         return this.withTransaction(async (queryRunner) => {
             const provider = await this.validateExists(id);
 
-            // Check name uniqueness if name is being updated
-            if (updateDto.name && updateDto.name !== provider.name) {
-                await this.validateUniqueness('name', updateDto.name, id);
+            if (updateDto.type && updateDto.type !== provider.type) {
+                await this.validateUniqueness('type', updateDto.type, id);
             }
 
             // Log status changes

@@ -6,8 +6,8 @@ import { DataSource, DeleteResult, EntityManager, FindOneOptions, FindOptionsWhe
 import { CreateBaseUserDto, ResponseBaseUserDto, UpdateBaseUserDto } from '@my-app/shared';
 import { UserState } from '@my-app/shared';
 import { BadRequestException } from '@nestjs/common';
-import { user as userMock } from '../test/__mocks__/user.mock';
-import { auth as authMock } from '../test/__mocks__/auth.mock';
+import { user as userMock } from '../models/test/__mocks__/user.mock';
+import { auth as authMock } from '../models/test/__mocks__/auth.mock';
 import { mockRepository } from '../test/setup';
 import { plainToClass } from 'class-transformer';
 

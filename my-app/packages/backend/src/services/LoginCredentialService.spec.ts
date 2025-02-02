@@ -1,4 +1,4 @@
-import { bcryptMock } from '../test/__mocks__/bcrypt.mock';
+import { bcryptMock } from '../models/test/__mocks__/bcrypt.mock';
 jest.mock('bcrypt', () => bcryptMock);
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -17,8 +17,8 @@ import {
     OAuthProvider
 } from '@my-app/shared';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { auth as authMock } from '../test/__mocks__/auth.mock';
-import { TestDataFactory } from '../test/factories/test-data.factory';
+import { auth as authMock } from '../models/test/__mocks__/auth.mock';
+import { TestDataFactory } from '../models/test/factories/test-data.factory';
 
 describe('LoginCredentialService', () => {
     let service: LoginCredentialService;

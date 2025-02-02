@@ -1,6 +1,6 @@
 import { core } from './core.mock';
 import { user } from './user.mock';
-import { Organization } from '../../models/Organization';
+import { Organization } from '../../../models/Organization';
 import { 
   CreateOrganizationDto,
   UpdateOrganizationDto,

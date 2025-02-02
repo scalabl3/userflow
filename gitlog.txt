@@ -1,0 +1,1578 @@
+commit 805365c96681fb1ae7828dadecf2ef0b2f6c72c9
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Thu Jan 30 12:00:29 2025 -0800
+
+    feat(templates): Reorganize and enhance code generation templates - Update genprompt-aider.md with layer-specific commands and utility file references - Create new MM templates (Model-Migration) for base, Has-A, and Is-A patterns - Improve migration standards with separate FK migrations - Add helper/validator/constant file references to Foundation layer - Update naming conventions for migrations and classes - Enhance documentation and examples for each template type - Add comprehensive touch commands for file creation
+
+6	0	.cursorignore
+0	0	02-impl/ideas/design/{design-entities.md => 1-entities.md}
+0	0	02-impl/ideas/design/design-controllers.md
+0	0	02-impl/ideas/design/design-services.md
+49	0	02-impl/ideas/genprompt-templates/archive/genprompt-aider.md
+0	0	02-impl/ideas/genprompt-templates/{ => archive}/genprompt-entity-1-MDM.md
+0	0	02-impl/ideas/genprompt-templates/{ => archive}/genprompt-entity-2-SDT.md
+0	0	02-impl/ideas/genprompt-templates/{ => archive}/genprompt-entity-3-CTT.md
+0	0	02-impl/ideas/genprompt-templates/{ => archive}/genprompt-entity-HasA-1-MDM.md
+0	0	02-impl/ideas/genprompt-templates/{ => archive}/genprompt-entity-HasA-2-SDT.md
+0	0	02-impl/ideas/genprompt-templates/{ => archive}/genprompt-entity-HasA-3-CTT.md
+0	0	02-impl/ideas/genprompt-templates/{ => archive}/genprompt-entity-IsA-1-MDM.md
+0	0	02-impl/ideas/genprompt-templates/{ => archive}/genprompt-entity-IsA-2-SDT.md
+0	0	02-impl/ideas/genprompt-templates/{ => archive}/genprompt-entity-IsA-3-CTT.md
+93	7	02-impl/ideas/genprompt-templates/genprompt-aider.md
+272	0	02-impl/ideas/genprompt-templates/genprompt-entity-1-MM-HasA.md
+208	0	02-impl/ideas/genprompt-templates/genprompt-entity-1-MM.md
+
+commit d33d094726301b47c7696c256ee480825b623aa1
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Thu Jan 30 10:35:44 2025 -0800
+
+    moved and removed files no longer part of project
+
+-	-	.DS_Store
+0	0	02-impl/ideas/{genprompt => genprompt-impl}/BillingProvider/0-aider.md
+0	0	02-impl/ideas/{genprompt => genprompt-impl}/BillingProvider/1-MDM.md
+0	0	02-impl/ideas/{genprompt => genprompt-impl}/BillingProvider/2-SDT.md
+0	0	02-impl/ideas/{genprompt => genprompt-impl}/BillingProvider/3-CTT.md
+0	0	02-impl/ideas/{ => genprompt-templates}/genprompt-aider.md
+0	0	02-impl/ideas/{ => genprompt-templates}/genprompt-entity-1-MDM.md
+0	0	02-impl/ideas/{ => genprompt-templates}/genprompt-entity-2-SDT.md
+0	0	02-impl/ideas/{ => genprompt-templates}/genprompt-entity-3-CTT.md
+0	0	02-impl/ideas/{ => genprompt-templates}/genprompt-entity-HasA-1-MDM.md
+0	0	02-impl/ideas/{ => genprompt-templates}/genprompt-entity-HasA-2-SDT.md
+0	0	02-impl/ideas/{ => genprompt-templates}/genprompt-entity-HasA-3-CTT.md
+0	0	02-impl/ideas/{ => genprompt-templates}/genprompt-entity-IsA-1-MDM.md
+0	0	02-impl/ideas/{ => genprompt-templates}/genprompt-entity-IsA-2-SDT.md
+0	0	02-impl/ideas/{ => genprompt-templates}/genprompt-entity-IsA-3-CTT.md
+
+commit 223cb2ad4e66b0a54429fbd771448832b00ce07b
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Thu Jan 30 10:33:59 2025 -0800
+
+    moved and removed files no longer part of project
+
+-	-	.DS_Store
+2	0	.gitignore
+0	160	02-impl/ai-reports/context/CONTEXT-PATTERN-2024-12-30-001.md
+0	73	02-impl/ai-reports/context/CONTEXT-PATTERN-2024-12-30-002.md
+0	27	02-impl/ai-reports/errors/ERROR-PROCESS-2024-12-30-001.md
+0	27	02-impl/ai-reports/errors/ERROR-PROCESS-2024-12-30-002.md
+0	27	02-impl/ai-reports/errors/ERROR-PROCESS-2024-12-30-003.md
+0	27	02-impl/ai-reports/errors/ERROR-PROCESS-2024-12-30-004.md
+0	1	02-impl/ai-reports/errors/ERROR-PROCESS-20241230-001.md
+0	190	02-impl/ai-reports/patterns/AI-PATTERN-2024-01-07-001.md
+0	221	02-impl/ai-reports/patterns/AI-PATTERN-2024-01-07-002.md
+122	0	02-impl/ideas/alignment/model-alignment-analysis.md
+0	327	02-impl/ideas/alignment/models-inconsistencies.md
+0	0	02-impl/ideas/{ => design}/0-site-summary.md
+0	0	02-impl/ideas/{ => design}/design-dto.md
+0	0	02-impl/ideas/{ => design}/design-entities.md
+0	0	02-impl/ideas/{ => design}/design-integration-tests.md
+0	0	02-impl/ideas/{ => design}/design-models.md
+0	60	02-impl/ideas/old/BillingProvider/0-aider.md
+0	136	02-impl/ideas/old/BillingProvider/1-MDM.md
+0	324	02-impl/ideas/old/BillingProvider/2-SDT.md
+0	441	02-impl/ideas/old/BillingProvider/3-CTT.md
+0	63	02-impl/ideas/old/genprompt-entity-HasA.md
+0	56	02-impl/ideas/old/genprompt-entity-IsA.md
+0	0	02-impl/ideas/{ => strategy}/strategy-api-test.md
+0	0	02-impl/ideas/{ => strategy}/strategy-security.md
+0	251	02-impl/product/class-functional-specs/CLASS-001-base-entity-spec.md
+0	120	02-impl/product/class-functional-specs/CLASS-002-user-spec.md
+0	157	02-impl/product/class-hierarchy/BASE-001-class-hierarchy.md
+0	134	02-impl/product/stories/STORY-ADMIN-UI-001.md
+0	166	02-impl/product/stories/STORY-API-001.md
+0	103	02-impl/product/stories/STORY-AUTH-UI-001.md
+0	94	02-impl/product/stories/STORY-BILLING-001.md
+0	97	02-impl/product/stories/STORY-DEPLOY-001.md
+0	96	02-impl/product/stories/STORY-MARKETING-UI-001.md
+0	136	02-impl/product/stories/STORY-ORG-001.md
+0	120	02-impl/product/stories/STORY-RBAC-001.md
+0	100	02-impl/product/stories/STORY-SESSION-001.md
+0	98	02-impl/product/stories/STORY-SHARED-DATA-001.md
+0	97	02-impl/product/stories/STORY-TESTING-001.md
+0	145	02-impl/product/stories/STORY-USER-001.md
+0	193	02-impl/product/vision/VISION-BASE-V1.md
+0	98	02-impl/specs/organization.class.spec.md
+
+commit 564a2b55adda9901a5d7c3a6451a0a558f084fae
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Thu Jan 30 10:19:50 2025 -0800
+
+    refactor(migrations): Standardize migration class names with improved readability - Updated all migration class names to follow consistent format (Action_Entity_Timestamp_Order) - Fixed class names in Auth system (LoginProvider, LoginCredential, BaseUser) - Fixed class names in Organization system (Organization, User) - Fixed class names in Billing system (BillingProvider) - Ensured timestamp consistency across all migration files - Added proper underscore separators for better code readability - Maintained file naming convention while updating class names - Verified all migration class names match their corresponding file names - Ensured consistent ordering with 6-digit suffixes (e.g., 001000, 002000)
+
+157	0	02-impl/ideas/design-dto.md
+118	42	02-impl/ideas/design-models.md
+1	1	my-app/packages/backend/src/migrations/{1737964200-001-CREATE-LoginProvider.ts => 1737964200-001000-CREATE-LoginProvider.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200-002-CREATE-LoginCredential.ts => 1737964200-002000-CREATE-LoginCredential.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200-004-CREATE-BaseUser.ts => 1737964200-003000-CREATE-BaseUser.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200-005-ADD-BaseUser-FK-LoginCredential.ts => 1737964200-003200-ADD-BaseUser-FK-LoginCredential.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200-006-CREATE-Organization.ts => 1737964200-010000-CREATE-Organization.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200-007-CREATE-User.ts => 1737964200-011000-CREATE-User.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200-008-ADD-User-FK-Organization.ts => 1737964200-011200-ADD-User-FK-Organization.ts}
+1	1	my-app/packages/backend/src/migrations/{1738084609-009-CREATE-BillingProvider.ts => 1737964200-020000-CREATE-BillingProvider.ts}
+59	0	my-app/packages/backend/src/migrations/README.md
+1	1	my-app/packages/backend/src/migrations/helpers.ts
+22	0	my-app/packages/backend/src/migrations/update-classes.sh
+4	0	my-app/packages/backend/src/models/BaseUser.ts
+5	3	my-app/packages/backend/src/models/BillingProvider.ts
+11	1	my-app/packages/backend/src/models/LoginCredential.ts
+5	4	my-app/packages/backend/src/models/LoginProvider.ts
+3	2	my-app/packages/backend/src/models/Organization.ts
+3	0	my-app/packages/backend/src/models/User.ts
+112	0	my-app/packages/shared/src/constants/field-lengths.ts
+56	0	my-app/packages/shared/src/decorators/validation.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+28	0	scripts/fix-migration-classes.sh
+55	0	scripts/rename-migrations.sh
+
+commit eeead657a581d3457ebb0ff67cd61f0f315e41d9
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Wed Jan 29 18:32:50 2025 -0800
+
+    feat(models): Comprehensive model layer standardization and documentation - Consolidated model standards into design-models.md with detailed patterns and examples - Added comprehensive sections for field standards (UUID, Enum, JSON, Timestamps) - Documented helper functions with usage examples - Established relationship standards and field organization patterns - Added detailed implementation examples from auth, org, and billing systems - Defined pending standards for validation, testing, and DTOs - Created verification checklist for model implementation - Improved documentation structure and readability
+
+327	0	02-impl/ideas/alignment/models-inconsistencies.md
+14	5	02-impl/ideas/design-entities.md
+455	0	02-impl/ideas/design-models.md
+547	0	02-impl/ideas/strategy-security.md
+1	2	my-app/packages/backend/src/controllers/BaseUserController.spec.ts
+31	2	my-app/packages/backend/src/migrations/1737964200-001-CREATE-LoginProvider.ts
+96	30	my-app/packages/backend/src/migrations/1737964200-002-CREATE-LoginCredential.ts
+0	25	my-app/packages/backend/src/migrations/1737964200-003-ADD-LoginCredential-FK-LoginProvider.ts
+46	16	my-app/packages/backend/src/migrations/1737964200-004-CREATE-BaseUser.ts
+28	15	my-app/packages/backend/src/migrations/1737964200-005-ADD-BaseUser-FK-LoginCredential.ts
+50	8	my-app/packages/backend/src/migrations/1737964200-006-CREATE-Organization.ts
+67	10	my-app/packages/backend/src/migrations/1737964200-007-CREATE-User.ts
+29	13	my-app/packages/backend/src/migrations/1737964200-008-ADD-User-FK-Organization.ts
+40	16	my-app/packages/backend/src/migrations/1738084609-009-CREATE-BillingProvider.ts
+228	29	my-app/packages/backend/src/migrations/helpers.ts
+0	28	my-app/packages/backend/src/models/BaseUser.spec.ts
+19	14	my-app/packages/backend/src/models/BaseUser.ts
+1	1	my-app/packages/backend/src/models/BillingProvider.ts
+58	23	my-app/packages/backend/src/models/LoginCredential.ts
+27	6	my-app/packages/backend/src/models/LoginProvider.ts
+21	5	my-app/packages/backend/src/models/Organization.ts
+52	18	my-app/packages/backend/src/models/User.ts
+12	36	my-app/packages/backend/src/services/BaseUserService.spec.ts
+0	9	my-app/packages/backend/src/services/BaseUserService.ts
+110	662	my-app/packages/backend/src/services/LoginCredentialService.spec.ts
+69	32	my-app/packages/backend/src/services/LoginCredentialService.ts
+0	7	my-app/packages/backend/src/test/__mocks__/user.mock.ts
+0	4	my-app/packages/backend/src/test/factories/test-data.factory.ts
+0	9	my-app/packages/shared/src/dtos/BaseUser/CreateBaseUserDto.ts
+0	8	my-app/packages/shared/src/dtos/BaseUser/ResponseBaseUserDto.ts
+0	9	my-app/packages/shared/src/dtos/BaseUser/UpdateBaseUserDto.ts
+7	0	my-app/packages/shared/src/dtos/LoginCredential/CreateLoginCredentialDto.ts
+2	3	my-app/packages/shared/src/dtos/LoginCredential/ResponseLoginCredentialDto.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+
+commit 197d768e9aa5e048bc206c4e26b7b39e6f195cab
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 23:05:45 2025 -0800
+
+    feat(dto): Standardize DTOs across all patterns - Add @Exclude() for Response DTOs - Add @Type() for nested objects/dates/relationships - Remove validation decorators from Response DTOs - Make all fields optional with @IsOptional() in Update DTOs - Document required: false for all optional properties - Update naming conventions (e.g., ownerId instead of owner_id) - Update example patterns in generation templates for base, IsA, and HasA relationships - Add comprehensive examples with settings object pattern - Ensure consistent decorator usage across all DTOs
+
+30	28	02-impl/ideas/genprompt-entity-1-MDM.md
+25	4	02-impl/ideas/genprompt-entity-2-SDT.md
+39	3	02-impl/ideas/genprompt-entity-HasA-1-MDM.md
+38	9	02-impl/ideas/genprompt-entity-HasA-2-SDT.md
+32	11	02-impl/ideas/genprompt-entity-IsA-1-MDM.md
+35	3	02-impl/ideas/genprompt-entity-IsA-2-SDT.md
+169	79	my-app/packages/backend/src/services/BaseUserService.spec.ts
+30	43	my-app/packages/backend/src/services/BaseUserService.ts
+6	2	my-app/packages/backend/src/test/setup.ts
+2	8	my-app/packages/shared/src/dtos/BaseUser/ResponseBaseUserDto.ts
+2	1	my-app/packages/shared/src/dtos/LoginCredential/ResponseLoginCredentialDto.ts
+2	0	my-app/packages/shared/src/dtos/LoginProvider/ResponseLoginProviderDto.ts
+2	9	my-app/packages/shared/src/dtos/Organization/ResponseOrganizationDto.ts
+2	0	my-app/packages/shared/src/dtos/User/CreateUserDto.ts
+2	0	my-app/packages/shared/src/dtos/User/UpdateUserDto.ts
+1	1	my-app/packages/shared/src/index.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+
+commit 34cbd9a6f958b4143f99d960d9a0b5c302c8e80b
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 21:24:37 2025 -0800
+
+    feat(test): Complete mock and factory setup - Add comprehensive DTO support for all entities (LoginProvider, LoginCredential, BaseUser, User, Organization) - Update auth mocks with proper circular references and DTO representations - Update user mocks with BaseUser and User DTOs - Update organization mocks with proper User relationships - Add factory methods for all entity and DTO types - Add complex factory scenarios (createBaseUserWithLoginCredentials, createUserWithLoginCredentials) - Ensure proper bidirectional relationships in all factory methods - Update test factory to support all entity types and DTOs - Fix mock exports in index.ts
+
+119	60	02-impl/ideas/genprompt-entity-1-MDM.md
+87	23	02-impl/ideas/genprompt-entity-HasA-1-MDM.md
+139	38	02-impl/ideas/genprompt-entity-IsA-1-MDM.md
+1	0	02-impl/ideas/template-service-validation.md
+2	1	my-app/packages/backend/src/models/BaseUser.spec.ts
+45	127	my-app/packages/backend/src/services/BaseUserService.ts
+48	168	my-app/packages/backend/src/services/BillingProviderService.ts
+71	18	my-app/packages/backend/src/services/LoginCredentialService.spec.ts
+58	255	my-app/packages/backend/src/services/LoginCredentialService.ts
+55	122	my-app/packages/backend/src/services/LoginProviderService.ts
+50	140	my-app/packages/backend/src/services/OrganizationService.ts
+63	147	my-app/packages/backend/src/services/UserService.ts
+135	14	my-app/packages/backend/src/test/__mocks__/auth.mock.ts
+2	1	my-app/packages/backend/src/test/__mocks__/index.ts
+38	22	my-app/packages/backend/src/test/__mocks__/organization.mock.ts
+75	22	my-app/packages/backend/src/test/__mocks__/user.mock.ts
+112	4	my-app/packages/backend/src/test/factories/test-data.factory.ts
+189	0	my-app/packages/backend/src/utils/service-utils.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+
+commit fe89a16bb5d8c33bba6fcaf9d2416e7c9f196e10
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 19:11:10 2025 -0800
+
+    feat(dtos): Complete Swagger documentation and type alignment across DTOs - Added comprehensive Swagger documentation to CreateUserDto with proper examples and descriptions - Added complete Swagger documentation to UpdateLoginCredentialDto including base, password, and OAuth fields - Verified and confirmed proper enum imports from shared package (UserState, CredentialType, OAuthProvider, BillingProviderType) - Ensured consistent type usage across all DTOs - Added proper documentation for relationship fields with correct types and examples - Standardized documentation format across all DTOs with clear descriptions, examples, and validation rules - Added proper enum documentation with examples and descriptions - Improved documentation for complex objects like user preferences
+
+22	10	my-app/packages/backend/src/models/BaseUser.ts
+75	15	my-app/packages/backend/src/models/LoginCredential.ts
+22	3	my-app/packages/backend/src/models/LoginProvider.ts
+18	4	my-app/packages/backend/src/models/Organization.ts
+22	1	my-app/packages/backend/src/models/User.ts
+15	0	my-app/packages/backend/src/modules/BillingProviderModule.ts
+70	53	my-app/packages/backend/src/services/BillingProviderService.ts
+78	50	my-app/packages/backend/src/services/LoginProviderService.ts
+94	60	my-app/packages/backend/src/services/UserService.ts
+31	0	my-app/packages/shared/src/dtos/BaseUser/CreateBaseUserDto.ts
+73	1	my-app/packages/shared/src/dtos/BaseUser/ResponseBaseUserDto.ts
+32	4	my-app/packages/shared/src/dtos/BaseUser/UpdateBaseUserDto.ts
+5	2	my-app/packages/shared/src/dtos/BillingProvider/UpdateBillingProviderDto.ts
+77	0	my-app/packages/shared/src/dtos/LoginCredential/CreateLoginCredentialDto.ts
+99	9	my-app/packages/shared/src/dtos/LoginCredential/ResponseLoginCredentialDto.ts
+90	2	my-app/packages/shared/src/dtos/LoginCredential/UpdateLoginCredentialDto.ts
+19	0	my-app/packages/shared/src/dtos/LoginProvider/CreateLoginProviderDto.ts
+29	0	my-app/packages/shared/src/dtos/LoginProvider/ResponseLoginProviderDto.ts
+20	0	my-app/packages/shared/src/dtos/LoginProvider/UpdateLoginProviderDto.ts
+17	0	my-app/packages/shared/src/dtos/Organization/CreateOrganizationDto.ts
+48	3	my-app/packages/shared/src/dtos/Organization/ResponseOrganizationDto.ts
+18	0	my-app/packages/shared/src/dtos/Organization/UpdateOrganizationDto.ts
+36	0	my-app/packages/shared/src/dtos/User/CreateUserDto.ts
+41	2	my-app/packages/shared/src/dtos/User/ResponseUserDto.ts
+29	15	my-app/packages/shared/src/dtos/User/UpdateUserDto.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+
+commit cb40fb1caa2af5ebb314ad0775c75ee55cda47b0
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 17:51:51 2025 -0800
+
+    feat(controllers): Complete vertical alignment of controller tests - Updated test templates with consistent patterns and improved error handling - Added DataSource mocking and QueryRunner setup across all tests - Standardized error handling with specific exceptions (NotFoundException, InternalServerErrorException) - Enhanced test coverage for CRUD operations and edge cases - Improved mock data management using shared mock files - Added relationship-specific tests for HasA and IsA patterns - Updated documentation and examples in generation templates - Aligned response DTO transformations across all controllers - Added comprehensive test descriptions and clear AAA patterns
+
+184	36	02-impl/ideas/genprompt-entity-3-CTT.md
+110	35	02-impl/ideas/genprompt-entity-HasA-3-CTT.md
+109	34	02-impl/ideas/genprompt-entity-IsA-3-CTT.md
+35	9	my-app/packages/backend/src/controllers/BaseUserController.spec.ts
+5	5	my-app/packages/backend/src/controllers/LoginProviderController.spec.ts
+
+commit a58b58e526e2d642bdcf41d1543087b9b8a24d14
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 17:40:42 2025 -0800
+
+    feat(controllers): Complete vertical alignment of all controllers - Standardize return types across all controllers (create: Returns response DTO, findAll: Returns array of response DTOs, findOne: Returns response DTO, update: Returns response DTO, remove: Returns boolean) - Unify HTTP status codes (create: 201 Created, findAll/findOne/update/remove: 200 OK, Remove 204 No Content status) - Fix BaseUserController (Change remove method return type from void to boolean, Update HTTP status from 204 to 200 for delete operation) - Clean up UserController (Remove premature preferences implementation, Fix findByUsername error message) - Ensure consistent error handling and response transformation
+
+3	2	my-app/packages/backend/src/controllers/BaseUserController.ts
+107	160	my-app/packages/backend/src/controllers/OrganizationController.spec.ts
+3	2	my-app/packages/backend/src/controllers/OrganizationController.ts
+57	97	my-app/packages/backend/src/controllers/UserController.spec.ts
+10	41	my-app/packages/backend/src/controllers/UserController.ts
+
+commit 3aeaf46a3d472dab524a403cc0fbca455461f77e
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 17:24:28 2025 -0800
+
+    fix: Vertical alignment of Controller Tests and Error Handling - Fixed error handling in controller-utils.ts to properly rethrow specific exceptions (NotFoundException, ConflictException, etc) - Updated error messages from 'Internal server error' to 'An unexpected error occurred' - Standardized error handling across all controllers with proper logging context - Fixed remove operations in LoginCredentialController and LoginProviderController to return boolean - Updated BillingProviderController tests to match error handling patterns - Aligned HTTP status codes (200 for successful deletion) - Standardized DTO transformations using toResponseDto and toResponseDtoArray - Improved test coverage and consistency across controller tests - Removed constructor-based initialization in ControllerBase in favor of abstract properties
+
+23	0	my-app/packages/backend/src/controllers/BaseUserController.spec.ts
+41	14	my-app/packages/backend/src/controllers/BillingProviderController.spec.ts
+4	6	my-app/packages/backend/src/controllers/BillingProviderController.ts
+122	73	my-app/packages/backend/src/controllers/LoginCredentialController.spec.ts
+2	1	my-app/packages/backend/src/controllers/LoginCredentialController.ts
+23	0	my-app/packages/backend/src/controllers/LoginProviderController.spec.ts
+2	1	my-app/packages/backend/src/controllers/LoginProviderController.ts
+23	0	my-app/packages/backend/src/controllers/OrganizationController.spec.ts
+23	0	my-app/packages/backend/src/controllers/UserController.spec.ts
+153	107	my-app/packages/backend/src/services/LoginCredentialService.spec.ts
+19	12	my-app/packages/backend/src/utils/controller-utils.ts
+13	0	my-app/packages/shared/src/dtos/LoginProvider/ResponseLoginProviderDto.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+0	179	src/controllers/BillingProviderController.spec.ts
+0	100	src/controllers/BillingProviderController.ts
+4	0	test-all.sh
+
+commit 81b9b00ed07a56f5a261e188c935521536d858f8
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 16:14:11 2025 -0800
+
+    feat(templates): update code generation templates with improved patterns and error handling - Updated all three code generation templates (basic, Has-A, Is-A) with latest patterns - Enhanced error handling using ControllerBase across all templates - Added proper DTO transformations and logging patterns - Improved relationship handling in Has-A template - Enhanced inheritance patterns in Is-A template - Added comprehensive test patterns for all scenarios - Standardized import statements and error handling - Added specialized validation methods - Updated documentation and examples - Improved type safety and error context - Added relationship-specific endpoints and validations - Enhanced Swagger documentation patterns - Standardized logging and resource naming - Added comprehensive test cases for edge scenarios
+
+1	1	02-impl/ideas/cmd-git.md
+75	20	02-impl/ideas/genprompt-entity-3-CTT.md
+90	29	02-impl/ideas/genprompt-entity-HasA-3-CTT.md
+74	30	02-impl/ideas/genprompt-entity-IsA-3-CTT.md
+73	16	my-app/packages/backend/src/controllers/BaseUserController.ts
+0	0	my-app/packages/backend/src/controllers/BillingProvider.spec.ts
+51	127	my-app/packages/backend/src/controllers/BillingProviderController.ts
+80	28	my-app/packages/backend/src/controllers/LoginCredentialController.ts
+55	75	my-app/packages/backend/src/controllers/LoginProviderController.ts
+241	0	my-app/packages/backend/src/controllers/OrganizationController.spec.ts
+57	71	my-app/packages/backend/src/controllers/OrganizationController.ts
+112	60	my-app/packages/backend/src/controllers/UserController.ts
+27	16	my-app/packages/backend/src/services/BillingProviderService.ts
+14	1	my-app/packages/backend/src/test/__mocks__/organization.mock.ts
+54	0	my-app/packages/backend/src/utils/controller-utils.ts
+179	0	src/controllers/BillingProviderController.spec.ts
+100	0	src/controllers/BillingProviderController.ts
+0	102	src/controllers/UserController.ts
+0	184	src/services/UserService.ts
+
+commit 71eae7bd8937527ffec95d0f97afbf099859d5a5
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 15:17:20 2025 -0800
+
+    refactor(auth): update login credential service and tests - Enhanced error handling with createErrorContext throughout service - Updated return types to properly handle null values - Fixed type errors in LoginCredentialService.spec.ts - Updated BillingProvider.spec.ts to use correct model properties - Improved test coverage for edge cases and error scenarios - Added comprehensive validation for password updates - Enhanced OAuth credential handling with proper type checks
+
+1	1	02-impl/ideas/genprompt/BillingProvider/0-aider.md
+1	0	02-impl/ideas/genprompt/BillingProvider/1-MDM.md
+7	0	build-all.sh
+13	4	my-app/packages/backend/src/controllers/BaseUserController.spec.ts
+6	3	my-app/packages/backend/src/controllers/BaseUserController.ts
+195	0	my-app/packages/backend/src/controllers/BillingProviderController.spec.ts
+176	0	my-app/packages/backend/src/controllers/BillingProviderController.ts
+28	30	my-app/packages/backend/src/controllers/LoginCredentialController.spec.ts
+23	17	my-app/packages/backend/src/controllers/LoginCredentialController.ts
+11	3	my-app/packages/backend/src/controllers/UserController.spec.ts
+13	1	my-app/packages/backend/src/controllers/UserController.ts
+3	20	my-app/packages/backend/src/migrations/1737964200-001-CREATE-LoginProvider.ts
+10	31	my-app/packages/backend/src/migrations/1737964200-002-CREATE-LoginCredential.ts
+8	27	my-app/packages/backend/src/migrations/1737964200-004-CREATE-BaseUser.ts
+3	20	my-app/packages/backend/src/migrations/1737964200-006-CREATE-Organization.ts
+3	7	my-app/packages/backend/src/migrations/1737964200-007-CREATE-User.ts
+56	0	my-app/packages/backend/src/migrations/1738084609-009-CREATE-BillingProvider.ts
+81	0	my-app/packages/backend/src/migrations/helpers.ts
+84	0	my-app/packages/backend/src/models/BillingProvider.spec.ts
+57	0	my-app/packages/backend/src/models/BillingProvider.ts
+128	32	my-app/packages/backend/src/services/BaseUserService.ts
+164	0	my-app/packages/backend/src/services/BillingProviderService.spec.ts
+166	0	my-app/packages/backend/src/services/BillingProviderService.ts
+47	29	my-app/packages/backend/src/services/LoginCredentialService.spec.ts
+278	98	my-app/packages/backend/src/services/LoginCredentialService.ts
+136	15	my-app/packages/backend/src/services/LoginProviderService.ts
+151	72	my-app/packages/backend/src/services/OrganizationService.ts
+152	45	my-app/packages/backend/src/services/UserService.ts
+129	0	my-app/packages/backend/src/utils/error-handling.ts
+44	0	my-app/packages/shared/src/dtos/BillingProvider/CreateBillingProviderDto.ts
+64	0	my-app/packages/shared/src/dtos/BillingProvider/ResponseBillingProviderDto.ts
+42	0	my-app/packages/shared/src/dtos/BillingProvider/UpdateBillingProviderDto.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+102	0	src/controllers/UserController.ts
+184	0	src/services/UserService.ts
+0	69	src/test/factories/login-credential.factory.ts
+0	37	src/test/factories/organization.factory.ts
+0	67	src/test/factories/user.factory.ts
+0	51	src/test/helpers/database.helper.ts
+0	157	src/test/integration/features/organization-management.integration.ts
+0	57	src/test/setup.ts
+
+commit 4528113ff0d7a3e7dbc9d2fee859cfea30ebaf83
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 13:50:01 2025 -0800
+
+    updated genprompt migration naming conventions, fixed migration filenames and class names
+
+8	2	02-impl/ideas/genprompt-entity-1-MDM.md
+10	2	02-impl/ideas/genprompt-entity-HasA-1-MDM.md
+9	1	02-impl/ideas/genprompt-entity-IsA-1-MDM.md
+63	0	02-impl/ideas/genprompt/BillingProvider/0-aider.md
+234	0	02-impl/ideas/genprompt/BillingProvider/1-MDM.md
+230	0	02-impl/ideas/genprompt/BillingProvider/2-SDT.md
+245	0	02-impl/ideas/genprompt/BillingProvider/3-CTT.md
+2	2	my-app/packages/backend/src/app.module.ts
+1	1	my-app/packages/backend/src/migrations/{1737964200_001-CreateLoginProvider.ts => 1737964200-001-CREATE-LoginProvider.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200_002-CreateLoginCredential.ts => 1737964200-002-CREATE-LoginCredential.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200_003-AddLoginCredentialForeignKeys.ts => 1737964200-003-ADD-LoginCredential-FK-LoginProvider.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200_004-CreateBaseUser.ts => 1737964200-004-CREATE-BaseUser.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200_005-AddBaseUserForeignKeys.ts => 1737964200-005-ADD-BaseUser-FK-LoginCredential.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200_006-CreateOrganization.ts => 1737964200-006-CREATE-Organization.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200_007-CreateUser.ts => 1737964200-007-CREATE-User.ts}
+1	1	my-app/packages/backend/src/migrations/{1737964200_008-AddUserForeignKeys.ts => 1737964200-008-ADD-User-FK-Organization.ts}
+
+commit 687934710898fd93c50f95d3b17449aebb090bc4
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 13:09:41 2025 -0800
+
+    finalized genprompt templates as 3 stages
+
+4	4	02-impl/ideas/genprompt-aider.md
+114	165	02-impl/ideas/genprompt-entity-1-MDM.md
+145	225	02-impl/ideas/genprompt-entity-2-SDT.md
+142	236	02-impl/ideas/genprompt-entity-3-CTT.md
+165	196	02-impl/ideas/genprompt-entity-HasA-1-MDM.md
+179	262	02-impl/ideas/genprompt-entity-HasA-2-SDT.md
+181	227	02-impl/ideas/genprompt-entity-HasA-3-CTT.md
+136	210	02-impl/ideas/genprompt-entity-IsA-1-MDM.md
+169	238	02-impl/ideas/genprompt-entity-IsA-2-SDT.md
+176	234	02-impl/ideas/genprompt-entity-IsA-3-CTT.md
+60	0	02-impl/ideas/old/BillingProvider/0-aider.md
+136	0	02-impl/ideas/old/BillingProvider/1-MDM.md
+324	0	02-impl/ideas/old/BillingProvider/2-SDT.md
+441	0	02-impl/ideas/old/BillingProvider/3-CTT.md
+0	0	02-impl/ideas/{ => old}/genprompt-entity-HasA.md
+0	0	02-impl/ideas/{ => old}/genprompt-entity-IsA.md
+0	11	my-app/packages/backend/src/migrations/1738084609-009-CreateBillingProvider.ts
+0	11	my-app/packages/backend/src/migrations/1738084609_009-CreateBillingProvider.ts
+9	0	my-app/packages/shared/src/enums/BillingProviderType.ts
+
+commit 0cabc0aa995981c8c64135c5ca2444aaaee9dfa1
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 11:21:51 2025 -0800
+
+    docs: create split templates for Has-A and Is-A relationships
+
+50	0	02-impl/ideas/cmd-genprompt.md
+49	0	02-impl/ideas/genprompt-aider.md
+0	11	02-impl/ideas/genprompt-entity-1-MDM.md
+0	11	02-impl/ideas/genprompt-entity-2-SDT.md
+0	10	02-impl/ideas/genprompt-entity-3-CTT.md
+274	0	02-impl/ideas/genprompt-entity-HasA-1-MDM.md
+352	0	02-impl/ideas/genprompt-entity-HasA-2-SDT.md
+307	0	02-impl/ideas/genprompt-entity-HasA-3-CTT.md
+258	0	02-impl/ideas/genprompt-entity-IsA-1-MDM.md
+328	0	02-impl/ideas/genprompt-entity-IsA-2-SDT.md
+320	0	02-impl/ideas/genprompt-entity-IsA-3-CTT.md
+0	351	02-impl/ideas/genprompt/BillingProvider/1-MDM.md
+0	379	02-impl/ideas/genprompt/BillingProvider/2-SDT.md
+0	98	02-impl/ideas/genprompt/BillingProvider/3-CTT.md
+
+commit 9021746e5f894fdfd1740aeb2184bea326462ea0
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 11:01:22 2025 -0800
+
+    docs: create BillingProvider generation prompts following template format
+
+0	51	02-impl/ideas/genprompt-entity.md
+351	0	02-impl/ideas/genprompt/BillingProvider/1-MDM.md
+379	0	02-impl/ideas/genprompt/BillingProvider/2-SDT.md
+98	0	02-impl/ideas/genprompt/BillingProvider/3-CTT.md
+0	479	02-impl/ideas/genprompt/gp-entity-BillingProfile.md
+0	171	02-impl/ideas/genprompt/gp-entity-BillingProvider.md
+
+commit 41a7997c3011fc0595c2111e8edd8112d042caf3
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 10:54:53 2025 -0800
+
+    feat: add BillingProfile entity generation prompts
+
+479	0	02-impl/ideas/genprompt/gp-entity-BillingProfile.md
+
+commit b4dd94a4b953896508de23a653c429969d0ff41e
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 10:52:37 2025 -0800
+
+    feat: complete entity generation templates with comprehensive stubs - Add model/DTO/migration stubs to MDM - Add service/test stubs to SDT - Add controller/test stubs to CTT
+
+1	1	02-impl/ideas/cmd-git.md
+
+commit 31cab4accdabc322709466722caa9a3f6ee7a5c2
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 10:51:16 2025 -0800
+
+    docs: add comprehensive stubs to all entity generation templates
+
+1	1	02-impl/ideas/genprompt-entity-1-MDM.md
+232	2	02-impl/ideas/genprompt-entity-2-SDT.md
+250	2	02-impl/ideas/genprompt-entity-3-CTT.md
+
+commit cf59499633e81cbf829a352a732bd33d40a7b743
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 10:47:03 2025 -0800
+
+    docs: rename template files to use simpler acronyms (SDT and CTT)
+
+193	1	02-impl/ideas/genprompt-entity-1-MDM.md
+0	0	02-impl/ideas/{genprompt-entity-2-SDsT.md => genprompt-entity-2-SDT.md}
+1	1	02-impl/ideas/{genprompt-entity-3-CcTmT.md => genprompt-entity-3-CTT.md}
+
+commit 4c1d253df5973074318c21bac4da1087fa39d936
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 10:43:10 2025 -0800
+
+    docs: update genprompt templates with generic placeholders and add stubs
+
+87	0	02-impl/ideas/genprompt-entity-1-MDM.md
+84	0	02-impl/ideas/genprompt-entity-2-SDsT.md
+92	0	02-impl/ideas/genprompt-entity-3-CcTmT.md
+
+commit 49ed3a6472a37c1a03c61082592b7297ad7113f0
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 10:39:59 2025 -0800
+
+    refactor: update CreateLoginCredential migration class name to use underscore format
+
+1	1	my-app/packages/backend/src/migrations/1737964200_002-CreateLoginCredential.ts
+11	0	my-app/packages/backend/src/migrations/1738084609-009-CreateBillingProvider.ts
+
+commit 935d6d5f9ae0bd05079ffc4b4c0fd64fdc907b99
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 10:38:41 2025 -0800
+
+    refactor: update remaining migration class names to use underscore format
+
+1	1	my-app/packages/backend/src/migrations/1737964200_003-AddLoginCredentialForeignKeys.ts
+1	1	my-app/packages/backend/src/migrations/1737964200_004-CreateBaseUser.ts
+1	1	my-app/packages/backend/src/migrations/1737964200_005-AddBaseUserForeignKeys.ts
+1	1	my-app/packages/backend/src/migrations/1737964200_006-CreateOrganization.ts
+1	1	my-app/packages/backend/src/migrations/1737964200_007-CreateUser.ts
+1	1	my-app/packages/backend/src/migrations/1737964200_008-AddUserForeignKeys.ts
+0	0	my-app/packages/backend/src/migrations/1738084609-CreateBillingProvider.ts
+11	0	my-app/packages/backend/src/migrations/1738084609_009-CreateBillingProvider.ts
+
+commit 6df160a9ff952e497720edb3a86d27d9c425f555
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 10:35:17 2025 -0800
+
+    refactor: update migration file names and class names to use underscore format
+
+1	1	my-app/packages/backend/src/migrations/{1737964200001-CreateLoginProvider.ts => 1737964200_001-CreateLoginProvider.ts}
+0	0	my-app/packages/backend/src/migrations/{1737964200002-CreateLoginCredential.ts => 1737964200_002-CreateLoginCredential.ts}
+0	0	my-app/packages/backend/src/migrations/{1737964200003-AddLoginCredentialForeignKeys.ts => 1737964200_003-AddLoginCredentialForeignKeys.ts}
+0	0	my-app/packages/backend/src/migrations/{1737964200004-CreateBaseUser.ts => 1737964200_004-CreateBaseUser.ts}
+0	0	my-app/packages/backend/src/migrations/{1737964200005-AddBaseUserForeignKeys.ts => 1737964200_005-AddBaseUserForeignKeys.ts}
+0	0	my-app/packages/backend/src/migrations/{1737964200006-CreateOrganization.ts => 1737964200_006-CreateOrganization.ts}
+0	0	my-app/packages/backend/src/migrations/{1737964200007-CreateUser.ts => 1737964200_007-CreateUser.ts}
+0	0	my-app/packages/backend/src/migrations/{1737964200008-AddUserForeignKeys.ts => 1737964200_008-AddUserForeignKeys.ts}
+
+commit 63e072c2da3c0b87975d8395084976402466f5b2
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 09:56:41 2025 -0800
+
+    chore: create empty files for BillingProvider implementation
+
+171	0	02-impl/ideas/genprompt/gp-entity-BillingProvider.md
+0	0	my-app/packages/backend/src/controllers/BillingProvider.spec.ts
+0	0	my-app/packages/backend/src/controllers/BillingProviderController.ts
+0	0	my-app/packages/backend/src/migrations/1738084609-CreateBillingProvider.ts
+0	0	my-app/packages/backend/src/models/BillingProvider.spec.ts
+0	0	my-app/packages/backend/src/models/BillingProvider.ts
+0	0	my-app/packages/backend/src/services/BillingProvider.spec.ts
+0	0	my-app/packages/backend/src/services/BillingProviderService.ts
+0	0	my-app/packages/shared/src/dtos/BillingProvider/CreateBillingProviderDto.ts
+0	0	my-app/packages/shared/src/dtos/BillingProvider/ResponseBillingProviderDto.ts
+0	0	my-app/packages/shared/src/dtos/BillingProvider/UpdateBillingProviderDto.ts
+
+commit 825aa9cd057ae2a16baf8bda03467238021b256d
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 09:26:28 2025 -0800
+
+    feat: Integrate BillingProviderModule into AppModule imports
+
+2	0	my-app/packages/backend/src/app.module.ts
+
+commit d5ba21531617dc27a7b59cd4643b8a0fa5fea480
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 09:06:18 2025 -0800
+
+    docs: update git command documentation with clearer instructions
+
+2	1	02-impl/ideas/cmd-git.md
+
+commit 4184b065256e074fb5108e8b6bc788e3766de94c
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 09:04:47 2025 -0800
+
+    refactor(guides): standardize naming conventions in entity generation guides - Update all entity generation guides (standalone, Is-A, Has-A) to use consistent PascalCase for all TypeScript files - Remove incorrect kebab-case references for DTOs - Clarify that all source files (models, services, controllers, DTOs) use PascalCase - Simplify casing instructions to two clear rules: PascalCase for files, camelCase for properties - Update file paths and examples to reflect correct casing patterns
+
+0	0	02-impl/ideas/{site-summary.md => 0-site-summary.md}
+1	1	02-impl/ideas/{git-command.md => cmd-git.md}
+0	0	02-impl/ideas/{tree.md => cmd-tree.md}
+0	0	02-impl/ideas/{user-design.md => design-entities.md}
+0	0	02-impl/ideas/{integration-tests-design.md => design-integration-tests.md}
+63	0	02-impl/ideas/genprompt-entity-HasA.md
+56	0	02-impl/ideas/genprompt-entity-IsA.md
+51	0	02-impl/ideas/genprompt-entity.md
+0	0	02-impl/ideas/{integration-tests-plan.md => plan-integration-tests.md}
+0	0	02-impl/ideas/{test-coverage.md => report-test-coverage.md}
+0	0	02-impl/ideas/{api-test-strategy.md => strategy-api-test.md}
+
+commit 5eac7cd700fe3cf84edafd9399d8bb94f08bdc8c
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Tue Jan 28 08:04:42 2025 -0800
+
+    refactor: Remove Profile entity and references - Removed profileId from User entity and migration - Removed Profile references from ResponseUserDto - Removed Profile references from user.mock.ts - Cleaned up user-design.md to remove Profile mentions - Kept OAuth rawProfile fields as they are part of OAuth data - All tests passing (193/193) with no regressions
+
+198	488	02-impl/ideas/api-test-strategy.md
+2	2	02-impl/ideas/git-command.md
+197	0	02-impl/ideas/integration-tests-design.md
+130	0	02-impl/ideas/integration-tests-plan.md
+1	4	02-impl/ideas/user-design.md
+140	4	my-app/package-lock.json
+4	1	my-app/packages/backend/package.json
+0	5	my-app/packages/backend/src/migrations/1737964200007-CreateUser.ts
+0	6	my-app/packages/backend/src/test/__mocks__/user.mock.ts
+0	4	my-app/packages/shared/src/dtos/User/ResponseUserDto.ts
+69	0	src/test/factories/login-credential.factory.ts
+37	0	src/test/factories/organization.factory.ts
+67	0	src/test/factories/user.factory.ts
+51	0	src/test/helpers/database.helper.ts
+157	0	src/test/integration/features/organization-management.integration.ts
+57	0	src/test/setup.ts
+
+commit 4c7362d87f7c89153bb0c45947a6f39c7b565cfa
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 19:20:02 2025 -0800
+
+    ideas files, site-summary documentation, api-test-strategy
+
+548	0	02-impl/ideas/api-test-strategy.md
+8	0	02-impl/ideas/git-command.md
+420	0	02-impl/ideas/site-summary.md
+
+commit e783ae51799286e015dc8eb4b056fb1d2632a109
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 19:18:35 2025 -0800
+
+    feat(testing): Implement feature-based integration test structure. Added integration test infrastructure with feature-based organization (organization-management, user-management, auth-management). Updated site-summary.md with comprehensive testing strategy documentation including test approach, database strategy, and feature organization.
+
+140	0	my-app/packages/backend/src/controllers/BaseUserController.spec.ts
+69	78	my-app/packages/backend/src/controllers/LoginCredentialController.spec.ts
+26	25	my-app/packages/backend/src/controllers/LoginProviderController.spec.ts
+110	73	my-app/packages/backend/src/controllers/UserController.spec.ts
+98	18	my-app/packages/backend/src/models/BaseUser.spec.ts
+42	0	my-app/packages/backend/src/models/LoginCredential.spec.ts
+44	15	my-app/packages/backend/src/models/LoginProvider.spec.ts
+61	7	my-app/packages/backend/src/models/Organization.spec.ts
+25	95	my-app/packages/backend/src/services/BaseUserService.spec.ts
+474	261	my-app/packages/backend/src/services/LoginCredentialService.spec.ts
+18	31	my-app/packages/backend/src/services/LoginProviderService.spec.ts
+78	76	my-app/packages/backend/src/services/OrganizationService.spec.ts
+41	101	my-app/packages/backend/src/services/UserService.spec.ts
+81	0	my-app/packages/backend/src/test/__mocks__/auth.mock.ts
+4	0	my-app/packages/backend/src/test/__mocks__/bcrypt.mock.ts
+16	0	my-app/packages/backend/src/test/__mocks__/core.mock.ts
+54	0	my-app/packages/backend/src/test/__mocks__/errors.mock.ts
+4	0	my-app/packages/backend/src/test/__mocks__/index.ts
+15	0	my-app/packages/backend/src/test/__mocks__/organization.mock.ts
+85	0	my-app/packages/backend/src/test/__mocks__/user.mock.ts
+31	0	my-app/packages/backend/src/test/factories/test-data.factory.ts
+45	0	my-app/packages/backend/src/test/helpers/test.helper.ts
+69	0	my-app/packages/backend/src/test/helpers/test.helpers.ts
+0	0	my-app/packages/backend/src/test/integration/features/auth-management.integration.ts
+0	0	my-app/packages/backend/src/test/integration/features/organization-management.integration.ts
+0	0	my-app/packages/backend/src/test/integration/features/user-management.integration.ts
+0	0	my-app/packages/backend/src/test/integration/setup.ts
+1	0	my-app/packages/backend/src/test/setup.ts
+
+commit ae2e63e881ce2d34ff964f996680e14b3b62637d
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 11:57:48 2025 -0800
+
+    refactor(migrations): restructure migration sequence for proper dependency flow - Remove AddBaseUserToLoginCredential (redundant) - Remove duplicate CreateLoginProvider - Reorder migrations: 1) CreateLoginProvider 2) CreateLoginCredential 3) AddLoginCredentialFKs 4) CreateBaseUser 5) AddBaseUserFKs 6) CreateOrganization 7) CreateUser 8) AddUserFKs - Fix circular dependencies between User/BaseUser/LoginCredential - Separate table creation from FK creation for cleaner rollbacks
+
+2	2	my-app/packages/backend/src/migrations/{1737964200004-CreateLoginProvider.ts => 1737964200001-CreateLoginProvider.ts}
+2	19	my-app/packages/backend/src/migrations/{1737964200003-CreateLoginCredential.ts => 1737964200002-CreateLoginCredential.ts}
+5	15	my-app/packages/backend/src/migrations/{1737964200001-AddBaseUserToLoginCredential.ts => 1737964200003-AddLoginCredentialForeignKeys.ts}
+7	22	my-app/packages/backend/src/migrations/{1737964200002-CreateBaseUser.ts => 1737964200004-CreateBaseUser.ts}
+27	0	my-app/packages/backend/src/migrations/1737964200005-AddBaseUserForeignKeys.ts
+0	0	my-app/packages/backend/src/migrations/{1737964200005-CreateOrganization.ts => 1737964200006-CreateOrganization.ts}
+3	10	my-app/packages/backend/src/migrations/{1737964200006-CreateUser.ts => 1737964200007-CreateUser.ts}
+27	0	my-app/packages/backend/src/migrations/1737964200008-AddUserForeignKeys.ts
+
+commit 614468734525cb1f9f23758a668b9be7f3a48e84
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 10:53:20 2025 -0800
+
+    refactor(monorepo): Major workspace restructuring and dependency alignment
+    
+    BREAKING CHANGES: Removed unnecessary root-level configuration files (package.json, tsconfig.json). Consolidated all workspace management into my-app directory.
+    
+    Workspace Changes: Removed root package.json and package-lock.json, removed root tsconfig.json, updated workspace-level tsconfig.json with proper decorator support, cleaned up workspace structure for better monorepo management.
+    
+    Package Changes: 1) Shared: Updated NestJS deps, added validators, fixed BaseUser DTOs. 2) Backend: Fixed BaseUser model/tests, added username validation, enhanced controller. 3) Frontend: Cleaned dependencies.
+    
+    Build System: Verified all package builds, fixed TS config inheritance, maintained 90%+ coverage. Documentation: Updated README and structure.
+
+0	0	--environment={'load_dotenv': True}
+1	0	02-impl/ideas/tree.md
+12	17	02-impl/ideas/user-design.md
+160	0	README.md
+0	52	markdown
+0	1235	package-lock.json
+0	31	package.json
+0	156	python
+0	19	tsconfig.json
+0	51	typescript
+
+commit e29f293df35a55fb84520168c5ebe014e6a0c819
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 10:50:56 2025 -0800
+
+    refactor(monorepo): Major workspace restructuring and dependency alignment
+    
+    BREAKING CHANGES: Removed unnecessary root-level configuration files (package.json, tsconfig.json). Consolidated all workspace management into my-app directory.
+    
+    Workspace Changes: Removed root package.json and package-lock.json, removed root tsconfig.json, updated workspace-level tsconfig.json with proper decorator support, cleaned up workspace structure for better monorepo management.
+    
+    Package Changes: 1) Shared: Updated NestJS deps, added validators, fixed BaseUser DTOs. 2) Backend: Fixed BaseUser model/tests, added username validation, enhanced controller. 3) Frontend: Cleaned dependencies.
+    
+    Build System: Verified all package builds, fixed TS config inheritance, maintained 90%+ coverage. Documentation: Updated README and structure.
+
+7	462	my-app/package-lock.json
+41	1	my-app/packages/backend/src/controllers/UserController.spec.ts
+24	3	my-app/packages/backend/src/controllers/UserController.ts
+0	5	my-app/packages/backend/src/migrations/1737964200002-CreateBaseUser.ts
+6	6	my-app/packages/backend/src/migrations/1737964200005-CreateOrganization.ts
+12	1	my-app/packages/backend/src/migrations/1737964200006-CreateUser.ts
+0	2	my-app/packages/backend/src/models/BaseUser.spec.ts
+0	3	my-app/packages/backend/src/models/BaseUser.ts
+2	14	my-app/packages/backend/src/models/User.ts
+0	11	my-app/packages/backend/src/services/BaseUserService.spec.ts
+76	4	my-app/packages/backend/src/services/UserService.spec.ts
+26	1	my-app/packages/backend/src/services/UserService.ts
+1	9	my-app/packages/frontend/package.json
+6	4	my-app/packages/shared/package.json
+0	3	my-app/packages/shared/src/dtos/BaseUser/CreateBaseUserDto.ts
+18	15	my-app/packages/shared/src/dtos/User/CreateUserDto.ts
+20	14	my-app/packages/shared/src/dtos/User/UpdateUserDto.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+3	1	my-app/tsconfig.json
+
+commit 80793eaff1d6ae4eef0a21fabec5b13ea4090384
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 08:21:48 2025 -0800
+
+    docs: clean up README formatting and tool descriptions
+
+2	2	README.md
+
+commit 260d46e71bb0be6f61724dcfcdfe539263157c0a
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 08:13:29 2025 -0800
+
+    docs: update README with comprehensive project overview
+
+110	151	README.md
+
+commit 024fd28ac256d1af9d8639e1218c807d26f19429
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 08:03:06 2025 -0800
+
+    Remove 00-AI-Init and 01-meta from git tracking
+
+3	0	.gitignore
+0	126	00-AI-Init/ai-inheritance-patterns.md
+-	-	01-meta/.DS_Store
+-	-	01-meta/00-AI-init/.DS_Store
+0	182	01-meta/00-AI-init/ai-class-object-operations.md
+0	65	01-meta/00-AI-init/dca-examples/complex-organization.md
+0	55	01-meta/00-AI-init/dca-examples/simple-user.md
+0	201	01-meta/00-AI-init/dca-templates.md
+0	90	01-meta/00-AI-init/o1-procedure.md
+0	288	01-meta/00-AI-init/o1-response.md
+0	227	01-meta/00-AI-init/prompting-templates.md
+0	64	01-meta/01-templates/dca-create.template.md
+0	56	01-meta/01-templates/dca-delete.template.md
+0	54	01-meta/01-templates/dca-modify.template.md
+0	57	01-meta/01-templates/generation-rules.template.md
+0	60	01-meta/01-templates/spec.api.template.md
+0	78	01-meta/01-templates/spec.class.template.md
+0	55	01-meta/01-templates/spec.data-model.template.md
+0	49	01-meta/03-prompts/prompt-comment.md
+
+commit 6064f3a329adcc1d1fd85b5a9d496d4db1774cc9
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 03:05:07 2025 -0800
+
+    fixed and updated all tests to sync with the changes to LoginCredentials and consistency across dto, model, services, controller, etc.
+
+249	80	my-app/packages/backend/src/controllers/LoginCredentialController.spec.ts
+17	10	my-app/packages/backend/src/controllers/UserController.spec.ts
+102	67	my-app/packages/backend/src/models/LoginCredential.spec.ts
+3	1	my-app/packages/backend/src/models/User.spec.ts
+1	10	my-app/packages/backend/src/models/User.ts
+267	392	my-app/packages/backend/src/services/LoginCredentialService.spec.ts
+150	76	my-app/packages/backend/src/services/OrganizationService.spec.ts
+
+commit 6186879d2955b0170580653d4cbb83ae7f8ab8e4
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 02:16:59 2025 -0800
+
+    deleted all the overgeneration and bad generation, fixed stuff
+
+0	0	02-impl/ideas/tree.md
+170	0	02-impl/ideas/user-design.md
+0	64	1. `my-app/packages/backend/src/models/Profile.ts
+0	13	2. `my-app/packages/backend/src/modules/ProfileModule.ts
+0	50	3. `my-app/packages/backend/src/services/ProfileService.ts
+0	36	4. `my-app/packages/shared/src/dtos/Profile/CreateProfileDto.ts
+0	33	5. `my-app/packages/shared/src/dtos/Profile/UpdateProfileDto.ts
+0	33	6. `my-app/packages/shared/src/dtos/Profile/ResponseProfileDto.ts
+0	76	7. `my-app/packages/backend/src/migrations/20240427000000-CreateProfile.ts
+141	27	my-app/package-lock.json
+2	0	my-app/packages/backend/package.json
+114	94	my-app/packages/backend/src/controllers/LoginCredentialController.spec.ts
+25	14	my-app/packages/backend/src/controllers/LoginCredentialController.ts
+2	3	my-app/packages/backend/src/controllers/UserController.spec.ts
+33	4	my-app/packages/backend/src/controllers/UserController.ts
+68	8	my-app/packages/backend/src/migrations/1737964200003-CreateLoginCredential.ts
+20	81	my-app/packages/backend/src/models/BaseUser.spec.ts
+9	3	my-app/packages/backend/src/models/BaseUser.ts
+62	118	my-app/packages/backend/src/models/LoginCredential.spec.ts
+61	23	my-app/packages/backend/src/models/LoginCredential.ts
+5	5	my-app/packages/backend/src/models/LoginProvider.ts
+12	9	my-app/packages/backend/src/models/Organization.spec.ts
+9	5	my-app/packages/backend/src/models/Organization.ts
+0	3	my-app/packages/backend/src/models/Profile.ts
+24	20	my-app/packages/backend/src/models/User.spec.ts
+31	15	my-app/packages/backend/src/models/User.ts
+2	1	my-app/packages/backend/src/modules/OrganizationModule.ts
+2	1	my-app/packages/backend/src/services/BaseUserService.spec.ts
+554	249	my-app/packages/backend/src/services/LoginCredentialService.spec.ts
+133	32	my-app/packages/backend/src/services/LoginCredentialService.ts
+7	1	my-app/packages/backend/src/services/OrganizationService.spec.ts
+66	7	my-app/packages/backend/src/services/OrganizationService.ts
+26	21	my-app/packages/backend/src/services/UserService.spec.ts
+
+commit 84d21992ba7b5814655428620963a552b0bee4bf
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 02:14:11 2025 -0800
+
+    fix: update sqlite compatibility for enums and timestamps
+
+74	15	my-app/packages/shared/src/dtos/LoginCredential/CreateLoginCredentialDto.ts
+56	2	my-app/packages/shared/src/dtos/LoginCredential/ResponseLoginCredentialDto.ts
+81	9	my-app/packages/shared/src/dtos/LoginCredential/UpdateLoginCredentialDto.ts
+4	0	my-app/packages/shared/src/dtos/LoginCredential/index.ts
+16	4	my-app/packages/shared/src/dtos/User/CreateUserDto.ts
+16	16	my-app/packages/shared/src/dtos/User/ResponseUserDto.ts
+15	4	my-app/packages/shared/src/dtos/User/UpdateUserDto.ts
+20	0	my-app/packages/shared/src/dtos/index.ts
+11	0	my-app/packages/shared/src/enums/CredentialType.ts
+5	0	my-app/packages/shared/src/enums/index.ts
+4	1	my-app/packages/shared/src/index.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+
+commit d53bf8c195f165ed3b19b16e1cd9edc04a4d386a
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 00:25:41 2025 -0800
+
+    feat: Create Profile feature with entity, service, module, and DTOs
+
+64	0	1. `my-app/packages/backend/src/models/Profile.ts
+13	0	2. `my-app/packages/backend/src/modules/ProfileModule.ts
+50	0	3. `my-app/packages/backend/src/services/ProfileService.ts
+36	0	4. `my-app/packages/shared/src/dtos/Profile/CreateProfileDto.ts
+33	0	5. `my-app/packages/shared/src/dtos/Profile/UpdateProfileDto.ts
+33	0	6. `my-app/packages/shared/src/dtos/Profile/ResponseProfileDto.ts
+76	0	7. `my-app/packages/backend/src/migrations/20240427000000-CreateProfile.ts
+
+commit 50ac459f5c8b5742ff0a1b2d8749537ed4e2b108
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 00:19:03 2025 -0800
+
+    docs: Update test coverage documentation with narrative style
+
+83	190	02-impl/ideas/test-coverage.md
+
+commit 8a02541f1bba1dddf2b4198ba7c667600096e2c3
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 00:13:02 2025 -0800
+
+    docs: Update test coverage documentation with latest metrics and test cases
+
+188	193	02-impl/ideas/test-coverage.md
+
+commit 3da6c8bf7585392f4ae80f25f8baf25e91120e36
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Mon Jan 27 00:10:40 2025 -0800
+
+    feat: Add comprehensive test coverage for User, BaseUser, and LoginCredential models. Update migrations with correct timestamps.
+
+126	5	my-app/packages/backend/src/controllers/UserController.spec.ts
+22	10	my-app/packages/backend/src/controllers/UserController.ts
+1	1	my-app/packages/backend/src/migrations/{20241005130000-AddBaseUserToLoginCredential.ts => 1737964200001-AddBaseUserToLoginCredential.ts}
+1	1	my-app/packages/backend/src/migrations/{20241005120000-CreateBaseUser.ts => 1737964200002-CreateBaseUser.ts}
+1	1	my-app/packages/backend/src/migrations/{20241004154000-CreateLoginCredential.ts => 1737964200003-CreateLoginCredential.ts}
+1	1	my-app/packages/backend/src/migrations/{20241004153000-CreateLoginProvider.ts => 1737964200004-CreateLoginProvider.ts}
+1	1	my-app/packages/backend/src/migrations/{1706331600000-CreateOrganization.ts => 1737964200005-CreateOrganization.ts}
+47	0	my-app/packages/backend/src/migrations/1737964200006-CreateUser.ts
+0	30	my-app/packages/backend/src/migrations/<timestamp>-CreateUser.ts
+71	50	my-app/packages/backend/src/models/BaseUser.spec.ts
+138	35	my-app/packages/backend/src/models/LoginCredential.spec.ts
+95	0	my-app/packages/backend/src/models/User.spec.ts
+34	6	my-app/packages/backend/src/models/User.ts
+164	2	my-app/packages/backend/src/services/UserService.spec.ts
+32	10	my-app/packages/backend/src/services/UserService.ts
+
+commit 9dea31535a8988f03351322f4cd4b614f3e9bfd9
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 23:35:01 2025 -0800
+
+    feat: Implement User entity with service, controller, and DTOs
+
+2	0	my-app/packages/backend/src/app.module.ts
+34	0	my-app/packages/backend/src/controllers/UserController.spec.ts
+28	0	my-app/packages/backend/src/controllers/UserController.ts
+2	1	my-app/packages/backend/src/data-source.ts
+30	0	my-app/packages/backend/src/migrations/<timestamp>-CreateUser.ts
+3	0	my-app/packages/backend/src/models/Profile.ts
+12	0	my-app/packages/backend/src/models/User.ts
+12	0	my-app/packages/backend/src/modules/UserModule.ts
+31	0	my-app/packages/backend/src/services/UserService.spec.ts
+30	0	my-app/packages/backend/src/services/UserService.ts
+18	0	my-app/packages/shared/src/dtos/User/CreateUserDto.ts
+20	0	my-app/packages/shared/src/dtos/User/ResponseUserDto.ts
+22	0	my-app/packages/shared/src/dtos/User/UpdateUserDto.ts
+
+commit 864c27770107dd90440839c71a6b49d281715d9a
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 23:05:49 2025 -0800
+
+    docs: add comprehensive test coverage documentation including controller tests
+
+195	0	02-impl/ideas/test-coverage.md
+
+commit fc67506db4580eca04a96f9bbb3e2e5f0bb80e9d
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 23:05:49 2025 -0800
+
+    feat: complete test coverage for all services and controllers
+
+6	5	my-app/package-lock.json
+19	0	my-app/packages/backend/jest.config.js
+2	2	my-app/packages/backend/package.json
+143	1	my-app/packages/backend/src/controllers/LoginCredentialController.spec.ts
+139	1	my-app/packages/backend/src/controllers/LoginProviderController.spec.ts
+81	0	my-app/packages/backend/src/models/BaseUser.spec.ts
+70	0	my-app/packages/backend/src/models/LoginCredential.spec.ts
+32	0	my-app/packages/backend/src/models/LoginProvider.spec.ts
+34	0	my-app/packages/backend/src/models/Organization.spec.ts
+260	0	my-app/packages/backend/src/services/BaseUserService.spec.ts
+18	2	my-app/packages/backend/src/services/BaseUserService.ts
+330	4	my-app/packages/backend/src/services/LoginCredentialService.spec.ts
+123	3	my-app/packages/backend/src/services/LoginProviderService.spec.ts
+176	1	my-app/packages/backend/src/services/OrganizationService.spec.ts
+46	0	my-app/packages/backend/src/test/setup.ts
+2	1	my-app/packages/frontend/package.json
+2	2	my-app/packages/shared/package.json
+
+commit d6134c95a394fa0c579daba558025af327329335
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 22:12:13 2025 -0800
+
+    feat: implement BaseUser entity with CRUD operations
+
+38	0	my-app/packages/backend/src/controllers/BaseUserController.ts
+1	1	my-app/packages/backend/src/migrations/20241005120000-CreateBaseUser.ts
+35	0	my-app/packages/backend/src/migrations/20241005130000-AddBaseUserToLoginCredential.ts
+2	8	my-app/packages/backend/src/models/BaseUser.ts
+8	0	my-app/packages/backend/src/models/LoginCredential.ts
+17	9	my-app/packages/backend/src/services/BaseUserService.ts
+1	1	my-app/packages/shared/src/dtos/BaseUser/CreateBaseUserDto.ts
+1	1	my-app/packages/shared/src/dtos/BaseUser/UpdateBaseUserDto.ts
+6	0	my-app/packages/shared/src/enums/UserState.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+
+commit 24356f7ba9b16ad7b0b50d909d8ec73e075e0497
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 22:01:51 2025 -0800
+
+    feat: Add BaseUser module with migration, service, and controller
+
+2	0	my-app/packages/backend/src/app.module.ts
+3	2	my-app/packages/backend/src/data-source.ts
+99	0	my-app/packages/backend/src/migrations/20241005120000-CreateBaseUser.ts
+65	0	my-app/packages/backend/src/models/BaseUser.ts
+13	0	my-app/packages/backend/src/modules/BaseUserModule.ts
+40	0	my-app/packages/backend/src/services/BaseUserService.ts
+28	0	my-app/packages/shared/src/dtos/BaseUser/CreateBaseUserDto.ts
+13	0	my-app/packages/shared/src/dtos/BaseUser/ResponseBaseUserDto.ts
+32	0	my-app/packages/shared/src/dtos/BaseUser/UpdateBaseUserDto.ts
+
+commit 8063275607a1735f395f2cc2d70f2e0a6ad73f04
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 21:51:01 2025 -0800
+
+    feat: implement LoginCredential entity with CRUD operations
+
+21	9	my-app/packages/backend/src/controllers/LoginCredentialController.ts
+3	2	my-app/packages/backend/src/data-source.ts
+41	5	my-app/packages/backend/src/migrations/20241004154000-CreateLoginCredential.ts
+26	5	my-app/packages/backend/src/models/LoginCredential.ts
+46	15	my-app/packages/backend/src/services/LoginCredentialService.ts
+21	6	my-app/packages/shared/src/dtos/LoginCredential/CreateLoginCredentialDto.ts
+7	2	my-app/packages/shared/src/dtos/LoginCredential/ResponseLoginCredentialDto.ts
+17	6	my-app/packages/shared/src/dtos/LoginCredential/UpdateLoginCredentialDto.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+
+commit ed3878ff3d35d7e9930d7997a8872f7b555483d1
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 21:39:32 2025 -0800
+
+    feat: Add LoginCredential feature with entity, service, controller, and tests
+
+2	0	my-app/packages/backend/src/app.module.ts
+35	0	my-app/packages/backend/src/controllers/LoginCredentialController.spec.ts
+34	0	my-app/packages/backend/src/controllers/LoginCredentialController.ts
+55	0	my-app/packages/backend/src/migrations/20241004154000-CreateLoginCredential.ts
+22	0	my-app/packages/backend/src/models/LoginCredential.ts
+12	0	my-app/packages/backend/src/modules/LoginCredentialModule.ts
+31	0	my-app/packages/backend/src/services/LoginCredentialService.spec.ts
+36	0	my-app/packages/backend/src/services/LoginCredentialService.ts
+15	0	my-app/packages/shared/src/dtos/LoginCredential/CreateLoginCredentialDto.ts
+7	0	my-app/packages/shared/src/dtos/LoginCredential/ResponseLoginCredentialDto.ts
+17	0	my-app/packages/shared/src/dtos/LoginCredential/UpdateLoginCredentialDto.ts
+
+commit bbebcda5b01a434e6458aa5d598c2e749eb2875e
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 21:28:57 2025 -0800
+
+    feat: Add LoginProvider entity with CRUD operations and tests
+
+0	0	my-app/packages/backend/dev.db
+3	2	my-app/packages/backend/src/data-source.ts
+0	56	my-app/packages/backend/src/migrations/20241003120000-CreateLoginProvider.ts
+5	0	my-app/packages/frontend/next-env.d.ts
+21	6	my-app/packages/frontend/tsconfig.json
+0	10	my-app/packages/shared/src/dtos/index.ts
+1	1	my-app/packages/shared/tsconfig.tsbuildinfo
+
+commit 4731e8f729f0c0fcd8b4f6e996cf8c4d67d30928
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 21:16:59 2025 -0800
+
+    feat: Add LoginProvider feature with controller, service, and migration
+
+38	0	my-app/packages/backend/src/controllers/LoginProviderController.spec.ts
+118	0	my-app/packages/backend/src/controllers/LoginProviderController.ts
+56	0	my-app/packages/backend/src/migrations/20241004153000-CreateLoginProvider.ts
+33	0	my-app/packages/backend/src/services/LoginProviderService.spec.ts
+6	1	my-app/packages/shared/src/dtos/index.ts
+
+commit 9cb0e44e3a1bfdee0eb0e9a275b049eaa0168e10
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 21:11:03 2025 -0800
+
+    feat: Implement LoginProvider entity, module, service, and migration
+
+2	0	my-app/packages/backend/src/app.module.ts
+56	0	my-app/packages/backend/src/migrations/20241003120000-CreateLoginProvider.ts
+22	0	my-app/packages/backend/src/models/LoginProvider.ts
+13	0	my-app/packages/backend/src/modules/LoginProviderModule.ts
+42	0	my-app/packages/backend/src/services/LoginProviderService.ts
+15	0	my-app/packages/shared/src/dtos/LoginProvider/CreateLoginProviderDto.ts
+8	0	my-app/packages/shared/src/dtos/LoginProvider/ResponseLoginProviderDto.ts
+17	0	my-app/packages/shared/src/dtos/LoginProvider/UpdateLoginProviderDto.ts
+
+commit 420511b7498913d797c7cad609756e130690fddc
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 19:32:32 2025 -0800
+
+    feat(organization): Complete Organization feature implementation and fixes - Remove custom repository for built-in TypeORM Repository, update module structure, fix database config for SQLite/PostgreSQL, update DTO imports, add migration scripts, fix DI and error handling, test all CRUD operations
+
+1502	97	my-app/package-lock.json
+9	1	my-app/packages/backend/package.json
+3	37	my-app/packages/backend/src/app.module.ts
+57	20	my-app/packages/backend/src/controllers/OrganizationController.ts
+20	10	my-app/packages/backend/src/data-source.ts
+3	4	my-app/packages/backend/src/migrations/{CreateOrganization.ts => 1706331600000-CreateOrganization.ts}
+2	2	my-app/packages/backend/src/models/Organization.ts
+13	0	my-app/packages/backend/src/modules/OrganizationModule.ts
+0	10	my-app/packages/backend/src/repositories/OrganizationRepository.ts
+22	26	my-app/packages/backend/src/services/OrganizationService.ts
+2	0	my-app/packages/frontend/package.json
+2	0	my-app/packages/shared/package.json
+1	0	my-app/packages/shared/tsconfig.tsbuildinfo
+
+commit 83322fa58551140de4b906e32f85256968ed13df
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 18:11:57 2025 -0800
+
+    feat: Add TypeORM data source configuration for SQLite3 and PostgreSQL
+
+23	0	my-app/packages/backend/src/data-source.ts
+2	2	package.json
+
+commit 83f4d1844561e2606f3a7a3d2e073c91c2df55ce
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 18:03:23 2025 -0800
+
+    feat: Configure PostgreSQL and SQLite3 for development and production environments
+
+10	0	.gitignore
+46	4	my-app/packages/backend/src/app.module.ts
+24	0	package.json
+16	3	tsconfig.json
+
+commit 5e76f9920dfc9e34b7b024cbae2d78352396b461
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:55:47 2025 -0800
+
+    feat(organization): Implement organization functionality - Add Organization model/migration, OrganizationService with CRUD operations, OrganizationRepository, DTOs (Create/Update/Response), test specs, and API endpoints
+
+90	0	01-meta/00-AI-init/o1-procedure.md
+288	0	01-meta/00-AI-init/o1-response.md
+60	37	01-meta/01-templates/spec.class.template.md
+0	66	02-impl/specs/comment.api.spec.md
+0	69	02-impl/specs/comment.class.spec.md
+0	63	02-impl/specs/comment.data-model.spec.md
+1948	130	my-app/package-lock.json
+9	6	my-app/packages/backend/package.json
+2	2	my-app/packages/backend/src/services/OrganizationService.spec.ts
+2	2	my-app/packages/backend/src/services/OrganizationService.ts
+10	3	my-app/packages/frontend/package.json
+8	1	my-app/packages/shared/package.json
+3	1	my-app/packages/shared/tsconfig.json
+1230	1	package-lock.json
+7	0	package.json
+6	0	tsconfig.json
+
+commit 9e32bb176b03a8b61e531b1b44c66211dad8477a
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:52:19 2025 -0800
+
+    feat: Implement Organization service and controller for CRUD operations
+
+75	0	my-app/packages/backend/src/controllers/OrganizationController.ts
+46	0	my-app/packages/backend/src/services/OrganizationService.ts
+
+commit 908abdbbe3440f575b117df9f17533453b47d62f
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:41:43 2025 -0800
+
+    feat: Add OpenAPI specification for Organization API endpoints
+
+200	0	my-app/packages/backend/src/controllers/api.spec
+
+commit d2e1c287446ea1766fbd5d0fa690155126f3fd04
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:38:25 2025 -0800
+
+    feat: Add service specification for Organization entity
+
+43	0	my-app/packages/backend/src/services/OrganizationService.spec.ts
+
+commit c78db671be472500037a52fd8ee9c66e0329b654
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:36:28 2025 -0800
+
+    feat: Add Organization repository specification for TypeORM integration
+
+10	0	my-app/packages/backend/src/repositories/OrganizationRepository.ts
+
+commit 6ec4d4a3ce174270b741ce06cebd1297b7bcc695
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:30:38 2025 -0800
+
+    feat: Add ResponseOrganizationDto for organization data transfer object
+
+22	0	my-app/packages/shared/src/dtos/Organization/ResponseOrganizationDto.ts
+
+commit cfce0e982c0b81ff518cc2cde91187ac31bf05ef
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:29:41 2025 -0800
+
+    feat: Create DTOs for Organization entity with validation rules
+
+14	0	my-app/packages/shared/src/dtos/Organization/CreateOrganizationDto.ts
+16	0	my-app/packages/shared/src/dtos/Organization/UpdateOrganizationDto.ts
+
+commit 1839d42dd95c5566ebb057f2d54c8bf76c244930
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:28:03 2025 -0800
+
+    feat: Add migration for creating organization table in database
+
+57	0	my-app/packages/backend/src/migrations/CreateOrganization.ts
+
+commit 178bd7534f2a4dd903f7a4dde36572b0b34aa35a
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:22:08 2025 -0800
+
+    fix: Add definite assignment assertions to Organization properties
+
+6	6	my-app/packages/backend/src/models/Organization.ts
+
+commit 28c519cfb36e366597600449d3f32990a84e7377
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:12:16 2025 -0800
+
+    feat: Set default values for createdAt and modifiedAt to current timestamp
+
+2	2	my-app/packages/backend/src/models/Organization.ts
+
+commit 2993a05762473a91679c5bc7306a6857d7e5c8b9
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:10:26 2025 -0800
+
+    feat: Make name field optional with default value 'shadow' in Organization model
+
+1	1	my-app/packages/backend/src/models/Organization.ts
+
+commit 3e8c25869daceb1a716057762489615f783f2f3f
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 17:08:10 2025 -0800
+
+    feat: Add Organization entity with properties and decorators
+
+22	0	my-app/packages/backend/src/models/Organization.ts
+
+commit 14d826f9882dfd0418807df2a9df03dac1df85f1
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 16:54:50 2025 -0800
+
+    feat: Add Organization class specification with core CRUD methods
+
+42	52	02-impl/specs/organization.class.spec.md
+
+commit 3a375f9148986dcfabd7e8cefd580f1e881a104a
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 16:22:03 2025 -0800
+
+    feat: Add organization class specification with core properties and methods
+
+108	0	02-impl/specs/organization.class.spec.md
+
+commit b72eea14ae56f061097ebf1f5df754117d4c9dc2
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 16:17:37 2025 -0800
+
+    docs: Update comment.class.spec.md to match spec.class.template.md structure
+
+55	49	02-impl/specs/comment.class.spec.md
+
+commit 3a8e94b9a4c95016d0e0e8fb44cdd11c694d8ed3
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 16:03:11 2025 -0800
+
+    docs: Update comment.class.spec.md to match template structure
+
+16	20	02-impl/specs/comment.class.spec.md
+
+commit 67b84595c58b9a103bd9e3797e58a9a68839f594
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 16:01:08 2025 -0800
+
+    testing templates with composer and aider
+
+26	32	01-meta/01-templates/spec.class.template.md
+49	0	01-meta/03-prompts/prompt-comment.md
+0	115	02-impl/specs/comment.api.spec.ts
+0	95	02-impl/specs/comment.class.spec.ts
+0	57	02-impl/specs/comment.model.spec.md
+0	72	02-impl/specs/comment.model.spec.ts
+
+commit 096aad91e7db72f93d1db5703ec55137300dfe04
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:46:25 2025 -0800
+
+    chore: remove outdated comment specification files
+
+33	135	02-impl/specs/comment.api.spec.md
+45	91	02-impl/specs/comment.class.spec.md
+14	29	02-impl/specs/comment.data-model.spec.md
+
+commit 06fa4b923d306f6ac3523b3fa3098d60dfa80626
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:37:34 2025 -0800
+
+    feat: Add comment data model specification for 10K user site scale
+
+78	0	02-impl/specs/comment.data-model.spec.md
+
+commit 3a43be3bf9788dbbc02162317db29359b7b4e8ea
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:33:58 2025 -0800
+
+    testing templates with composer and aider
+
+0	90	01-meta/01-templates/api-spec.template.md
+0	71	01-meta/01-templates/class-spec.template.md
+0	49	01-meta/01-templates/data-model.template.md
+6	7	01-meta/01-templates/dca-create.template.md
+60	0	01-meta/01-templates/spec.api.template.md
+61	0	01-meta/01-templates/spec.class.template.md
+55	0	01-meta/01-templates/spec.data-model.template.md
+
+commit aa41231ca7f62c2f267589d23d12394958d793cf
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:21:23 2025 -0800
+
+    feat: Add comprehensive comment data model specification
+
+57	0	02-impl/specs/comment.model.spec.md
+
+commit b560c27d585876f479acb47f2e52d42c3563a24a
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:20:10 2025 -0800
+
+    feat: Add comprehensive comment API specification
+
+168	0	02-impl/specs/comment.api.spec.md
+
+commit ea629297e3752cf0af469605f74f807f51d632e9
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:19:04 2025 -0800
+
+    feat: Add comment class specification with core CRUD methods and validation
+
+113	0	02-impl/specs/comment.class.spec.md
+
+commit 3c5ba8971f93c86b38538209e1ee11dba3511dd3
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:17:44 2025 -0800
+
+    feat: Add comment model specification for 10K scale implementation
+
+52	0	markdown
+
+commit f6e4be15904e615538c6325124752647be71f83b
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:12:05 2025 -0800
+
+    testing templates with composer and aider
+
+1	1	01-meta/01-templates/api-spec.template.md
+1	1	01-meta/01-templates/class-spec.template.md
+1	1	01-meta/01-templates/data-model.template.md
+0	1	01-meta/01-templates/dca-create.template.md
+
+commit 9fcc725738b18ef01e7f9be1484fc200c5f8d3cc
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:08:14 2025 -0800
+
+    feat: Create comment model specification for 10K scale implementation
+
+51	0	typescript
+
+commit 10f62b4e73817a0f2392aca9a84cd4a6bee6e801
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:07:37 2025 -0800
+
+    testing templates with composer and aider
+
+11	0	01-meta/01-templates/dca-create.template.md
+
+commit 9c6540b1976b52dae125824c84fb1744856ea6fa
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 15:05:23 2025 -0800
+
+    testing templates with composer and aider
+
+6	9	01-meta/01-templates/api-spec.template.md
+10	15	01-meta/01-templates/class-spec.template.md
+13	19	01-meta/01-templates/data-model.template.md
+
+commit 9e552f4df83906cae7457c779554918b257e194c
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 14:55:45 2025 -0800
+
+    testing templates with composer and aider
+
+28	33	01-meta/01-templates/dca-create.template.md
+29	27	01-meta/01-templates/dca-delete.template.md
+28	27	01-meta/01-templates/dca-modify.template.md
+
+commit cfd6166a12db48c56f038e0b86548486c9e59e22
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 14:29:04 2025 -0800
+
+    feat: Add comment model, class, and API specifications for 10K user scale
+
+115	0	02-impl/specs/comment.api.spec.ts
+95	0	02-impl/specs/comment.class.spec.ts
+72	0	02-impl/specs/comment.model.spec.ts
+
+commit 87e59fed05ae5cdbd2006986463002bd16635cef
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sun Jan 26 14:25:58 2025 -0800
+
+    added new dca templates
+
+-	-	.DS_Store
+126	0	00-AI-Init/ai-inheritance-patterns.md
+-	-	01-meta/.DS_Store
+0	551	01-meta/00-AI-init/AI-Process-Guide.v1.md
+0	910	01-meta/00-AI-init/AI-Structures-Comprehensive.v1.md
+0	291	01-meta/00-AI-init/AI-System-Analysis.v1.md
+0	332	01-meta/00-AI-init/AI-System-Context-Investigation.v1.md
+182	0	01-meta/00-AI-init/ai-class-object-operations.md
+65	0	01-meta/00-AI-init/dca-examples/complex-organization.md
+55	0	01-meta/00-AI-init/dca-examples/simple-user.md
+201	0	01-meta/00-AI-init/dca-templates.md
+227	0	01-meta/00-AI-init/prompting-templates.md
+-	-	01-meta/01-templates/.DS_Store
+0	307	01-meta/01-templates/ai/AI-System-Self-Assessment-Guide-template.v1.md
+0	30	01-meta/01-templates/ai/ai-report.v2.template.md
+93	0	01-meta/01-templates/api-spec.template.md
+76	0	01-meta/01-templates/class-spec.template.md
+0	482	01-meta/01-templates/class/class-functional-spec.v1.template.md
+0	86	01-meta/01-templates/class/class-hierarchy-template-v1.md
+55	0	01-meta/01-templates/data-model.template.md
+60	0	01-meta/01-templates/dca-create.template.md
+54	0	01-meta/01-templates/dca-delete.template.md
+53	0	01-meta/01-templates/dca-modify.template.md
+0	97	01-meta/01-templates/feature-parking-lot-template.md
+57	0	01-meta/01-templates/generation-rules.template.md
+0	73	01-meta/01-templates/process/design-planning.v1.template.md
+0	161	01-meta/01-templates/process/product-development.v1.template.md
+0	187	01-meta/01-templates/process/strategic-planning.v1.template.md
+0	226	01-meta/01-templates/process/tactical-planning.v1.template.md
+0	129	01-meta/01-templates/process/user-story-development.v1.template.md
+0	113	01-meta/01-templates/process/user-story-development.v2.template.md
+0	79	01-meta/01-templates/process/vision-development.v1.template.md
+0	236	01-meta/01-templates/task/code-generation-task.v1.template.md
+0	290	01-meta/01-templates/task/todo-breakdown.v1.template.md
+0	399	01-meta/02-process/ai/ai-development-process.v1.md
+0	223	01-meta/02-process/ai/ai-error-handling.v1.md
+0	71	01-meta/02-process/ai/ai-focusing-tips.v1.md
+0	183	01-meta/02-process/design/design-process.v1.md
+0	365	01-meta/02-process/hierarchy/process-hierarchy.v1.md
+0	139	01-meta/02-process/strategic/strategic-process.v1.md
+0	141	01-meta/02-process/tactical/tactical-process.v1.md
+0	0	{02-implementation-docs => 02-impl}/ai-reports/context/CONTEXT-PATTERN-2024-12-30-001.md
+0	0	{02-implementation-docs => 02-impl}/ai-reports/context/CONTEXT-PATTERN-2024-12-30-002.md
+0	0	{02-implementation-docs => 02-impl}/ai-reports/errors/ERROR-PROCESS-2024-12-30-001.md
+0	0	{02-implementation-docs => 02-impl}/ai-reports/errors/ERROR-PROCESS-2024-12-30-002.md
+0	0	{02-implementation-docs => 02-impl}/ai-reports/errors/ERROR-PROCESS-2024-12-30-003.md
+0	0	{02-implementation-docs => 02-impl}/ai-reports/errors/ERROR-PROCESS-2024-12-30-004.md
+0	0	{02-implementation-docs => 02-impl}/ai-reports/errors/ERROR-PROCESS-20241230-001.md
+0	0	{02-implementation-docs => 02-impl}/ai-reports/patterns/AI-PATTERN-2024-01-07-001.md
+0	0	{02-implementation-docs => 02-impl}/ai-reports/patterns/AI-PATTERN-2024-01-07-002.md
+0	0	{02-implementation-docs => 02-impl}/product/class-functional-specs/CLASS-001-base-entity-spec.md
+0	0	{02-implementation-docs => 02-impl}/product/class-functional-specs/CLASS-002-user-spec.md
+0	0	{02-implementation-docs => 02-impl}/product/class-hierarchy/BASE-001-class-hierarchy.md
+134	0	02-impl/product/stories/STORY-ADMIN-UI-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-API-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-AUTH-UI-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-BILLING-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-DEPLOY-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-MARKETING-UI-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-ORG-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-RBAC-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-SESSION-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-SHARED-DATA-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-TESTING-001.md
+0	0	{02-implementation-docs => 02-impl}/product/stories/STORY-USER-001.md
+0	0	{02-implementation-docs => 02-impl}/product/vision/VISION-BASE-V1.md
+0	0	{02-implementation-docs/deployment => 02-impl/structure}/deployment-options.md
+0	0	{02-implementation-docs/misc => 02-impl/structure}/monorepo-structure-ideas.md
+0	0	{02-implementation-docs/project-structure => 02-impl/structure}/project-structure-spec.md
+-	-	02-implementation-docs/.DS_Store
+0	233	02-implementation-docs/00-ai-self-assessments/C3/self-assessment.001.md
+0	329	02-implementation-docs/00-ai-self-assessments/C3/self-assessment.002.md
+0	193	02-implementation-docs/00-ai-self-assessments/C3/self-assessment.003.md
+0	122	02-implementation-docs/00-ai-self-assessments/C3B/self-assessment.001.md
+0	111	02-implementation-docs/00-ai-self-assessments/C3B/self-assessment.002.md
+0	183	02-implementation-docs/00-ai-self-assessments/C3B/self-assessment.003.md
+0	208	02-implementation-docs/00-ai-self-assessments/C3B/self-assessment.004.md
+0	167	02-implementation-docs/00-ai-self-assessments/C3C/self-assessment.001.md
+0	138	02-implementation-docs/00-ai-self-assessments/C3C/self-assessment.002.md
+0	102	02-implementation-docs/00-ai-self-assessments/C3C/self-assessment.003.md
+0	195	02-implementation-docs/00-ai-self-assessments/C3C/self-assessment.004.md
+0	185	02-implementation-docs/00-ai-self-assessments/C3D/self-assessment.001.md
+0	182	02-implementation-docs/00-ai-self-assessments/C3D/self-assessment.002.md
+0	287	02-implementation-docs/00-ai-self-assessments/C3D/self-assessment.003.md
+0	188	02-implementation-docs/00-ai-self-assessments/C3E/self-assessment.001.md
+0	425	02-implementation-docs/design/specs/build/build.BuildFlow.spec.md
+0	138	02-implementation-docs/product/stories/STORY-ADMIN-UI-001.md
+0	214	02-implementation-docs/strategic/SI-BASE-001/strategic-plan.md
+0	205	02-implementation-docs/tactical/TI-BASE001-002/tactical-plan.md
+0	253	02-implementation-docs/tactical/TI-BASE001-003/tactical-plan.md
+
+commit 341f234161975cc26a0e3c08bf68b720865c64a0
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sat Jan 25 20:47:22 2025 -0800
+
+    story revision, scoping, redundancy removal, more clear, updated template
+
+10	0	01-meta/01-templates/class/class-functional-spec.v1.template.md
+113	0	01-meta/01-templates/process/user-story-development.v2.template.md
+0	0	02-implementation-docs/product/class-functional-specs/{BaseEntity.md => CLASS-001-base-entity-spec.md}
+1	3	02-implementation-docs/product/class-functional-specs/CLASS-002-user-spec.md
+22	23	02-implementation-docs/product/class-hierarchy/BASE-001-class-hierarchy.md
+113	77	02-implementation-docs/product/stories/STORY-ADMIN-UI-001.md
+60	62	02-implementation-docs/product/stories/STORY-API-001.md
+66	109	02-implementation-docs/product/stories/STORY-AUTH-UI-001.md
+76	116	02-implementation-docs/product/stories/STORY-BILLING-001.md
+70	76	02-implementation-docs/product/stories/STORY-DEPLOY-001.md
+79	82	02-implementation-docs/product/stories/STORY-MARKETING-UI-001.md
+117	115	02-implementation-docs/product/stories/STORY-ORG-001.md
+94	106	02-implementation-docs/product/stories/STORY-RBAC-001.md
+73	106	02-implementation-docs/product/stories/STORY-SESSION-001.md
+62	100	02-implementation-docs/product/stories/STORY-SHARED-DATA-001.md
+67	73	02-implementation-docs/product/stories/STORY-TESTING-001.md
+114	577	02-implementation-docs/product/stories/STORY-USER-001.md
+0	206	02-implementation-docs/tactical/TI-BASE001-001/tactical-plan.md
+0	1	02-implementation-docs/tactical/TI-BASE001-001/tasks/TASK-001-typescript-config.md
+0	1	02-implementation-docs/tactical/TI-BASE001-001/tasks/TASK-002-testing-framework.md
+0	1	02-implementation-docs/tactical/TI-BASE001-001/tasks/TASK-003-build-process.md
+0	1	02-implementation-docs/tactical/TI-BASE001-001/todos/TODO-TI001-001.md
+164	120	02-implementation-docs/tactical/TI-BASE001-003/tactical-plan.md
+
+commit 60a526e7aed8c92ea3171f248007861c275f1b9c
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sat Jan 25 17:07:02 2025 -0800
+
+    feat: Add initial User class specification document with relationships, overview, and technical details
+
+122	0	02-implementation-docs/product/class-functional-specs/CLASS-002-user-spec.md
+
+commit 3896d63a381f4510461e4ee2d571fbe42b4e8c43
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sat Jan 25 17:00:23 2025 -0800
+
+    feat: Add BaseEntity functional specification with comprehensive entity design
+
+251	0	02-implementation-docs/product/class-functional-specs/BaseEntity.md
+
+commit a7b6dc5a5625daf4da65497eb1a96b62e66653b0
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sat Jan 25 16:58:26 2025 -0800
+
+     fixed file name
+
+0	0	02-implementation-docs/product/class-hierarchy/{BASE-001-class-hierarchy.md  => BASE-001-class-hierarchy.md}
+
+commit c6c81dfa3d58d225cc05b6b64969d91ca7fe8606
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sat Jan 25 16:55:10 2025 -0800
+
+    chore: ignore .specstory directory
+
+1	0	.gitignore
+0	54	.specstory/history/.what-is-this.md
+0	114	.specstory/history/git-commit,-merge,-and-branch-creation.md
+
+commit 22e5b052be3118db088ee3e9846b03b866a228d5
+Author: Jasdeep Jaitla <jasdeep@scalabl3.com>
+Date:   Sat Jan 25 16:54:06 2025 -0800
+
+    feat: update class hierarchy and documentation structure
+
+0	0	--environment={'load_dotenv': True}
+1	0	.gitignore
+54	0	.specstory/history/.what-is-this.md
+114	0	.specstory/history/git-commit,-merge,-and-branch-creation.md
+158	0	02-implementation-docs/product/class-hierarchy/BASE-001-class-hierarchy.md 
+0	70	02-implementation-docs/product/class-hierarchy/BUILD-001-build-system-hierarchy.md
+0	7	count.py
+
+commit 7a677e978810b472ea10582cf637d85f2c5e907a
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sat Jan 25 16:36:01 2025 -0800
+
+    feat: Reduce build system class hierarchy document to essential structure
+
+44	129	02-implementation-docs/product/class-hierarchy/BUILD-001-build-system-hierarchy.md
+
+commit 9b54d90c55c95ce8c8c5f3bb605ac21f68a6086d
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sat Jan 25 16:17:40 2025 -0800
+
+    feat: Create base class hierarchy document for application framework
+
+156	0	python
+
+commit 6be46afc551b87c63bb1dd8873cc33b23001813f
+Author: Jasdeep Jaitla (aider) <jasdeep@scalabl3.com>
+Date:   Sat Jan 25 16:13:09 2025 -0800
+
+    feat: Add Python script to count from 0 to 100 by 10
+
+7	0	count.py

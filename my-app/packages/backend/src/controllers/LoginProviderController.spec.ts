@@ -5,8 +5,8 @@ import { CreateLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/C
 import { UpdateLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/UpdateLoginProviderDto';
 import { ResponseLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/ResponseLoginProviderDto';
 import { HttpException, HttpStatus, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { auth } from '../test/__mocks__/auth.mock';
-import { core } from '../test/__mocks__/core.mock';
+import { auth } from '../models/test/__mocks__/auth.mock';
+import { core } from '../models/test/__mocks__/core.mock';
 import { DataSource } from 'typeorm';
 
 describe('LoginProviderController', () => {

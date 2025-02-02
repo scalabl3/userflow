@@ -1,19 +1,16 @@
-import { MigrationInterface, QueryRunner, Table, TableIndex } from 'typeorm';
-import { BillingProviderType } from '@my-app/shared/dist/enums/BillingProviderType';
-import { getIdColumn, getTimestampColumns, getEnumColumn } from './helpers';
+import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { getIdColumn, getTimestampColumns } from './helpers';
 
 /**
  * Creates the billing_provider table with standardized columns.
+ * This table serves as the source of truth for valid provider types.
  * 
  * Core Fields:
  * - UUID primary key with standard generation
- * - Name: Provider display name
- *   - Length constrained to 255 chars
+ * - Type: Provider identifier (e.g., 'STRIPE', 'PAYPAL')
  *   - Required and unique
- *   - Used in UI and reporting
- * - Type: Provider type enum
- *   - Required classification
- *   - Used for provider-specific logic
+ *   - Used for provider identification and display
+ *   - Source of truth for valid provider types
  * 
  * State Management:
  * - Enabled flag for provider activation
@@ -25,9 +22,11 @@ import { getIdColumn, getTimestampColumns, getEnumColumn } from './helpers';
  * - Will be referenced by billing_account (future)
  * - Will be referenced by payment_method (future)
  * 
- * Indices:
- * - Unique index on name for lookups
- * - Type index for filtering (common query pattern)
+ * Initial Providers:
+ * - STRIPE: Credit card processing
+ * - PAYPAL: Digital wallet payments
+ * - APPLE_PAY: Mobile payments
+ * - GOOGLE_PAY: Mobile payments
  */
 export class Create_BillingProvider_1737964200_020000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
@@ -37,41 +36,44 @@ export class Create_BillingProvider_1737964200_020000 implements MigrationInterf
                 columns: [
                     getIdColumn(queryRunner),
                     {
-                        name: 'name',
+                        name: 'type',
                         type: 'varchar',
-                        length: '255',
+                        length: '50',
                         isNullable: false,
-                        isUnique: true,  // Each provider name must be unique
+                        isUnique: true
                     },
-                    getEnumColumn('type', Object.values(BillingProviderType), false),
                     {
                         name: 'isEnabled',
                         type: 'boolean',
                         default: true,
-                        isNullable: false,  // Must explicitly be enabled/disabled
+                        isNullable: false
                     },
                     {
                         name: 'visible',
                         type: 'boolean',
                         default: true,
-                        isNullable: false,  // Must explicitly be visible/hidden
+                        isNullable: false
                     },
                     ...getTimestampColumns(queryRunner)
                 ],
                 indices: [
                     {
-                        name: 'IDX_BILLING_PROVIDER_NAME',
-                        columnNames: ['name'],
-                        isUnique: true,  // Enforce unique names
-                    },
-                    {
                         name: 'IDX_BILLING_PROVIDER_TYPE',
-                        columnNames: ['type'],  // Common filter in queries
+                        columnNames: ['type'],
+                        isUnique: true
                     }
                 ]
             }),
             true
         );
+
+        // Seed initial provider types
+        await queryRunner.manager.insert('billing_provider', [
+            { type: 'STRIPE', isEnabled: true, visible: true },
+            { type: 'PAYPAL', isEnabled: true, visible: true },
+            { type: 'APPLE_PAY', isEnabled: true, visible: true },
+            { type: 'GOOGLE_PAY', isEnabled: true, visible: true }
+        ]);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {

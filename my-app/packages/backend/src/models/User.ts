@@ -7,87 +7,94 @@ import { getModelRelationConfig } from '../migrations/helpers';
 import { IsStandardLength, IsStandardName } from '@my-app/shared/dist/decorators/validation';
 
 /**
- * Represents user notification preferences
+ * User preferences for notifications
  */
-class NotificationPreferences {
+export class NotificationPreferences {
+    /** Flag for email notifications */
     @IsBoolean()
     @IsOptional()
-    email?: boolean = true;
+    email: boolean = true;
 
+    /** Flag for push notifications */
     @IsBoolean()
     @IsOptional()
-    push?: boolean = true;
+    push: boolean = true;
 }
 
 /**
- * Represents all user preferences
+ * User preferences container
  */
-class UserPreferences {
+export class UserPreferences {
+    /** UI theme preference */
     @IsString()
     @IsOptional()
-    theme?: 'light' | 'dark' = 'light';
+    theme: 'light' | 'dark' = 'light';
 
+    /** Notification settings */
     @ValidateNested()
     @Type(() => NotificationPreferences)
     @IsOptional()
-    notifications?: NotificationPreferences = new NotificationPreferences();
+    notifications: NotificationPreferences = new NotificationPreferences();
 }
 
 /**
  * User entity extends BaseUser with organization-specific properties.
- * Represents an end-user in the system with organization affiliation.
+ * 
+ * Core Features:
+ * - Organization membership
+ * - User preferences
+ * - Display customization
  * 
  * Relationships:
  * - Many Users belong to one Organization (M:1)
  * - Organization relationship is required
- * - If Organization is deleted, associated Users are prevented from being orphaned (RESTRICT)
+ * - Protected from organization deletion (RESTRICT)
+ * 
+ * Preferences:
+ * - Theme: UI appearance (light/dark)
+ * - Notifications: Email and push settings
+ * 
+ * Constraints:
+ * - Username must be unique
+ * - Must belong to an organization
+ * - Inherits BaseUser constraints
  */
 @Entity()
 export class User extends BaseUser {
     // Required Core Fields
+    /** Unique username for the user */
     @Column({ type: 'varchar', unique: true })
     @IsString()
     @IsStandardName('USERNAME')
     username!: string;
 
+    /** Display name shown in UI */
     @Column({ type: 'varchar' })
     @IsString()
     @IsStandardName('DISPLAYNAME')
     displayname!: string;
 
     // Relationship Fields
+    /** ID of the user's organization */
     @Column(getModelRelationConfig(true).columnOptions)
     @IsUUID()
     organizationId!: string;
 
+    /** The user's organization */
     @ManyToOne(() => Organization, getModelRelationConfig(true).relationOptions)
     @JoinColumn({ name: 'organizationId' })
     organization!: Organization;
 
     // Optional Fields
+    /** User's preferences (theme, notifications) */
     @Column({ 
         type: 'simple-json', 
         nullable: true,
-        default: {
-            theme: 'light',
-            notifications: {
-                email: true,
-                push: true
-            }
-        }
+        default: () => new UserPreferences()
     })
     @IsObject()
     @ValidateNested()
     @Type(() => UserPreferences)
     @IsOptional()
-    preferences?: UserPreferences;
-
-    /**
-     * Sets default preferences if none are set
-     */
-    setDefaultPreferences() {
-        if (!this.preferences) {
-            this.preferences = new UserPreferences();
-        }
-    }
+    preferences: UserPreferences = new UserPreferences();
 }

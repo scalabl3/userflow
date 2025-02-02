@@ -1,8 +1,8 @@
 import { auth, user, organization } from '../__mocks__';
-import { LoginProvider } from '../../models/LoginProvider';
-import { LoginCredential } from '../../models/LoginCredential';
-import { BaseUser } from '../../models/BaseUser';
-import { User } from '../../models/User';
+import { LoginProvider } from '../../LoginProvider';
+import { LoginCredential } from '../../LoginCredential';
+import { BaseUser } from '../../BaseUser';
+import { User } from '../../User';
 import { 
   CreatePasswordCredentialDto,
   CreateOAuthCredentialDto,
@@ -17,7 +17,7 @@ import {
   UpdateOrganizationDto,
   ResponseOrganizationDto
 } from '@my-app/shared';
-import { Organization } from '../../models/Organization';
+import { Organization } from '../../Organization';
 
 export class TestDataFactory {
   // Provider factories

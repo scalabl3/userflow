@@ -227,6 +227,61 @@ data?: DataType;
 }
 ```
 
+#### Property Initialization
+Use TypeScript property initialization for defaults instead of constructors:
+
+```typescript
+// ✅ DO: Property Initialization
+export class Entity {
+    // Simple defaults
+    isEnabled: boolean = false;
+    items: Item[] = [];
+    status: Status = Status.PENDING;
+    
+    // With TypeORM columns
+    @Column({ type: 'varchar', length: 255 })
+    name: string = '';
+
+    @Column({ type: 'boolean' })
+    visible: boolean = false;
+
+    @Column({ type: 'simple-array' })
+    tags: string[] = [];
+}
+
+// ❌ DON'T: Constructor Initialization
+export class Entity {
+    constructor() {
+        this.isEnabled = false;  // Could override DB values
+        this.items = [];
+    }
+}
+```
+
+**When to Use Defaults**
+1. **Always Default**
+   - Arrays (empty array)
+   - Boolean flags
+   - Status/State enums
+   - Collection properties
+
+2. **Optional Default**
+   - Strings (empty or undefined)
+   - Numbers (if zero is meaningful)
+   - Dates (if current time is meaningful)
+
+3. **Never Default**
+   - Foreign keys
+   - Required relationships
+   - Unique identifiers
+   - Required string fields
+
+**Rationale**
+- TypeORM Compatibility: Works correctly with hydration
+- Code Clarity: Defaults visible at property declaration
+- Maintainability: No constructor overhead or inheritance complications
+- Testing: Clear expectations for default values
+
 ### 3. Helper Functions
 
 #### UUID and Primary Keys
@@ -360,6 +415,108 @@ Key standards:
 4. Explicit nullability in both Column and validation
 5. Standard error messages through Length decorator
 
+### Relationship Field Standards
+
+#### Foreign Key and Relation Naming
+```typescript
+// ALWAYS use xxxId for foreign keys and xxx for relation objects
+class Example {
+    // One-to-One or Many-to-One (owning side)
+    @Column(getModelRelationConfig(true, 'RESTRICT').columnOptions)
+    @IsUUID()
+    adminUserId!: string;  // Foreign key field
+
+    @OneToOne(() => User, getModelRelationConfig(true, 'RESTRICT').relationOptions)
+    @JoinColumn({ name: 'adminUserId' })
+    adminUser!: User;  // Relation object
+
+    // One-to-Many (inverse side)
+    @OneToMany(() => LoginCredential, credential => credential.baseUser)
+    loginCredentials: LoginCredential[] = [];  // Collection relation
+}
+```
+
+#### Relationship Configuration
+1. **Required Relationships**
+   - Use `!` suffix for required foreign keys and relation objects
+   - Use `getModelRelationConfig(true, ...)` for required relationships
+   - Always specify deletion behavior ('RESTRICT', 'CASCADE', etc.)
+
+2. **Optional Relationships**
+   - Use `?` suffix for optional foreign keys and relation objects
+   - Use `getModelRelationConfig(false, ...)` for optional relationships
+   - Initialize collections as empty arrays
+
+3. **Bidirectional Relationships**
+   - Always specify both sides of the relationship
+   - Use proper back-reference in decorators
+   - Follow consistent naming on both sides
+
+#### Examples
+
+1. **Required One-to-One (Organization -> Admin User)**
+```typescript
+// Organization side (owning)
+@Column(getModelRelationConfig(true, 'RESTRICT').columnOptions)
+@IsUUID()
+adminUserId!: string;
+
+@OneToOne(() => User, getModelRelationConfig(true, 'RESTRICT').relationOptions)
+@JoinColumn({ name: 'adminUserId' })
+adminUser!: User;
+
+// User side (inverse)
+@OneToOne(() => Organization, org => org.adminUser)
+adminOfOrganization?: Organization;
+```
+
+2. **Required Many-to-One (LoginCredential -> BaseUser)**
+```typescript
+// LoginCredential side (owning)
+@Column(getModelRelationConfig(true, 'RESTRICT').columnOptions)
+@IsUUID()
+baseUserId!: string;
+
+@ManyToOne(() => BaseUser, baseUser => baseUser.loginCredentials, 
+          getModelRelationConfig(true, 'RESTRICT').relationOptions)
+@JoinColumn({ name: 'baseUserId' })
+baseUser!: BaseUser;
+
+// BaseUser side (inverse)
+@OneToMany(() => LoginCredential, credential => credential.baseUser)
+loginCredentials: LoginCredential[] = [];
+```
+
+3. **Optional Many-to-One (User -> Organization)**
+```typescript
+// User side (owning)
+@Column(getModelRelationConfig(false, 'SET NULL').columnOptions)
+@IsUUID()
+@IsOptional()
+organizationId?: string;
+
+@ManyToOne(() => Organization, org => org.users,
+          getModelRelationConfig(false, 'SET NULL').relationOptions)
+@JoinColumn({ name: 'organizationId' })
+organization?: Organization;
+
+// Organization side (inverse)
+@OneToMany(() => User, user => user.organization)
+users: User[] = [];
+```
+
+#### Implementation Checklist
+- [ ] Foreign keys use `xxxId` naming
+- [ ] Relation objects use `xxx` naming (no Id suffix)
+- [ ] Required fields marked with `!`
+- [ ] Optional fields marked with `?`
+- [ ] Collections initialized as empty arrays
+- [ ] Proper deletion behavior specified
+- [ ] JoinColumn decorators used on owning side
+- [ ] Back-references properly configured
+- [ ] Appropriate helper functions used
+- [ ] Validation decorators included
+
 ## Implementation Examples
 
 ### 1. Authentication System
@@ -377,29 +534,81 @@ Key standards:
 
 ## Best Practices
 
-### 1. Relationship Management
+### 1. Property Management
+- Use property initialization instead of constructors
+- Follow "When to Use Defaults" guidelines
+- Keep required properties marked with `!`
+- Use optional properties marked with `?`
+- Initialize collections as empty arrays
+- Set explicit boolean defaults
+- Use enum defaults for state fields
+
+### 2. Type Safety
+- Use strict TypeScript configuration
+- Leverage enum types for constrained values
+- Avoid `any` type
+- Use proper types for all properties
+- Define explicit types for JSON fields
+- Use class-validator decorators consistently
+- Include proper type imports
+
+### 3. Relationship Management
 - Use appropriate helper for relationship type
 - Consider deletion behavior carefully
 - Document relationship constraints
 - Add indices for foreign keys
+- Keep foreign key naming consistent
+- Use explicit JoinColumn decorators
+- Consider lazy/eager loading implications
 
-### 2. Documentation
+### 4. Data Integrity
+- Set appropriate field lengths
+- Use explicit nullability
+- Add proper validation decorators
+- Include business rule validations
+- Set meaningful default values
+- Use appropriate column types
+- Consider database compatibility
+- Add unique constraints where needed
+
+### 5. Documentation
 - Document all fields and constraints
 - Explain relationship behaviors
 - Note future considerations
 - Include usage examples
+- Document default values
+- Explain validation rules
+- Add JSDoc comments
+- Keep documentation up to date
 
-### 3. Migration Organization
-- CREATE migrations for table structure
-- Separate ADD-FK migrations for relationships
-- Clear dependency order
-- Reversible changes
+### 6. Testing Considerations
+- Test default property values
+- Verify required fields
+- Test validation rules
+- Check type safety
+- Test enum values
+- Verify computed properties
+- Test business rules
+- Keep tests focused on model behavior
 
-### 4. Data Safety
-- Explicit nullability
-- Proper length constraints
-- Appropriate defaults
-- Type safety with enums
+### 7. Code Organization
+- Follow field organization order
+- Group related properties
+- Keep validation near properties
+- Organize imports logically
+- Use consistent decorator order
+- Maintain clear separation of concerns
+- Follow naming conventions strictly
+
+### 8. Performance and Scalability
+- Consider index impact
+- Use appropriate fetch strategies
+- Keep JSON fields simple
+- Consider query performance
+- Use efficient data types
+- Plan for data growth
+- Consider migration impact
+- Think about cache implications
 
 ## Verification Checklist
 - [ ] Uses appropriate helper functions
@@ -410,122 +619,3 @@ Key standards:
 - [ ] Specifies field constraints
 - [ ] Provides proper defaults
 - [ ] Considers database compatibility
-
-## Pending Standards
-
-### 1. Testing Patterns
-Current state:
-- Basic unit tests exist
-- No standardized factory pattern
-- Inconsistent test data creation
-
-Needs standardization:
-```typescript
-// Proposed test factory pattern
-export class EntityFactory {
-    static create(overrides = {}): Entity {
-        return {
-            id: uuid(),
-            field: 'default',
-            ...overrides
-        };
-    }
-
-    static createMany(count: number, overrides = {}): Entity[] {
-        return Array.from({ length: count }, () => this.create(overrides));
-    }
-}
-
-// Proposed test structure
-describe('Entity', () => {
-    describe('Validation', () => {
-        // Standard validation tests
-    });
-
-    describe('Relationships', () => {
-        // Standard relationship tests
-    });
-
-    describe('Business Logic', () => {
-        // Model-specific logic tests
-    });
-});
-```
-
-To be defined:
-1. Test data factory standards
-2. Common test scenarios
-3. Mocking strategies
-4. Integration test patterns
-5. Test database handling
-
-### 2. DTO Alignment
-Current state:
-- DTOs don't consistently match models
-- Validation duplicated between DTOs and models
-- Inconsistent transformation patterns
-
-Needs standardization:
-```typescript
-// Proposed DTO pattern
-export class CreateEntityDto {
-    // Match model field names unless specific reason not to
-    @IsString()
-    @Length(1, 255)
-    field!: string;
-
-    // Explicit transformations
-    @Transform(({ value }) => value.toLowerCase())
-    email!: string;
-
-    // Nested DTO handling
-    @ValidateNested()
-    @Type(() => NestedDto)
-    nested?: NestedDto;
-}
-
-// Response DTO pattern
-export class EntityResponseDto {
-    // Standard fields always included
-    id!: string;
-    createdAt!: Date;
-
-    // Configurable field inclusion
-    @Expose({ groups: ['detailed'] })
-    details?: string;
-
-    // Computed fields
-    @Expose()
-    get fullName(): string {
-        return `${this.firstName} ${this.lastName}`;
-    }
-}
-```
-
-To be defined:
-1. DTO naming conventions
-2. Transform strategies
-3. Validation sharing between models and DTOs
-4. Response DTO field exposure patterns
-5. Nested DTO handling
-
-## Next Steps
-1. Implement validation strategy
-   - Define standard decorators
-   - Create validation message format
-   - Document validation groups
-
-2. Establish testing patterns
-   - Create test factory base class
-   - Define common test scenarios
-   - Document mocking approach
-
-3. Align DTOs with models
-   - Update existing DTOs to match standards
-   - Implement transform strategies
-   - Create response DTO patterns
-
-4. Create implementation guides
-   - Step-by-step validation guide
-   - Testing implementation guide
-   - DTO creation guide

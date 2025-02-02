@@ -1,45 +1,54 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
-import { BillingProviderType } from '@my-app/shared/dist/enums/BillingProviderType';
-import { IsEnum, IsBoolean, IsString, Length } from 'class-validator';
-import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
+import { IsString, IsBoolean, Matches } from 'class-validator';
 
 /**
  * BillingProvider entity represents a payment provider supported by the system.
- * Examples include Stripe, PayPal, Apple Pay, etc.
- * Each provider must have a unique name and can be enabled/disabled for system use.
+ * This table is the source of truth for valid provider types.
+ * 
+ * Core Features:
+ * - Provider type serves as unique identifier
+ * - Visibility control for UI display
+ * - Enable/disable functionality for system use
+ * 
+ * Valid Types (seeded in migration):
+ * - STRIPE: Credit card processing
+ * - PAYPAL: Digital wallet payments
+ * - APPLE_PAY: Mobile payments
+ * - GOOGLE_PAY: Mobile payments
+ * 
+ * Constraints:
+ * - Type must be unique uppercase string
+ * - Cannot be deleted if in use by billing accounts
  */
 @Entity('billing_provider')
-@Index(['name'], { unique: true })
+@Index(['type'], { unique: true })
 export class BillingProvider {
+    // Primary Key
     /** Unique identifier for the billing provider */
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    /** Unique name of the billing provider (e.g., 'Stripe', 'PayPal') */
-    @Column({ 
-        type: 'varchar',
-        length: 30,
-        unique: true 
-    })
-    @IsString()
-    @Length(1, 30)
-    name!: string;
-
-    /** Type of billing provider (e.g., STRIPE, PAYPAL, APPLE_PAY) */
+    // Required Core Fields
+    /** Type identifier for the provider (e.g., 'STRIPE', 'PAYPAL') */
     @Column({
         type: 'varchar',
-        enum: BillingProviderType
+        length: 50,
+        unique: true
     })
-    @IsEnum(BillingProviderType, { message: 'Invalid billing provider type' })
-    type!: BillingProviderType;
+    @IsString()
+    @Matches(/^[A-Z][A-Z0-9_]*$/, {
+        message: 'Type must be uppercase letters, numbers, and underscores'
+    })
+    type!: string;
 
+    // Optional Core Fields
     /** Flag indicating if the provider is enabled for system use */
     @Column({ 
         type: 'boolean',
         default: true
     })
     @IsBoolean()
-    isEnabled!: boolean;
+    isEnabled: boolean = true;
 
     /** Flag indicating if the provider is visible to users */
     @Column({ 
@@ -47,8 +56,9 @@ export class BillingProvider {
         default: true
     })
     @IsBoolean()
-    visible!: boolean;
+    visible: boolean = true;
 
+    // Timestamps
     /** Timestamp of when the provider was created */
     @CreateDateColumn({ type: 'datetime' })
     createdAt!: Date;

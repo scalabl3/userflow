@@ -1,17 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 import { BillingProviderType } from '../../enums/BillingProviderType';
+import { BaseResponseDto } from '../base/BaseDto';
 
 @Exclude()
-export class ResponseBillingProviderDto {
-    @Expose()
-    @ApiProperty({
-        description: 'Unique identifier of the billing provider',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-        format: 'uuid'
-    })
-    id!: string;
-
+export class ResponseBillingProviderDto extends BaseResponseDto {
     @Expose()
     @ApiProperty({
         description: 'Name of the billing provider',
@@ -45,20 +38,4 @@ export class ResponseBillingProviderDto {
         type: Boolean
     })
     visible!: boolean;
-
-    @Expose()
-    @ApiProperty({
-        description: 'Creation timestamp',
-        example: '2024-01-28T12:00:00.000Z',
-        format: 'date-time'
-    })
-    createdAt!: Date;
-
-    @Expose()
-    @ApiProperty({
-        description: 'Last modification timestamp',
-        example: '2024-01-28T12:00:00.000Z',
-        format: 'date-time'
-    })
-    modifiedAt!: Date;
 }

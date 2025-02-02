@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateUserDto } from '@my-app/shared/dist/dtos/User/CreateUserDto';
 import { UpdateUserDto } from '@my-app/shared/dist/dtos/User/UpdateUserDto';
-import { user as userMock } from '../test/__mocks__/user.mock';
+import { user as userMock } from '../models/test/__mocks__/user.mock';
 import { mockRepository } from '../test/setup';
 
 describe('UserService', () => {

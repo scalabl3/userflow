@@ -1,92 +1,123 @@
+import { validate } from 'class-validator';
 import { BaseUser } from './BaseUser';
-import { LoginCredential } from './LoginCredential';
 import { UserState } from '@my-app/shared/dist/enums/UserState';
 
 describe('BaseUser', () => {
     let user: BaseUser;
-    let loginCredential: LoginCredential;
 
     beforeEach(() => {
         user = new BaseUser();
-        loginCredential = new LoginCredential();
-        loginCredential.id = 'cred123';
-        loginCredential.identifier = 'test@example.com';
-        loginCredential.passwordHash = 'hashedPassword123';
-        // Set default values manually since decorators don't work in tests
-        user.state = UserState.PENDING;
-        user.isEnabled = true;
-        user.loginCredentials = [];
     });
 
-    it('should create an instance', () => {
-        expect(user).toBeTruthy();
+    describe('initialization', () => {
+        it('should create a valid instance', () => {
+            expect(user).toBeTruthy();
+        });
+
+        it('should initialize with default values', () => {
+            expect(user.state).toBe(UserState.PENDING);
+            expect(user.isEnabled).toBe(true);
+            expect(user.lastLoginAt).toBeUndefined();
+        });
+
+        it('should handle id field', () => {
+            const userId = '123e4567-e89b-12d3-a456-426614174000';
+            user.id = userId;
+            expect(user.id).toBe(userId);
+        });
     });
 
-    it('should initialize with default values', () => {
-        expect(user.state).toBe(UserState.PENDING);
-        expect(user.isEnabled).toBe(true);
-        expect(user.loginCredentials).toEqual([]);
+    describe('properties', () => {
+        describe('core properties', () => {
+            it('should get and set firstname', () => {
+                const firstname = 'John';
+                user.firstname = firstname;
+                expect(user.firstname).toBe(firstname);
+            });
+
+            it('should require firstname', async () => {
+                expect(user.firstname).toBeUndefined();
+                const errors = await validate(user);
+                const firstnameErrors = errors.find(e => e.property === 'firstname');
+                expect(firstnameErrors?.constraints).toHaveProperty('isString');
+            });
+
+            it('should get and set lastname', () => {
+                const lastname = 'Doe';
+                user.lastname = lastname;
+                expect(user.lastname).toBe(lastname);
+            });
+
+            it('should require lastname', async () => {
+                expect(user.lastname).toBeUndefined();
+                const errors = await validate(user);
+                const lastnameErrors = errors.find(e => e.property === 'lastname');
+                expect(lastnameErrors?.constraints).toHaveProperty('isString');
+            });
+
+            it('should get and set contact email', () => {
+                const email = 'john@example.com';
+                user.contactEmail = email;
+                expect(user.contactEmail).toBe(email);
+            });
+
+            it('should require contact email', async () => {
+                expect(user.contactEmail).toBeUndefined();
+                const errors = await validate(user);
+                const emailErrors = errors.find(e => e.property === 'contactEmail');
+                expect(emailErrors?.constraints).toHaveProperty('isEmail');
+            });
+        });
+
+        describe('state management', () => {
+            it('should handle state transitions', () => {
+                const states = [
+                    UserState.PENDING,
+                    UserState.ACTIVE,
+                    UserState.SUSPENDED,
+                    UserState.DEACTIVATED
+                ];
+
+                states.forEach(state => {
+                    user.state = state;
+                    expect(user.state).toBe(state);
+                });
+            });
+
+            it('should handle enabled flag', () => {
+                user.isEnabled = false;
+                expect(user.isEnabled).toBe(false);
+
+                user.isEnabled = true;
+                expect(user.isEnabled).toBe(true);
+            });
+
+            it('should handle last login time', () => {
+                const loginTime = new Date();
+                user.lastLoginAt = loginTime;
+                expect(user.lastLoginAt).toBe(loginTime);
+            });
+        });
     });
 
-    it('should handle optional fields', () => {
-        expect(user.lastLoginAt).toBeUndefined();
+    describe('relationships', () => {
+        describe('loginCredentials collection', () => {
+            it('should initialize loginCredentials as empty array', () => {
+                expect(user.loginCredentials).toBeDefined();
+                expect(Array.isArray(user.loginCredentials)).toBe(true);
+                expect(user.loginCredentials).toHaveLength(0);
+            });
+        });
     });
 
-    it('should set and get basic properties', () => {
-        user.firstname = 'John';
-        user.lastname = 'Doe';
-        user.contactEmail = 'john@example.com';
-        
-        expect(user.firstname).toBe('John');
-        expect(user.lastname).toBe('Doe');
-        expect(user.contactEmail).toBe('john@example.com');
-    });
+    describe('timestamps', () => {
+        it('should track creation and modification times', () => {
+            const now = new Date();
+            user.createdAt = now;
+            user.modifiedAt = now;
 
-    it('should handle state changes', () => {
-        // Test all enum values
-        user.state = UserState.ACTIVE;
-        expect(user.state).toBe(UserState.ACTIVE);
-
-        user.state = UserState.SUSPENDED;
-        expect(user.state).toBe(UserState.SUSPENDED);
-
-        user.state = UserState.DEACTIVATED;
-        expect(user.state).toBe(UserState.DEACTIVATED);
-
-        user.state = UserState.PENDING;
-        expect(user.state).toBe(UserState.PENDING);
-    });
-
-    it('should handle timestamps', () => {
-        const now = new Date();
-        user.createdAt = now;
-        user.modifiedAt = now;
-
-        expect(user.createdAt).toBe(now);
-        expect(user.modifiedAt).toBe(now);
-    });
-
-    it('should handle lastLoginAt updates', () => {
-        const loginTime = new Date();
-        user.lastLoginAt = loginTime;
-        expect(user.lastLoginAt).toBe(loginTime);
-    });
-
-    it('should handle login credentials relationship', () => {
-        const user = new BaseUser();
-        const credential1 = new LoginCredential();
-        const credential2 = new LoginCredential();
-        
-        user.loginCredentials = [credential1, credential2];
-        
-        expect(user.loginCredentials).toHaveLength(2);
-        expect(user.loginCredentials).toContain(credential1);
-        expect(user.loginCredentials).toContain(credential2);
-    });
-
-    it('should handle isEnabled field', () => {
-        const user = new BaseUser();
-        user.isEnabled = true;
-        expect(user.isEnabled).toBe(true);
+            expect(user.createdAt).toBe(now);
+            expect(user.modifiedAt).toBe(now);
+        });
     });
 }); 

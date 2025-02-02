@@ -1,45 +1,27 @@
-import { IsOptional, IsString, IsEnum, IsBoolean, Length } from 'class-validator';
+import { IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { BillingProviderType } from '../../enums/BillingProviderType';
+import { BaseUpdateDto, EnableableVisibilityDto } from '../base/BaseDto';
+import { StandardString } from '../../utils/dto-utils';
 
-export class UpdateBillingProviderDto {
-    @ApiProperty({
+export class UpdateBillingProviderDto extends EnableableVisibilityDto {
+    @StandardString({
         description: 'Name of the billing provider',
         example: 'Stripe',
         required: false,
         minLength: 2,
         maxLength: 255
     })
-    @IsString()
-    @Length(2, 255, { message: 'Name must be between 2 and 255 characters' })
-    @IsOptional()
     name?: string;
 
     @ApiProperty({
         description: 'Type of billing provider',
         enum: BillingProviderType,
         example: BillingProviderType.STRIPE,
+        enumName: 'BillingProviderType',
         required: false
     })
-    @IsEnum(BillingProviderType)
+    @IsEnum(BillingProviderType, { message: 'Invalid billing provider type' })
     @IsOptional()
     type?: BillingProviderType;
-
-    @ApiProperty({
-        description: 'Whether the provider is enabled',
-        example: true,
-        required: false
-    })
-    @IsBoolean()
-    @IsOptional()
-    isEnabled?: boolean;
-
-    @ApiProperty({
-        description: 'Whether the provider is visible to users',
-        example: true,
-        required: false
-    })
-    @IsBoolean()
-    @IsOptional()
-    visible?: boolean;
 }

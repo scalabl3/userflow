@@ -17,9 +17,9 @@ import {
     UserState
 } from '@my-app/shared';
 import { BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
-import { auth } from '../test/__mocks__/auth.mock';
-import { user } from '../test/__mocks__/user.mock';
-import { core } from '../test/__mocks__/core.mock';
+import { auth } from '../models/test/__mocks__/auth.mock';
+import { user } from '../models/test/__mocks__/user.mock';
+import { core } from '../models/test/__mocks__/core.mock';
 import { plainToClass } from 'class-transformer';
 import { DataSource } from 'typeorm';
 

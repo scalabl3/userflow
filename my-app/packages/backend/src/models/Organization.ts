@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
-import { IsString, IsBoolean, IsUUID, Length } from 'class-validator';
+import { IsString, IsBoolean, IsUUID } from 'class-validator';
 import { User } from './User';
 import { getModelRelationConfig } from '../migrations/helpers';
 import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
@@ -7,51 +7,75 @@ import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
 /**
  * Organization entity represents a company or group in the system.
  * 
+ * Core Features:
+ * - Unique organization name
+ * - Admin user management
+ * - Visibility control
+ * 
  * Relationships:
  * - One Organization has many Users (1:M)
  * - One Organization has exactly one admin User (1:1)
- * - Admin User relationship is required and protected from deletion (RESTRICT)
- * - If Organization is deleted, associated Users become unaffiliated (SET NULL)
+ * - Admin User relationship is required and protected (RESTRICT)
+ * - Users become unaffiliated on org deletion (SET NULL)
+ * 
+ * States:
+ * - Shadow: Initial state with default name
+ * - Visible: Organization appears in listings
+ * - Hidden: Organization exists but isn't listed
  * 
  * Constraints:
- * - Name must be unique when visible is true
+ * - Name must be unique when visible
  * - Must have exactly one admin user
- * - Cannot be deleted if it has active users
+ * - Cannot be deleted with active users
  */
 @Entity()
 export class Organization {
     // Primary Key
+    /** Unique identifier for the organization */
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
     // Required Core Fields
+    /** Organization name (defaults to 'shadow' for initial creation) */
     @Column({ type: 'varchar', length: 50, default: 'shadow', nullable: true })
     @IsString()
-    @Length(1, 50)
+    @IsStandardLength('NAME')
     name!: string;
 
     // Admin User Relationship (1:1)
+    /** ID of the organization's admin user */
     @Column(getModelRelationConfig(true, 'RESTRICT').columnOptions)
     @IsUUID()
     adminUserId!: string;
 
+    /** The organization's admin user */
     @OneToOne(() => User, getModelRelationConfig(true, 'RESTRICT').relationOptions)
     @JoinColumn({ name: 'adminUserId' })
     adminUser!: User;
 
     // Optional Core Fields
-    @Column({ default: false })
+    /** Flag indicating if the organization is visible in listings */
+    @Column({ type: 'boolean', default: false })
     @IsBoolean()
-    visible!: boolean;
+    visible: boolean = false;
 
     // User Relationship (1:M)
+    /** Users belonging to this organization */
     @OneToMany(() => User, user => user.organization)
-    users!: User[];
+    users: User[] = [];
 
     // Timestamps
-    @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    /** Timestamp of when the organization was created */
+    @CreateDateColumn({ 
+        type: 'datetime',
+        default: () => 'CURRENT_TIMESTAMP'
+    })
     createdAt!: Date;
 
-    @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    /** Timestamp of when the organization was last modified */
+    @UpdateDateColumn({ 
+        type: 'datetime',
+        default: () => 'CURRENT_TIMESTAMP'
+    })
     modifiedAt!: Date;
 }

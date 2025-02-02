@@ -13,8 +13,8 @@ import {
 } from '@my-app/shared';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
-import { user as userMock } from '../test/__mocks__/user.mock';
-import { organization as orgMock } from '../test/__mocks__/organization.mock';
+import { user as userMock } from '../models/test/__mocks__/user.mock';
+import { organization as orgMock } from '../models/test/__mocks__/organization.mock';
 
 /**
  * Service specification for Organization entity.
