@@ -11,8 +11,8 @@
 - 010: Organization
 - 011: User
 
-### Billing System (020-029)
-- 020: BillingProvider
+### Payment System (020-029)
+- 020: CustomerPaymentMethod
 
 ## Migration Numbering System
 Format: `EEESNN`
@@ -47,8 +47,8 @@ Organization System:
 007 -> 011000 (User)
 008 -> 011200 (User FK)
 
-Billing System:
-009 -> 020000 (BillingProvider)
+Payment System:
+New -> 020000 (CustomerPaymentMethod)
 ```
 
 ## Best Practices

@@ -1,34 +1,23 @@
-import { IsString, IsBoolean, Length, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { EnableableDto } from '../base/BaseDto';
+import { StandardString } from '../../utils/dto-utils';
 
-export class CreateLoginProviderDto {
-    @ApiProperty({
+export class CreateLoginProviderDto extends EnableableDto {
+    @StandardString({
         description: 'Provider code (e.g., "email", "google", "phone")',
         example: 'google',
+        required: true,
         minLength: 1,
         maxLength: 50
     })
-    @IsString()
-    @Length(1, 50)
     code!: string;
 
-    @ApiProperty({
+    @StandardString({
         description: 'Display name of the provider',
         example: 'Google',
+        required: true,
         minLength: 1,
         maxLength: 255
     })
-    @IsString()
-    @Length(1, 255)
     name!: string;
-
-    @ApiProperty({
-        description: 'Whether the provider is enabled',
-        example: true,
-        default: true,
-        required: false
-    })
-    @IsBoolean()
-    @IsOptional()
-    isEnabled?: boolean;
 }

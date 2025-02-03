@@ -1,16 +1,10 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
+import { BaseResponseDto } from '../base/BaseDto';
 
 @Exclude()
-export class ResponseLoginProviderDto {
-    @Expose()
-    @ApiProperty({
-        description: 'Unique identifier',
-        example: '123e4567-e89b-12d3-a456-426614174000'
-    })
-    id!: string;
-
+export class ResponseLoginProviderDto extends BaseResponseDto {
     @Expose()
     @ApiProperty({
         description: 'Provider code (e.g., "email", "google", "phone")',
@@ -32,21 +26,8 @@ export class ResponseLoginProviderDto {
     @Expose()
     @ApiProperty({
         description: 'Whether the provider is enabled',
-        example: true
+        example: true,
+        type: Boolean
     })
     isEnabled!: boolean;
-
-    @Expose()
-    @ApiProperty({
-        description: 'Creation timestamp',
-        example: '2024-01-28T12:00:00.000Z'
-    })
-    createdAt!: Date;
-
-    @Expose()
-    @ApiProperty({
-        description: 'Last modification timestamp',
-        example: '2024-01-28T12:00:00.000Z'
-    })
-    modifiedAt!: Date;
 }

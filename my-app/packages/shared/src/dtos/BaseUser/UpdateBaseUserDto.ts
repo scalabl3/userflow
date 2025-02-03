@@ -1,32 +1,35 @@
-import { IsString, IsEmail, IsEnum, IsUUID, IsOptional, IsBoolean } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserState } from '../../enums/UserState';
+import { EnableableDto } from '../base/BaseDto';
+import { StandardString } from '../../utils/dto-utils';
 
-export class UpdateBaseUserDto {
-    @ApiProperty({
+export class UpdateBaseUserDto extends EnableableDto {
+    @StandardString({
         description: 'User\'s first name',
         example: 'John',
-        required: false
+        required: false,
+        minLength: 1,
+        maxLength: 255
     })
-    @IsString()
-    @IsOptional()
     firstname?: string;
 
-    @ApiProperty({
+    @StandardString({
         description: 'User\'s last name',
         example: 'Doe',
-        required: false
+        required: false,
+        minLength: 1,
+        maxLength: 255
     })
-    @IsString()
-    @IsOptional()
     lastname?: string;
 
     @ApiProperty({
         description: 'User\'s contact email',
         example: 'john.doe@example.com',
-        required: false
+        required: false,
+        format: 'email'
     })
-    @IsEmail()
+    @IsEmail({}, { message: 'Must be a valid email address' })
     @IsOptional()
     contactEmail?: string;
 
@@ -34,18 +37,10 @@ export class UpdateBaseUserDto {
         description: 'User\'s state',
         enum: UserState,
         example: UserState.ACTIVE,
+        enumName: 'UserState',
         required: false
     })
-    @IsEnum(UserState)
+    @IsEnum(UserState, { message: 'Must be a valid user state' })
     @IsOptional()
     state?: UserState;
-
-    @ApiProperty({
-        description: 'Whether the user is enabled',
-        example: true,
-        required: false
-    })
-    @IsBoolean()
-    @IsOptional()
-    isEnabled?: boolean;
 }
