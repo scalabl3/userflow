@@ -12,7 +12,7 @@
 - 011: User
 
 ### Payment System (020-029)
-- 020: CustomerPaymentMethod
+- 020: Organization Stripe Fields
 
 ## Migration Numbering System
 Format: `EEESNN`
@@ -48,7 +48,7 @@ Organization System:
 008 -> 011200 (User FK)
 
 Payment System:
-New -> 020000 (CustomerPaymentMethod)
+020000 -> Organization Stripe Fields (stripeCustomerId, subscriptionStatus)
 ```
 
 ## Best Practices

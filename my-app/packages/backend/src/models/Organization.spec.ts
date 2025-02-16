@@ -16,6 +16,8 @@ describe('Organization', () => {
         it('should initialize with default values', () => {
             expect(organization.name).toBeUndefined();
             expect(organization.visible).toBe(false);
+            expect(organization.stripeCustomerId).toBeUndefined();
+            expect(organization.subscriptionStatus).toBeUndefined();
         });
 
         it('should handle id field', () => {
@@ -35,6 +37,34 @@ describe('Organization', () => {
             it('should get and set visible flag', () => {
                 organization.visible = true;
                 expect(organization.visible).toBe(true);
+            });
+        });
+
+        describe('stripe integration', () => {
+            it('should get and set stripeCustomerId', () => {
+                const customerId = 'cus_123456789';
+                organization.stripeCustomerId = customerId;
+                expect(organization.stripeCustomerId).toBe(customerId);
+            });
+
+            it('should allow null stripeCustomerId', async () => {
+                organization.stripeCustomerId = undefined;
+                const errors = await validate(organization);
+                const stripeErrors = errors.find(e => e.property === 'stripeCustomerId');
+                expect(stripeErrors).toBeUndefined();
+            });
+
+            it('should get and set subscriptionStatus', () => {
+                const status = 'active';
+                organization.subscriptionStatus = status;
+                expect(organization.subscriptionStatus).toBe(status);
+            });
+
+            it('should allow null subscriptionStatus', async () => {
+                organization.subscriptionStatus = undefined;
+                const errors = await validate(organization);
+                const statusErrors = errors.find(e => e.property === 'subscriptionStatus');
+                expect(statusErrors).toBeUndefined();
             });
         });
     });

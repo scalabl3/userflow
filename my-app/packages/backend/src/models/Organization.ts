@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
-import { IsString, IsBoolean, IsUUID } from 'class-validator';
+import { IsString, IsBoolean, IsUUID, IsOptional } from 'class-validator';
 import { User } from './User';
 import { getModelRelationConfig } from '../migrations/helpers';
 import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
@@ -58,6 +58,21 @@ export class Organization {
     @Column({ type: 'boolean', default: false })
     @IsBoolean()
     visible: boolean = false;
+
+    // Stripe Integration Fields
+    /** Stripe customer ID for payment processing */
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    @IsString()
+    @IsOptional()
+    @IsStandardLength('IDENTIFIER')
+    stripeCustomerId?: string;
+
+    /** Organization's subscription status */
+    @Column({ type: 'varchar', length: 50, nullable: true })
+    @IsString()
+    @IsOptional()
+    @IsStandardLength('CODE')
+    subscriptionStatus?: string;  // 'active', 'past_due', 'canceled', etc.
 
     // User Relationship (1:M)
     /** Users belonging to this organization */

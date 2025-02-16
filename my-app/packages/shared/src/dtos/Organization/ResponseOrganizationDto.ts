@@ -46,6 +46,26 @@ export class ResponseOrganizationDto {
 
     @Expose()
     @ApiProperty({
+        description: 'Stripe customer ID for payment processing',
+        example: 'cus_123456789',
+        required: false,
+        minLength: 1,
+        maxLength: 255
+    })
+    stripeCustomerId?: string;
+
+    @Expose()
+    @ApiProperty({
+        description: 'Current subscription status',
+        example: 'active',
+        required: false,
+        minLength: 1,
+        maxLength: 50
+    })
+    subscriptionStatus?: string;
+
+    @Expose()
+    @ApiProperty({
         description: 'Creation timestamp',
         example: '2024-01-28T12:00:00.000Z'
     })

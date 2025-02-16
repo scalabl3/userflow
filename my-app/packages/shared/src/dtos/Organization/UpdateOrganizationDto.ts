@@ -1,5 +1,6 @@
 import { IsString, IsOptional, IsBoolean, IsUUID, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { StandardString } from '../../utils/dto-utils';
 
 export class UpdateOrganizationDto {
     @ApiProperty({
@@ -31,4 +32,22 @@ export class UpdateOrganizationDto {
     @IsUUID()
     @IsOptional()
     adminUser?: string;
+
+    @StandardString({
+        description: 'Stripe customer ID for payment processing',
+        example: 'cus_123456789',
+        required: false,
+        minLength: 1,
+        maxLength: 255
+    })
+    stripeCustomerId?: string;
+
+    @StandardString({
+        description: 'Current subscription status',
+        example: 'active',
+        required: false,
+        minLength: 1,
+        maxLength: 50
+    })
+    subscriptionStatus?: string;
 }
