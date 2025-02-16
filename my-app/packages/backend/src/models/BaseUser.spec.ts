@@ -119,5 +119,19 @@ describe('BaseUser', () => {
             expect(user.createdAt).toBe(now);
             expect(user.modifiedAt).toBe(now);
         });
+
+        it('should handle soft deletion', () => {
+            // Initially not deleted
+            expect(user.deleted).toBe(false);
+            expect(user.deletedAt).toBeUndefined();
+            
+            // Mark as deleted
+            const deletionTime = new Date();
+            user.deleted = true;
+            user.deletedAt = deletionTime;
+            
+            expect(user.deleted).toBe(true);
+            expect(user.deletedAt).toBe(deletionTime);
+        });
     });
 }); 

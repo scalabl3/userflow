@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { LoginProvider } from './LoginProvider';
 import { BaseUser } from './BaseUser';
 import { CredentialType, OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
@@ -39,6 +39,7 @@ class OAuthProfile {
  * - Flexible authentication methods (password/OAuth)
  * - Provider-specific data storage
  * - Security token management
+ * - Soft deletion support
  * 
  * Relationships:
  * - Many LoginCredentials belong to one LoginProvider (M:1)
@@ -54,6 +55,11 @@ class OAuthProfile {
  * - Unique identifier per provider
  * - Required relationship to provider and user
  * - Type-specific field validation
+ * 
+ * Soft Deletion:
+ * - Uses deleted flag and deletedAt timestamp
+ * - Maintains referential integrity
+ * - Allows credential recovery if needed
  */
 @Entity()
 @Index(['identifier', 'loginProviderId'], { unique: true })
@@ -223,4 +229,16 @@ export class LoginCredential {
         default: () => 'CURRENT_TIMESTAMP'
     })
     modifiedAt!: Date;
+
+    /** Flag indicating if the credential has been soft deleted */
+    @Column({ type: 'boolean', default: false })
+    @IsBoolean()
+    deleted: boolean = false;
+
+    /** Timestamp of when the credential was soft deleted */
+    @DeleteDateColumn({ 
+        type: 'datetime',
+        nullable: true
+    })
+    deletedAt?: Date;
 }

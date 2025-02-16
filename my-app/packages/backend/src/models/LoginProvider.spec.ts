@@ -85,5 +85,19 @@ describe('LoginProvider', () => {
             expect(provider.createdAt).toBe(now);
             expect(provider.modifiedAt).toBe(now);
         });
+
+        it('should handle soft deletion', () => {
+            // Initially not deleted
+            expect(provider.deleted).toBe(false);
+            expect(provider.deletedAt).toBeUndefined();
+            
+            // Mark as deleted
+            const deletionTime = new Date();
+            provider.deleted = true;
+            provider.deletedAt = deletionTime;
+            
+            expect(provider.deleted).toBe(true);
+            expect(provider.deletedAt).toBe(deletionTime);
+        });
     });
 }); 

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
 import { IsString, IsBoolean, IsUUID, IsOptional } from 'class-validator';
 import { User } from './User';
 import { getModelRelationConfig } from '../migrations/helpers';
@@ -8,25 +8,29 @@ import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
  * Organization entity represents a company or group in the system.
  * 
  * Core Features:
- * - Unique organization name
- * - Admin user management
- * - Visibility control
+ * - Unique identifier
+ * - Organization details (name, contact info)
+ * - Subscription and billing status
+ * - Soft deletion support
  * 
  * Relationships:
  * - One Organization has many Users (1:M)
- * - One Organization has exactly one admin User (1:1)
- * - Admin User relationship is required and protected (RESTRICT)
- * - Users become unaffiliated on org deletion (SET NULL)
+ * - Users are prevented from being orphaned (RESTRICT)
  * 
- * States:
- * - Shadow: Initial state with default name
- * - Visible: Organization appears in listings
- * - Hidden: Organization exists but isn't listed
+ * Examples:
+ * - Small Business: "Tech Startup LLC"
+ * - Enterprise: "Global Corp Industries"
+ * - Non-profit: "Community Foundation"
  * 
  * Constraints:
- * - Name must be unique when visible
- * - Must have exactly one admin user
+ * - Name must be unique
  * - Cannot be deleted with active users
+ * - Must maintain valid contact info
+ * 
+ * Soft Deletion:
+ * - Uses deleted flag and deletedAt timestamp
+ * - Maintains referential integrity
+ * - Allows organization recovery if needed
  */
 @Entity()
 export class Organization {
@@ -93,4 +97,16 @@ export class Organization {
         default: () => 'CURRENT_TIMESTAMP'
     })
     modifiedAt!: Date;
+
+    /** Flag indicating if the organization has been soft deleted */
+    @Column({ type: 'boolean', default: false })
+    @IsBoolean()
+    deleted: boolean = false;
+
+    /** Timestamp of when the organization was soft deleted */
+    @DeleteDateColumn({ 
+        type: 'datetime',
+        nullable: true
+    })
+    deletedAt?: Date;
 }

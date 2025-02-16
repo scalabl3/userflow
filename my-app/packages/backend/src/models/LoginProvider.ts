@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany } from 'typeorm';
 import { IsString, IsBoolean } from 'class-validator';
 import { LoginCredential } from './LoginCredential';
 import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
@@ -10,6 +10,7 @@ import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
  * - Unique code identifier for each provider
  * - Human-readable name for display
  * - Enable/disable functionality for system use
+ * - Soft deletion support
  * 
  * Relationships:
  * - One LoginProvider has many LoginCredentials (1:M)
@@ -24,6 +25,11 @@ import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
  * - Code must be unique
  * - Cannot be deleted if has active credentials
  * - Name must follow standard length
+ * 
+ * Soft Deletion:
+ * - Uses deleted flag and deletedAt timestamp
+ * - Maintains referential integrity
+ * - Allows provider recovery if needed
  */
 @Entity()
 export class LoginProvider {
@@ -72,4 +78,11 @@ export class LoginProvider {
         default: () => 'CURRENT_TIMESTAMP'
     })
     modifiedAt!: Date;
+
+    /** Timestamp of when the provider was soft deleted */
+    @DeleteDateColumn({ 
+        type: 'datetime',
+        nullable: true
+    })
+    deletedAt?: Date;
 } 

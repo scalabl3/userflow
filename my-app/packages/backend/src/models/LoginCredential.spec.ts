@@ -181,5 +181,19 @@ describe('LoginCredential', () => {
             expect(credential.createdAt).toBe(now);
             expect(credential.modifiedAt).toBe(now);
         });
+
+        it('should handle soft deletion', () => {
+            // Initially not deleted
+            expect(credential.deleted).toBe(false);
+            expect(credential.deletedAt).toBeUndefined();
+            
+            // Mark as deleted
+            const deletionTime = new Date();
+            credential.deleted = true;
+            credential.deletedAt = deletionTime;
+            
+            expect(credential.deleted).toBe(true);
+            expect(credential.deletedAt).toBe(deletionTime);
+        });
     });
 }); 

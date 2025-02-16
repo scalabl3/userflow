@@ -4,6 +4,7 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
+    DeleteDateColumn,
     OneToMany,
 } from 'typeorm';
 import { LoginCredential } from './LoginCredential';
@@ -19,6 +20,7 @@ import { IsStandardLength, IsStandardName } from '@my-app/shared/dist/decorators
  * - Multiple authentication methods
  * - State and lifecycle control
  * - Contact management
+ * - Soft deletion support
  * 
  * Relationships:
  * - One BaseUser has many LoginCredentials (1:M)
@@ -35,6 +37,11 @@ import { IsStandardLength, IsStandardName } from '@my-app/shared/dist/decorators
  * - Contact email must be unique
  * - Must have valid state
  * - Cannot be deleted with active credentials
+ * 
+ * Soft Deletion:
+ * - Uses deleted flag and deletedAt timestamp
+ * - Maintains referential integrity
+ * - Allows data recovery if needed
  */
 @Entity()
 export class BaseUser {
@@ -105,4 +112,16 @@ export class BaseUser {
         default: () => 'CURRENT_TIMESTAMP'
     })
     modifiedAt!: Date;
+
+    /** Flag indicating if the user has been soft deleted */
+    @Column({ type: 'boolean', default: false })
+    @IsBoolean()
+    deleted: boolean = false;
+
+    /** Timestamp of when the user was soft deleted */
+    @DeleteDateColumn({ 
+        type: 'datetime',
+        nullable: true
+    })
+    deletedAt?: Date;
 }

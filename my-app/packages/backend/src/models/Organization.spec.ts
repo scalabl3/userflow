@@ -105,5 +105,19 @@ describe('Organization', () => {
             expect(organization.createdAt).toBe(now);
             expect(organization.modifiedAt).toBe(now);
         });
+
+        it('should handle soft deletion', () => {
+            // Initially not deleted
+            expect(organization.deleted).toBe(false);
+            expect(organization.deletedAt).toBeUndefined();
+            
+            // Mark as deleted
+            const deletionTime = new Date();
+            organization.deleted = true;
+            organization.deletedAt = deletionTime;
+            
+            expect(organization.deleted).toBe(true);
+            expect(organization.deletedAt).toBe(deletionTime);
+        });
     });
 }); 
