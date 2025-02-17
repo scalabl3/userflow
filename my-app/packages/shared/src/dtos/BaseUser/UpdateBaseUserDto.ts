@@ -1,3 +1,37 @@
+/**
+ * Data Transfer Object for updating an existing base user.
+ * Supports partial updates of user properties.
+ * 
+ * Core Features:
+ * - Partial updates (all fields optional)
+ * - Identity information updates
+ * - Contact detail changes
+ * - State transitions
+ * - Account status control
+ * 
+ * Optional Fields:
+ * 1. Identity Updates
+ *    - firstname: Modified first name
+ *    - lastname: Modified last name
+ *    - contactEmail: New contact email
+ * 
+ * 2. Status Changes
+ *    - state: New account state
+ *    - isEnabled: Modified activation status (inherited)
+ * 
+ * Validation:
+ * - Standard string validation for names
+ * - Email format validation when provided
+ * - State enum validation
+ * - Boolean flag validation
+ * 
+ * Usage:
+ * - Profile updates
+ * - Contact info changes
+ * - Account state transitions
+ * - Status modifications
+ */
+
 import { IsEmail, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserState } from '../../enums/UserState';

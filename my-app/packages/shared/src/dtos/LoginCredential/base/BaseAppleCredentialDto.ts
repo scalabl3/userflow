@@ -1,5 +1,40 @@
+/**
+ * Base Data Transfer Object for Apple Sign-In credential operations.
+ * Extends OAuth credential DTO with Apple-specific fields and validation.
+ * 
+ * Core Features:
+ * - Apple Sign-In integration
+ * - Identity verification
+ * - Authorization handling
+ * - User verification
+ * 
+ * Apple-Specific Fields:
+ * - Identity token (JWT)
+ * - Authorization code
+ * - Real user status
+ * - Nonce verification
+ * 
+ * Security Features:
+ * - JWT validation
+ * - Nonce verification
+ * - User status verification
+ * - Token format validation
+ * 
+ * Validation:
+ * - JWT format validation
+ * - Required field validation
+ * - Optional field handling
+ * - String format validation
+ * 
+ * Usage:
+ * - Apple Sign-In integration
+ * - Identity verification
+ * - User authentication
+ * - Token management
+ */
+
 import { ApiProperty } from '@nestjs/swagger';
-import { IsJWT } from 'class-validator';
+import { IsJWT, IsString, IsOptional } from 'class-validator';
 import { BaseOAuthCredentialDto } from './BaseOAuthCredentialDto';
 import { StandardString } from '../../../utils/dto-utils';
 import { OAuthProvider } from '../../../enums/CredentialType';
@@ -32,23 +67,24 @@ export class BaseAppleCredentialDto extends BaseOAuthCredentialDto {
         minLength: 1,
         maxLength: 1000
     })
+    @IsString()
     authorizationCode!: string;
 
-    @StandardString({
+    @ApiProperty({
         description: 'Apple\'s real user status',
         example: '2',
-        required: true,
-        minLength: 1,
-        maxLength: 50
+        required: false
     })
-    realUserStatus!: string;
+    @IsString()
+    @IsOptional()
+    realUserStatus?: string;
 
-    @StandardString({
+    @ApiProperty({
         description: 'Apple nonce used for token verification',
         example: 'abc123...',
-        required: true,
-        minLength: 1,
-        maxLength: 1000
+        required: false
     })
-    nonce!: string;
+    @IsString()
+    @IsOptional()
+    nonce?: string;
 } 

@@ -1,3 +1,41 @@
+/**
+ * Data Transfer Object for updating an existing organization.
+ * Supports partial updates of organization properties.
+ * 
+ * Core Features:
+ * - Partial updates (all fields optional)
+ * - Organization details modification
+ * - Admin reassignment
+ * - Visibility toggling
+ * - Subscription management
+ * 
+ * Optional Fields:
+ * 1. Basic Information
+ *    - name: Updated organization name
+ *    - adminUser: New administrator ID
+ * 
+ * 2. Settings
+ *    - visible: Modified visibility state
+ * 
+ * 3. Billing Updates
+ *    - stripeCustomerId: New Stripe customer reference
+ *    - subscriptionStatus: Updated subscription state
+ * 
+ * Validation:
+ * - Name: 1-255 characters if provided
+ * - Admin: Valid UUID if provided
+ * - Visibility: Boolean if provided
+ * - Stripe ID: Standard string format
+ * - Status: Standard string format
+ * 
+ * Usage:
+ * - Organization profile updates
+ * - Admin transfers
+ * - Visibility changes
+ * - Subscription updates
+ * - Billing information changes
+ */
+
 import { IsString, IsOptional, IsBoolean, IsUUID, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { StandardString } from '../../utils/dto-utils';

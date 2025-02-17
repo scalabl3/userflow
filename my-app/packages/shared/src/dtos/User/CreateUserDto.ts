@@ -1,71 +1,93 @@
-import { IsOptional, IsString, IsUUID, IsObject } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+/**
+ * Data Transfer Object for creating a new organization user.
+ * Extends base user creation with organization-specific properties.
+ * 
+ * Core Features:
+ * - Organization membership
+ * - User identification
+ * - Display customization
+ * - Preference initialization
+ * - Inherited base user features
+ * 
+ * Required Fields:
+ * 1. Identity Information (inherited)
+ *    - firstname: User's first name
+ *    - lastname: User's last name
+ *    - contactEmail: Primary contact email
+ * 
+ * 2. Organization Context
+ *    - username: Unique system identifier
+ *    - displayname: UI presentation name
+ *    - organizationId: Parent organization
+ * 
+ * Optional Fields:
+ * 1. Account Status (inherited)
+ *    - state: Initial account state
+ *    - isEnabled: Activation status
+ * 
+ * 2. Preferences
+ *    - theme: UI theme selection
+ *    - notifications: Channel settings
+ * 
+ * Validation:
+ * - Standard name validation
+ * - Username uniqueness
+ * - Organization existence
+ * - Preference structure
+ * 
+ * Inheritance:
+ * - Extends CreateBaseUserDto
+ * - Inherits all base user validations
+ * - Adds organization-specific fields
+ * 
+ * Usage:
+ * - Organization user creation
+ * - Member registration
+ * - Account initialization
+ * - Profile setup
+ */
+
+import { IsObject, IsOptional, IsUUID, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+import { CreateBaseUserDto } from '../BaseUser/CreateBaseUserDto';
+import { UserPreferences } from '../../types/user';
+import { StandardString } from '../../utils/dto-utils';
 
-export class CreateUserDto {
-    // Base user fields
-    @ApiProperty({
-        description: 'User\'s first name',
-        example: 'John'
+export class CreateUserDto extends CreateBaseUserDto {
+    @StandardString({
+        description: 'Unique username for system identification',
+        example: 'johndoe',
+        required: true,
+        minLength: 1,
+        maxLength: 255
     })
-    @IsString()
-    firstname!: string;
-
-    @ApiProperty({
-        description: 'User\'s last name',
-        example: 'Doe'
-    })
-    @IsString()
-    lastname!: string;
-
-    @ApiProperty({
-        description: 'User\'s contact email',
-        example: 'john.doe@example.com'
-    })
-    @IsString()
-    contactEmail!: string;
-
-    // User fields
-    @ApiProperty({
-        description: 'User\'s unique username',
-        example: 'johndoe'
-    })
-    @IsString()
     username!: string;
 
-    @ApiProperty({
-        description: 'User\'s display name',
-        example: 'John Doe'
+    @StandardString({
+        description: 'Display name shown in UI',
+        example: 'John Doe',
+        required: true,
+        minLength: 1,
+        maxLength: 255
     })
-    @IsString()
     displayname!: string;
 
     @ApiProperty({
-        description: 'ID of the associated organization',
+        description: 'ID of the organization this user belongs to',
         example: '123e4567-e89b-12d3-a456-426614174000'
     })
     @IsUUID()
     organizationId!: string;
 
     @ApiProperty({
-        description: 'User preferences',
-        example: {
-            theme: 'light',
-            notifications: {
-                email: true,
-                push: true
-            }
-        },
+        description: 'User preferences including theme and notifications',
+        type: () => UserPreferences,
         required: false
     })
-    @IsOptional()
     @IsObject()
-    @Type(() => Object)
-    preferences?: {
-        theme?: 'light' | 'dark';
-        notifications?: {
-            email?: boolean;
-            push?: boolean;
-        };
-    };
+    @ValidateNested()
+    @Type(() => UserPreferences)
+    @IsOptional()
+    preferences?: UserPreferences;
 }

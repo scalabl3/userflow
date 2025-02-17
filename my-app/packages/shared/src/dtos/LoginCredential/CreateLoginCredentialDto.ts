@@ -1,9 +1,55 @@
+/**
+ * Data Transfer Objects for creating login credentials.
+ * Supports multiple authentication types with type-specific validation.
+ * 
+ * Core Features:
+ * - Multiple credential types (Password, OAuth)
+ * - Provider-specific fields
+ * - Conditional validation
+ * - Swagger documentation
+ * 
+ * Authentication Types:
+ * 1. Password Authentication
+ *    - Standard username/password
+ *    - Password hashing handled by service
+ * 
+ * 2. OAuth Authentication
+ *    - Multiple providers (Google, GitHub, Apple)
+ *    - Token management
+ *    - Profile data handling
+ * 
+ * 3. Apple Sign-In
+ *    - Identity token handling
+ *    - Real user verification
+ *    - Nonce validation
+ * 
+ * Usage:
+ * - User authentication setup
+ * - OAuth integration
+ * - Credential management
+ */
+
 import { IsString, IsUUID, IsEnum, IsOptional, IsBoolean, IsDate, IsObject, ValidateIf, IsJWT } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { CredentialType, OAuthProvider } from '../../enums/CredentialType';
 
-// Base DTO with common fields
+/**
+ * Base DTO for all credential creation operations.
+ * Provides common fields required for any credential type.
+ * 
+ * Core Features:
+ * - Basic credential information
+ * - Type identification
+ * - Relationship management
+ * 
+ * Validation:
+ * - Required fields: identifier, provider, user, type
+ * - UUID validation for relationships
+ * - Enum validation for type
+ * 
+ * @class
+ */
 class CreateLoginCredentialBaseDto {
     @ApiProperty({
         description: 'Identifier used for authentication (email, phone, etc.)',
@@ -45,7 +91,21 @@ class CreateLoginCredentialBaseDto {
     isEnabled?: boolean = true;
 }
 
-// Password-specific DTO
+/**
+ * DTO for creating password-based credentials.
+ * Handles traditional username/password authentication.
+ * 
+ * Core Features:
+ * - Password field handling
+ * - Conditional validation
+ * - Service-side hashing
+ * 
+ * Security:
+ * - Password will be hashed by service
+ * - Never stored in plain text
+ * 
+ * @extends {CreateLoginCredentialBaseDto}
+ */
 class CreatePasswordCredentialDto extends CreateLoginCredentialBaseDto {
     @ApiProperty({
         description: 'Password in plain text (will be hashed by service)',
@@ -56,7 +116,28 @@ class CreatePasswordCredentialDto extends CreateLoginCredentialBaseDto {
     password!: string;  // Will be hashed by service
 }
 
-// OAuth base DTO
+/**
+ * DTO for creating OAuth-based credentials.
+ * Supports multiple OAuth providers with provider-specific fields.
+ * 
+ * Core Features:
+ * - Multi-provider support
+ * - Token management
+ * - Profile data handling
+ * - Apple Sign-In support
+ * 
+ * Provider Support:
+ * - Google OAuth
+ * - GitHub OAuth
+ * - Apple Sign-In
+ * 
+ * Token Management:
+ * - Access token handling
+ * - Refresh token support
+ * - Expiration tracking
+ * 
+ * @extends {CreateLoginCredentialBaseDto}
+ */
 class CreateOAuthCredentialDto extends CreateLoginCredentialBaseDto {
     @ApiProperty({
         description: 'OAuth provider type',

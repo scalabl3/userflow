@@ -1,10 +1,47 @@
+/**
+ * Data Transfer Object for login credential responses.
+ * Provides standardized credential data representation with security measures.
+ * 
+ * Core Features:
+ * - Complete credential information
+ * - Secure field exposure control
+ * - Type-specific data handling
+ * - Relationship exposure
+ * 
+ * Authentication Types:
+ * 1. Password Credentials
+ *    - No password exposure
+ *    - Basic credential info only
+ * 
+ * 2. OAuth Credentials
+ *    - Token information
+ *    - Provider details
+ *    - Profile data
+ * 
+ * 3. Apple Sign-In
+ *    - Identity verification
+ *    - Real user status
+ * 
+ * Security:
+ * - No sensitive data exposure
+ * - Selective field visibility
+ * - Relationship ID only references
+ * 
+ * Usage:
+ * - API responses
+ * - Credential management
+ * - Authentication state
+ * - User profile data
+ */
+
 import { Exclude, Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { CredentialType, OAuthProvider } from '../../enums/CredentialType';
 import { ResponseLoginProviderDto } from '../LoginProvider/ResponseLoginProviderDto';
+import { BaseResponseDto } from '../base/BaseDto';
 
 @Exclude()
-export class ResponseLoginCredentialDto {
+export class ResponseLoginCredentialDto extends BaseResponseDto {
     @Expose()
     @ApiProperty({
         description: 'Unique identifier',
@@ -61,7 +98,7 @@ export class ResponseLoginCredentialDto {
     // OAuth-specific fields
     @Expose()
     @ApiProperty({
-        description: 'OAuth provider type',
+        description: 'OAuth provider type (for OAuth credentials)',
         enum: OAuthProvider,
         example: OAuthProvider.GOOGLE,
         required: false
@@ -70,7 +107,7 @@ export class ResponseLoginCredentialDto {
 
     @Expose()
     @ApiProperty({
-        description: 'When the access token expires',
+        description: 'When the access token expires (for OAuth credentials)',
         example: '2024-01-28T12:00:00.000Z',
         required: false
     })
@@ -86,7 +123,7 @@ export class ResponseLoginCredentialDto {
 
     @Expose()
     @ApiProperty({
-        description: 'When the refresh token expires',
+        description: 'When the refresh token expires (for OAuth credentials)',
         example: '2024-01-28T12:00:00.000Z',
         required: false
     })
@@ -94,7 +131,7 @@ export class ResponseLoginCredentialDto {
 
     @Expose()
     @ApiProperty({
-        description: 'OAuth scope',
+        description: 'OAuth scope (for OAuth credentials)',
         example: 'email profile',
         required: false
     })
@@ -127,7 +164,7 @@ export class ResponseLoginCredentialDto {
 
     @Expose()
     @ApiProperty({
-        description: 'Apple\'s real user status',
+        description: 'Real user status from Apple Sign-In',
         example: '2',
         required: false
     })

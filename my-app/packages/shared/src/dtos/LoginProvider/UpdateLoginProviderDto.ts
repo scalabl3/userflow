@@ -1,3 +1,26 @@
+/**
+ * Data Transfer Object for updating an existing login provider.
+ * Supports partial updates of provider properties.
+ * 
+ * Core Features:
+ * - Optional field updates
+ * - Provider code modification
+ * - Display name updates
+ * - Enable/disable toggling
+ * 
+ * Validation:
+ * - Code: Optional, 1-50 characters if provided
+ * - Name: Optional, 1-255 characters if provided
+ * - Enabled: Optional boolean
+ * 
+ * Usage:
+ * - Provider modification endpoints
+ * - Configuration updates
+ * - Provider state management
+ * 
+ * @extends {EnableableDto}
+ */
+
 import { ApiProperty } from '@nestjs/swagger';
 import { EnableableDto } from '../base/BaseDto';
 import { StandardString } from '../../utils/dto-utils';

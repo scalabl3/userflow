@@ -1,3 +1,45 @@
+/**
+ * Data Transfer Object for organization responses.
+ * Provides standardized organization data representation with proper field exposure.
+ * 
+ * Core Features:
+ * - Complete organization information
+ * - User membership exposure
+ * - Billing integration data
+ * - Temporal tracking
+ * - Selective field exposure
+ * 
+ * Field Categories:
+ * 1. Identity Information
+ *    - id: Unique identifier
+ *    - name: Display name
+ *    - visible: Public visibility state
+ * 
+ * 2. Membership Management
+ *    - adminUser: Administrator reference
+ *    - users: Member collection
+ * 
+ * 3. Billing Information
+ *    - stripeCustomerId: Payment integration
+ *    - subscriptionStatus: Current billing state
+ * 
+ * 4. Temporal Tracking
+ *    - createdAt: Creation timestamp
+ *    - modifiedAt: Last update timestamp
+ * 
+ * Security:
+ * - Selective field exposure with @Expose()
+ * - Type-safe nested objects
+ * - Proper relationship handling
+ * 
+ * Usage:
+ * - API responses
+ * - Organization profiles
+ * - Member management
+ * - Billing operations
+ * - Audit tracking
+ */
+
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose, Type } from 'class-transformer';
 import { ResponseUserDto } from '../User/ResponseUserDto';

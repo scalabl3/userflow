@@ -1,3 +1,37 @@
+/**
+ * Data Transfer Object for creating a new base user.
+ * Provides core user properties without organization context.
+ * 
+ * Core Features:
+ * - Basic user information
+ * - Contact details
+ * - Initial state management
+ * - Account activation control
+ * 
+ * Required Fields:
+ * 1. Identity Information
+ *    - firstname: User's first name
+ *    - lastname: User's last name
+ *    - contactEmail: Primary contact email
+ * 
+ * Optional Fields:
+ * 1. Account Status
+ *    - state: Initial account state (defaults to PENDING)
+ *    - isEnabled: Initial activation status (inherited)
+ * 
+ * Validation:
+ * - Standard string validation for names
+ * - Email format validation
+ * - State enum validation
+ * - Boolean flag validation
+ * 
+ * Usage:
+ * - User registration
+ * - Account creation
+ * - System user setup
+ * - Test data generation
+ */
+
 import { IsEmail, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserState } from '../../enums/UserState';

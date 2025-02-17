@@ -1,3 +1,39 @@
+/**
+ * Data Transfer Object for base user responses.
+ * Provides standardized user data representation with proper field exposure.
+ * 
+ * Core Features:
+ * - Basic user information
+ * - Contact details
+ * - Account state tracking
+ * - Login history
+ * - Activation status
+ * 
+ * Field Categories:
+ * 1. Identity Information
+ *    - firstname, lastname
+ *    - contactEmail
+ * 
+ * 2. Account Status
+ *    - state (PENDING, ACTIVE, etc.)
+ *    - isEnabled
+ * 
+ * 3. Activity Tracking
+ *    - lastLoginAt
+ *    - Inherited timestamps (createdAt, modifiedAt)
+ * 
+ * Security:
+ * - Selective field exposure
+ * - No sensitive data
+ * - Proper type transformation
+ * 
+ * Usage:
+ * - API responses
+ * - User profile data
+ * - Account management
+ * - Authentication flows
+ */
+
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 import { UserState } from '../../enums/UserState';

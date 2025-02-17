@@ -1,3 +1,37 @@
+/**
+ * Base Data Transfer Object for OAuth credential operations.
+ * Extends base credential DTO with OAuth-specific fields and validation.
+ * 
+ * Core Features:
+ * - OAuth provider specification
+ * - Token management
+ * - Profile data handling
+ * - Scope management
+ * 
+ * Token Management:
+ * - Access token handling
+ * - Refresh token support
+ * - Token expiration tracking
+ * - Token validation
+ * 
+ * Profile Data:
+ * - Raw profile storage
+ * - Provider-specific data
+ * - Data transformation
+ * 
+ * Validation:
+ * - Provider enum validation
+ * - Token format validation
+ * - Date validation
+ * - Optional field handling
+ * 
+ * Usage:
+ * - OAuth credential creation
+ * - Token refresh operations
+ * - Profile updates
+ * - Provider integration
+ */
+
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsDate, IsObject, IsString, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -61,6 +95,8 @@ export class BaseOAuthCredentialDto extends BaseLoginCredentialDto {
         minLength: 1,
         maxLength: 1000
     })
+    @IsString()
+    @IsOptional()
     scope?: string;
 
     @ApiProperty({

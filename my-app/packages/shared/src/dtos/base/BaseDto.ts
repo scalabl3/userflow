@@ -1,8 +1,44 @@
+/**
+ * Base Data Transfer Object (DTO) classes for standardized data transfer.
+ * Provides foundational structures for all DTOs in the system.
+ * 
+ * Core Features:
+ * - Common field definitions
+ * - Swagger/OpenAPI documentation
+ * - Class transformation decorators
+ * - Standard property patterns
+ * 
+ * Categories:
+ * 1. Response DTOs: Standard response structure
+ * 2. Create DTOs: Creation operation base
+ * 3. Update DTOs: Update operation base
+ * 4. Feature DTOs: Enable/Disable and Visibility
+ * 
+ * Usage:
+ * - API response standardization
+ * - Request validation
+ * - Documentation generation
+ * - Type safety enforcement
+ */
+
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 
 /**
- * Base class for all Response DTOs
+ * Base class for all Response DTOs.
+ * Provides standard response fields with Swagger documentation.
+ * 
+ * Core Features:
+ * - Unique identifier
+ * - Timestamp tracking
+ * - Class transformation control
+ * 
+ * Usage:
+ * - API response objects
+ * - Entity data transfer
+ * - Response serialization
+ * 
+ * @class
  */
 @Exclude()
 export class BaseResponseDto {
@@ -29,7 +65,19 @@ export class BaseResponseDto {
 }
 
 /**
- * Base class for all Create DTOs
+ * Base class for all Create DTOs.
+ * Provides structure for entity creation operations.
+ * 
+ * Core Features:
+ * - Common creation fields
+ * - Extensibility support
+ * 
+ * Usage:
+ * - Entity creation requests
+ * - Data validation
+ * - Request standardization
+ * 
+ * @class
  */
 export class BaseCreateDto {
     // Base class for common create fields
@@ -38,7 +86,19 @@ export class BaseCreateDto {
 }
 
 /**
- * Base class for all Update DTOs
+ * Base class for all Update DTOs.
+ * Provides structure for entity update operations.
+ * 
+ * Core Features:
+ * - Common update fields
+ * - Partial update support
+ * 
+ * Usage:
+ * - Entity update requests
+ * - Patch operations
+ * - Field validation
+ * 
+ * @class
  */
 export class BaseUpdateDto {
     // Base class for common update fields
@@ -47,7 +107,20 @@ export class BaseUpdateDto {
 }
 
 /**
- * Base class for entities with enable/disable functionality
+ * Base class for entities with enable/disable functionality.
+ * Provides standard enabled state management.
+ * 
+ * Core Features:
+ * - Enable/disable flag
+ * - Default state control
+ * - Swagger documentation
+ * 
+ * Usage:
+ * - Feature toggles
+ * - Access control
+ * - State management
+ * 
+ * @class
  */
 export class EnableableDto {
     @ApiProperty({
@@ -59,7 +132,20 @@ export class EnableableDto {
 }
 
 /**
- * Base class for entities with visibility control
+ * Base class for entities with visibility control.
+ * Provides standard visibility state management.
+ * 
+ * Core Features:
+ * - Visibility flag
+ * - Default state control
+ * - Swagger documentation
+ * 
+ * Usage:
+ * - Content visibility
+ * - UI display control
+ * - Access management
+ * 
+ * @class
  */
 export class VisibilityDto {
     @ApiProperty({
@@ -71,7 +157,20 @@ export class VisibilityDto {
 }
 
 /**
- * Base class for entities with both enable and visibility control
+ * Base class for entities with both enable and visibility control.
+ * Combines enable/disable and visibility functionality.
+ * 
+ * Core Features:
+ * - Combined state management
+ * - Inherited enable/disable
+ * - Independent visibility
+ * 
+ * Usage:
+ * - Complex state management
+ * - Feature visibility control
+ * - Access and display management
+ * 
+ * @class
  */
 export class EnableableVisibilityDto extends EnableableDto {
     @ApiProperty({
