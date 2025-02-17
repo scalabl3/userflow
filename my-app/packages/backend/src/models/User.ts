@@ -1,92 +1,75 @@
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseUser } from './BaseUser';
 import { Organization } from './Organization';
-import { IsString, IsUUID, IsObject, IsOptional, ValidateNested, IsBoolean } from 'class-validator';
+import { IsString, IsUUID, IsObject, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { getModelRelationConfig } from '../migrations/helpers';
 import { IsStandardLength, IsStandardName } from '@my-app/shared/dist/decorators/validation';
-
-/**
- * User preferences for notifications
- */
-export class NotificationPreferences {
-    /** Flag for email notifications */
-    @IsBoolean()
-    @IsOptional()
-    email: boolean = true;
-
-    /** Flag for push notifications */
-    @IsBoolean()
-    @IsOptional()
-    push: boolean = true;
-}
-
-/**
- * User preferences container
- */
-export class UserPreferences {
-    /** UI theme preference */
-    @IsString()
-    @IsOptional()
-    theme: 'light' | 'dark' = 'light';
-
-    /** Notification settings */
-    @ValidateNested()
-    @Type(() => NotificationPreferences)
-    @IsOptional()
-    notifications: NotificationPreferences = new NotificationPreferences();
-}
+import { UserPreferences } from '@my-app/shared/dist/types/user';
 
 /**
  * User entity extends BaseUser with organization-specific properties.
  * 
  * Core Features:
- * - Organization membership
- * - User preferences
- * - Display customization
+ * - Organization membership management
+ * - User identification and display
+ * - Preference customization
+ * - UI/UX personalization
  * 
  * Relationships:
  * - Many Users belong to one Organization (M:1)
- * - Organization relationship is required
- * - Protected from organization deletion (RESTRICT)
+ * - Organization relationship is required and protected (RESTRICT)
+ * - Inherits authentication relationships from BaseUser
  * 
- * Preferences:
- * - Theme: UI appearance (light/dark)
- * - Notifications: Email and push settings
+ * Identity Management:
+ * - Unique username for system identification
+ * - Display name for UI presentation
+ * - Organization affiliation tracking
+ * 
+ * Customization:
+ * - Theme preferences (light/dark)
+ * - Notification settings (email/push)
+ * - Display preferences
  * 
  * Constraints:
- * - Username must be unique
- * - Must belong to an organization
- * - Inherits BaseUser constraints
+ * - Username must be unique across system
+ * - Must belong to exactly one organization
+ * - Display name must follow standard format
+ * - Inherits all BaseUser constraints
+ * 
+ * Inheritance:
+ * - Extends BaseUser for core user functionality
+ * - Adds organization-specific features
+ * - Maintains BaseUser validation rules
  */
 @Entity()
 export class User extends BaseUser {
     // Required Core Fields
-    /** Unique username for the user */
+    /** Unique username for system identification */
     @Column({ type: 'varchar', unique: true })
     @IsString()
     @IsStandardName('USERNAME')
     username!: string;
 
-    /** Display name shown in UI */
+    /** Display name shown in UI and communications */
     @Column({ type: 'varchar' })
     @IsString()
     @IsStandardName('DISPLAYNAME')
     displayname!: string;
 
     // Relationship Fields
-    /** ID of the user's organization */
+    /** ID of the user's organization (required) */
     @Column(getModelRelationConfig(true).columnOptions)
     @IsUUID()
     organizationId!: string;
 
-    /** The user's organization */
+    /** The user's organization (M:1 relationship) */
     @ManyToOne(() => Organization, getModelRelationConfig(true).relationOptions)
     @JoinColumn({ name: 'organizationId' })
     organization!: Organization;
 
     // Optional Fields
-    /** User's preferences (theme, notifications) */
+    /** User's customizable preferences */
     @Column({ 
         type: 'simple-json', 
         nullable: true,

@@ -1,3 +1,50 @@
+/**
+ * Test suite for Organization entity model.
+ * Validates organization management functionality and data integrity.
+ * 
+ * Test Categories:
+ * - Initialization: Default values and instance creation
+ * - Core Properties: Organization identification and visibility
+ * - Stripe Integration: Customer and subscription management
+ * - Relationships: Admin user and member management
+ * - Timestamps: Temporal tracking
+ * 
+ * Coverage Areas:
+ * - Organization Configuration:
+ *   - Name management
+ *   - Visibility control
+ *   - Stripe customer integration
+ *   - Subscription status tracking
+ * 
+ * - Data Validation:
+ *   - Required fields (name, adminUserId)
+ *   - Optional fields (stripeCustomerId, subscriptionStatus)
+ *   - Field formats and constraints
+ * 
+ * - Relationship Management:
+ *   - Admin user assignment
+ *   - User collection handling
+ * 
+ * Test Structure:
+ * 1. Initialization
+ *    - Instance creation
+ *    - Default values
+ *    - ID handling
+ * 
+ * 2. Properties
+ *    - Core fields (name, visible)
+ *    - Stripe integration (customerId, subscriptionStatus)
+ * 
+ * 3. Relationships
+ *    - Admin user assignment
+ *    - User collection management
+ * 
+ * 4. Timestamps
+ *    - Creation tracking
+ *    - Modification tracking
+ *    - Soft deletion
+ */
+
 import { validate } from 'class-validator';
 import { Organization } from './Organization';
 
@@ -8,6 +55,10 @@ describe('Organization', () => {
         organization = new Organization();
     });
 
+    /**
+     * Tests for Organization instance initialization.
+     * Validates default state and basic functionality.
+     */
     describe('initialization', () => {
         it('should create a valid instance', () => {
             expect(organization).toBeTruthy();
@@ -27,7 +78,15 @@ describe('Organization', () => {
         });
     });
 
+    /**
+     * Tests for Organization properties and validation.
+     * Ensures data integrity and constraint enforcement.
+     */
     describe('properties', () => {
+        /**
+         * Tests for core organization properties.
+         * Validates name and visibility management.
+         */
         describe('core properties', () => {
             it('should get and set name', () => {
                 organization.name = 'Test Org';
@@ -40,6 +99,10 @@ describe('Organization', () => {
             });
         });
 
+        /**
+         * Tests for Stripe integration properties.
+         * Validates customer ID and subscription status handling.
+         */
         describe('stripe integration', () => {
             it('should get and set stripeCustomerId', () => {
                 const customerId = 'cus_123456789';
@@ -69,7 +132,15 @@ describe('Organization', () => {
         });
     });
 
+    /**
+     * Tests for Organization relationships.
+     * Validates admin user and member management.
+     */
     describe('relationships', () => {
+        /**
+         * Tests for admin user relationship.
+         * Ensures proper admin user assignment and validation.
+         */
         describe('adminUser relationship', () => {
             describe('foreign key', () => {
                 it('should get and set adminUserId', () => {
@@ -87,6 +158,10 @@ describe('Organization', () => {
             });
         });
 
+        /**
+         * Tests for users collection.
+         * Validates member management functionality.
+         */
         describe('users collection', () => {
             it('should initialize users as empty array', () => {
                 expect(organization.users).toBeDefined();
@@ -96,6 +171,10 @@ describe('Organization', () => {
         });
     });
 
+    /**
+     * Tests for Organization temporal tracking.
+     * Validates timestamp management and soft deletion.
+     */
     describe('timestamps', () => {
         it('should track creation and modification times', () => {
             const now = new Date();

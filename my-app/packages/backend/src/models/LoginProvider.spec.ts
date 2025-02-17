@@ -1,3 +1,50 @@
+/**
+ * Test suite for LoginProvider entity model.
+ * Validates authentication provider functionality and data integrity.
+ * 
+ * Test Categories:
+ * - Initialization: Default values and instance creation
+ * - Core Properties: Provider identification and naming
+ * - State Management: Provider activation control
+ * - Relationships: Credential collections
+ * - Timestamps: Temporal tracking
+ * 
+ * Coverage Areas:
+ * - Provider Configuration:
+ *   - Unique provider codes
+ *   - Display names
+ *   - Enable/disable functionality
+ * 
+ * - Data Validation:
+ *   - Required fields
+ *   - Field formats
+ *   - Length constraints
+ * 
+ * - Collection Management:
+ *   - Credential associations
+ *   - Collection initialization
+ * 
+ * Test Structure:
+ * 1. Initialization
+ *    - Instance creation
+ *    - Default values
+ *    - ID handling
+ * 
+ * 2. Properties
+ *    - Core fields (code, name)
+ *    - Field validation
+ *    - State management
+ * 
+ * 3. Relationships
+ *    - Credentials collection
+ *    - Collection initialization
+ * 
+ * 4. Timestamps
+ *    - Creation tracking
+ *    - Modification tracking
+ *    - Soft deletion
+ */
+
 import { validate } from 'class-validator';
 import { LoginProvider } from './LoginProvider';
 
@@ -8,6 +55,10 @@ describe('LoginProvider', () => {
         provider = new LoginProvider();
     });
 
+    /**
+     * Tests for LoginProvider instance initialization.
+     * Validates default state and basic functionality.
+     */
     describe('initialization', () => {
         it('should create a valid instance', () => {
             expect(provider).toBeTruthy();
@@ -24,7 +75,15 @@ describe('LoginProvider', () => {
         });
     });
 
+    /**
+     * Tests for LoginProvider properties and validation.
+     * Ensures data integrity and constraint enforcement.
+     */
     describe('properties', () => {
+        /**
+         * Tests for core provider properties.
+         * Validates required fields and format constraints.
+         */
         describe('core properties', () => {
             it('should get and set code', () => {
                 const code = 'google';
@@ -55,6 +114,10 @@ describe('LoginProvider', () => {
             });
         });
 
+        /**
+         * Tests for provider state management.
+         * Validates enable/disable functionality.
+         */
         describe('state management', () => {
             it('should get and set enabled status', () => {
                 provider.isEnabled = false;
@@ -66,7 +129,15 @@ describe('LoginProvider', () => {
         });
     });
 
+    /**
+     * Tests for LoginProvider relationships.
+     * Validates credential collection management.
+     */
     describe('relationships', () => {
+        /**
+         * Tests for credentials collection.
+         * Ensures proper initialization and array handling.
+         */
         describe('credentials collection', () => {
             it('should initialize credentials as empty array', () => {
                 expect(provider.credentials).toBeDefined();
@@ -76,6 +147,10 @@ describe('LoginProvider', () => {
         });
     });
 
+    /**
+     * Tests for LoginProvider temporal tracking.
+     * Validates timestamp management and soft deletion.
+     */
     describe('timestamps', () => {
         it('should track creation and modification times', () => {
             const now = new Date();

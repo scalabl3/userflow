@@ -1,3 +1,55 @@
+/**
+ * Test suite for LoginCredential entity model.
+ * Validates authentication credential functionality and data integrity.
+ * 
+ * Test Categories:
+ * - Initialization: Default values and instance creation
+ * - Core Properties: Basic credential fields and types
+ * - Password Auth: Local authentication fields
+ * - OAuth Auth: Provider-specific authentication
+ * - Apple Auth: Apple-specific OAuth fields
+ * - Relationships: Provider and user associations
+ * - Timestamps: Temporal tracking
+ * 
+ * Coverage Areas:
+ * - Authentication Types:
+ *   - Password-based authentication
+ *   - OAuth authentication (Google)
+ *   - Apple Sign-In
+ * 
+ * - Data Validation:
+ *   - Required fields
+ *   - Field formats
+ *   - Type constraints
+ * 
+ * - Security Features:
+ *   - Password hashing
+ *   - Token management
+ *   - Provider verification
+ * 
+ * Test Structure:
+ * 1. Initialization
+ *    - Instance creation
+ *    - Default values
+ *    - ID handling
+ * 
+ * 2. Properties
+ *    - Core fields (identifier, type)
+ *    - Password authentication
+ *    - OAuth authentication
+ *    - Apple authentication
+ * 
+ * 3. Relationships
+ *    - Login provider association
+ *    - User association
+ *    - Foreign key constraints
+ * 
+ * 4. Timestamps
+ *    - Creation tracking
+ *    - Modification tracking
+ *    - Soft deletion
+ */
+
 import { validate } from 'class-validator';
 import { LoginCredential } from './LoginCredential';
 import { CredentialType, OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
@@ -9,6 +61,10 @@ describe('LoginCredential', () => {
         credential = new LoginCredential();
     });
 
+    /**
+     * Tests for LoginCredential instance initialization.
+     * Validates default state and basic functionality.
+     */
     describe('initialization', () => {
         it('should create a valid instance', () => {
             expect(credential).toBeTruthy();
@@ -26,7 +82,15 @@ describe('LoginCredential', () => {
         });
     });
 
+    /**
+     * Tests for LoginCredential properties and validation.
+     * Covers different authentication types and their specific fields.
+     */
     describe('properties', () => {
+        /**
+         * Tests for core credential properties.
+         * Validates basic fields common to all auth types.
+         */
         describe('core properties', () => {
             it('should get and set identifier', () => {
                 const identifier = 'test@example.com';
@@ -51,6 +115,10 @@ describe('LoginCredential', () => {
             });
         });
 
+        /**
+         * Tests for password-based authentication.
+         * Validates password hash storage and management.
+         */
         describe('password authentication', () => {
             beforeEach(() => {
                 credential.credentialType = CredentialType.PASSWORD;
@@ -63,6 +131,10 @@ describe('LoginCredential', () => {
             });
         });
 
+        /**
+         * Tests for OAuth authentication.
+         * Validates token management and profile data.
+         */
         describe('oauth authentication', () => {
             beforeEach(() => {
                 credential.credentialType = CredentialType.OAUTH;
@@ -104,6 +176,10 @@ describe('LoginCredential', () => {
             });
         });
 
+        /**
+         * Tests for Apple Sign-In specific features.
+         * Validates Apple-specific authentication fields.
+         */
         describe('apple authentication', () => {
             beforeEach(() => {
                 credential.credentialType = CredentialType.OAUTH;
@@ -136,7 +212,15 @@ describe('LoginCredential', () => {
         });
     });
 
+    /**
+     * Tests for LoginCredential relationships.
+     * Validates provider and user associations.
+     */
     describe('relationships', () => {
+        /**
+         * Tests for login provider relationship.
+         * Validates provider association and constraints.
+         */
         describe('loginProvider relationship', () => {
             describe('foreign key', () => {
                 it('should get and set loginProviderId', () => {
@@ -154,6 +238,10 @@ describe('LoginCredential', () => {
             });
         });
 
+        /**
+         * Tests for base user relationship.
+         * Validates user association and constraints.
+         */
         describe('baseUser relationship', () => {
             describe('foreign key', () => {
                 it('should get and set baseUserId', () => {
@@ -172,6 +260,10 @@ describe('LoginCredential', () => {
         });
     });
 
+    /**
+     * Tests for LoginCredential temporal tracking.
+     * Validates timestamp management and soft deletion.
+     */
     describe('timestamps', () => {
         it('should track creation and modification times', () => {
             const now = new Date();

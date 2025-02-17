@@ -2,65 +2,78 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BaseUserService } from './BaseUserService';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { BaseUser } from '../models/BaseUser';
-import { DataSource, DeleteResult, EntityManager, FindOneOptions, FindOptionsWhere, QueryRunner, Repository, SaveOptions } from 'typeorm';
+import { DataSource, EntityManager, QueryRunner, Repository, FindOneOptions, DeepPartial, ObjectLiteral } from 'typeorm';
 import { CreateBaseUserDto, ResponseBaseUserDto, UpdateBaseUserDto } from '@my-app/shared';
 import { UserState } from '@my-app/shared';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { user as userMock } from '../models/test/__mocks__/user.mock';
-import { auth as authMock } from '../models/test/__mocks__/auth.mock';
-import { mockRepository } from '../test/setup';
 import { plainToClass } from 'class-transformer';
+import { OperationType, ServiceErrorCode } from '../constants/service-operations';
 
-type MockType<T> = {
-    [P in keyof T]?: jest.Mock<any>;
-};
+type MockRepository<T extends ObjectLiteral> = Partial<Record<keyof Repository<T>, jest.Mock>>;
+type MockEntityManager = Partial<Record<keyof EntityManager, jest.Mock>>;
 
 describe('BaseUserService', () => {
     let service: BaseUserService;
-    let repository: MockType<Repository<BaseUser>>;
-    let dataSource: DataSource;
-    let mockQueryRunner: QueryRunner;
-    let mockManager: EntityManager;
+    let repository: MockRepository<BaseUser>;
+    let dataSource: Partial<DataSource>;
+    let queryRunner: Partial<QueryRunner>;
+    let entityManager: MockEntityManager;
 
     beforeEach(async () => {
-        mockManager = {
-            save: jest.fn().mockImplementation(async (entity: any) => entity),
-            findOne: jest.fn(),
-            find: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-        } as unknown as EntityManager;
+        entityManager = {
+            save: jest.fn(),
+            remove: jest.fn(),
+            transaction: jest.fn(),
+        };
 
-        mockQueryRunner = {
+        queryRunner = {
             connect: jest.fn(),
             startTransaction: jest.fn(),
             commitTransaction: jest.fn(),
             rollbackTransaction: jest.fn(),
             release: jest.fn(),
-            manager: mockManager,
-        } as unknown as QueryRunner;
+            manager: entityManager as unknown as EntityManager,
+        };
 
-        const mockDataSource = {
-            createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner),
-        } as unknown as DataSource;
+        dataSource = {
+            createQueryRunner: jest.fn().mockReturnValue(queryRunner),
+        };
+
+        repository = {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+            manager: {
+                ...entityManager,
+                connection: dataSource as DataSource,
+            } as unknown as EntityManager,
+        };
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 BaseUserService,
                 {
                     provide: getRepositoryToken(BaseUser),
-                    useFactory: mockRepository,
+                    useValue: repository,
                 },
                 {
                     provide: DataSource,
-                    useValue: mockDataSource,
+                    useValue: dataSource,
                 },
             ],
         }).compile();
 
         service = module.get<BaseUserService>(BaseUserService);
-        repository = module.get(getRepositoryToken(BaseUser));
-        dataSource = module.get<DataSource>(DataSource);
+
+        // Mock the logger to prevent console output during tests
+        jest.spyOn(service['serviceLogger'], 'logOperation').mockImplementation(() => {});
+        jest.spyOn(service['serviceLogger'], 'logError').mockImplementation(() => {});
+        jest.spyOn(service['serviceLogger'], 'logSecurity').mockImplementation(() => {});
+        jest.spyOn(service['serviceLogger'], 'logStateChange').mockImplementation(() => {});
     });
 
     it('should be defined', () => {
@@ -68,179 +81,255 @@ describe('BaseUserService', () => {
     });
 
     describe('findAllBaseUsers', () => {
-        it('should return all users with their credentials', async () => {
-            const users = [userMock.base];
-            const responseDto = plainToClass(ResponseBaseUserDto, users[0]);
-            repository.find?.mockImplementation(async () => users);
+        const adminUserId = 'admin-user-id';
 
-            const result = await service.findAllBaseUsers();
-            expect(result).toEqual([responseDto]);
+        it('should return all users with their credentials when admin access', async () => {
+            const users = [userMock.base];
+            repository.find?.mockResolvedValue(users);
+
+            const result = await service.findAllBaseUsers(adminUserId);
+            
+            expect(result).toEqual([plainToClass(ResponseBaseUserDto, users[0])]);
             expect(repository.find).toHaveBeenCalledWith({
-                relations: {
-                    loginCredentials: true
-                }
+                relations: ['loginCredentials'],
+                where: { deleted: false }
             });
+            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
+                OperationType.ADMIN,
+                'findAllBaseUsers',
+                'SUCCESS',
+                expect.objectContaining({
+                    userId: adminUserId,
+                    metadata: { count: users.length }
+                })
+            );
         });
 
-        it('should return empty array when no users exist', async () => {
-            repository.find?.mockImplementation(async () => []);
+        it('should throw UnauthorizedException when non-admin access', async () => {
+            jest.spyOn(service as any, 'validateAccess')
+                .mockRejectedValue(new UnauthorizedException({
+                    code: ServiceErrorCode.ACCESS_DENIED,
+                    message: 'Access denied',
+                    details: { userId: 'non-admin-id' }
+                }));
 
-            const result = await service.findAllBaseUsers();
-            expect(result).toEqual([]);
+            await expect(service.findAllBaseUsers('non-admin-id'))
+                .rejects
+                .toThrow(UnauthorizedException);
         });
     });
 
     describe('findOneBaseUser', () => {
-        it('should return user with login credentials', async () => {
+        const userId = 'user-id';
+
+        it('should return user with login credentials when authorized', async () => {
             const user = userMock.base;
-            const responseDto = plainToClass(ResponseBaseUserDto, user);
-            repository.findOne?.mockImplementation(async () => user);
+            repository.findOne?.mockResolvedValue(user);
 
-            const result = await service.findOneBaseUser(user.id);
+            const result = await service.findOneBaseUser(user.id, userId);
 
-            expect(result).toEqual(responseDto);
+            expect(result).toEqual(plainToClass(ResponseBaseUserDto, user));
             expect(repository.findOne).toHaveBeenCalledWith({
-                where: { id: user.id },
-                relations: {
-                    loginCredentials: true
-                }
+                where: { id: user.id, deleted: false },
+                relations: ['loginCredentials']
             });
+            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
+                OperationType.USER,
+                'findOneBaseUser',
+                'SUCCESS',
+                expect.objectContaining({
+                    userId,
+                    targetId: user.id
+                })
+            );
         });
 
-        it('should return null if user not found', async () => {
-            repository.findOne?.mockImplementation(async () => null);
+        it('should throw NotFoundException when user not found', async () => {
+            repository.findOne?.mockResolvedValue(null);
 
-            const result = await service.findOneBaseUser('nonexistent');
-            expect(result).toBeNull();
+            await expect(service.findOneBaseUser('nonexistent', userId))
+                .rejects
+                .toThrow(NotFoundException);
+        });
+
+        it('should throw UnauthorizedException when unauthorized access', async () => {
+            jest.spyOn(service as any, 'validateAccess')
+                .mockRejectedValue(new UnauthorizedException());
+
+            await expect(service.findOneBaseUser(userId, 'unauthorized-id'))
+                .rejects
+                .toThrow(UnauthorizedException);
         });
     });
 
     describe('createBaseUser', () => {
-        it('should create a user', async () => {
-            const createUserDto: CreateBaseUserDto = {
-                firstname: userMock.base.firstname,
-                lastname: userMock.base.lastname,
-                contactEmail: userMock.base.contactEmail
-            };
+        const createUserDto: CreateBaseUserDto = userMock.baseUserDtos.create;
 
-            const savedUser = userMock.base;
-            const responseDto = plainToClass(ResponseBaseUserDto, savedUser);
-
-            mockManager.save = jest.fn().mockResolvedValue(savedUser);
+        it('should create a user with default pending state', async () => {
+            const savedUser = { ...userMock.base, state: UserState.PENDING };
             repository.create?.mockImplementation(() => savedUser);
 
-            const result = await service.createBaseUser(createUserDto);
+            const result = await service.createBaseUser(createUserDto, 'user-id');
 
-            expect(result).toEqual(responseDto);
-            expect(mockQueryRunner.startTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.release).toHaveBeenCalled();
+            expect(result).toEqual(plainToClass(ResponseBaseUserDto, savedUser));
+            expect(queryRunner.startTransaction).toHaveBeenCalled();
+            expect(queryRunner.commitTransaction).toHaveBeenCalled();
+            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
+                OperationType.USER,
+                'createBaseUser',
+                'SUCCESS',
+                expect.objectContaining({
+                    userId: 'user-id',
+                    targetId: savedUser.id,
+                    changes: ['User created']
+                })
+            );
         });
 
-        it('should rollback transaction on error', async () => {
-            const createUserDto: CreateBaseUserDto = {
-                firstname: userMock.base.firstname,
-                lastname: userMock.base.lastname,
-                contactEmail: userMock.base.contactEmail
-            };
+        it('should throw BadRequestException when email exists', async () => {
+            jest.spyOn(service as any, 'validateUniqueness')
+                .mockRejectedValue(new BadRequestException({
+                    code: ServiceErrorCode.ALREADY_EXISTS,
+                    message: 'BaseUser with this contactEmail already exists'
+                }));
 
-            const error = new Error('Database error');
-            mockManager.save = jest.fn().mockRejectedValue(error);
-
-            await expect(service.createBaseUser(createUserDto))
+            await expect(service.createBaseUser(createUserDto, 'user-id'))
                 .rejects
-                .toThrow(error);
-
-            expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.release).toHaveBeenCalled();
+                .toThrow(BadRequestException);
         });
     });
 
     describe('updateBaseUser', () => {
-        it('should update user state', async () => {
-            const updateDto: UpdateBaseUserDto = { state: UserState.ACTIVE };
+        const updateDto: UpdateBaseUserDto = userMock.baseUserDtos.update;
+
+        it('should update user when authorized', async () => {
             const updatedUser = { ...userMock.base, ...updateDto };
-            const responseDto = plainToClass(ResponseBaseUserDto, updatedUser);
-
-            mockManager.save = jest.fn().mockResolvedValue(updatedUser);
-            repository.findOne?.mockImplementation(async () => updatedUser);
-
-            const result = await service.updateBaseUser(userMock.base.id, updateDto);
-
-            expect(result).toEqual(responseDto);
-            expect(mockQueryRunner.startTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.release).toHaveBeenCalled();
-        });
-
-        it('should return null if user not found', async () => {
-            repository.findOne?.mockImplementation(async () => null);
-
-            const result = await service.updateBaseUser('nonexistent', { state: UserState.ACTIVE });
-            expect(result).toBeNull();
-        });
-
-        it('should allow updating all user fields', async () => {
-            const updateDto: UpdateBaseUserDto = {
-                firstname: 'Updated',
-                lastname: 'User',
-                contactEmail: 'updated@example.com',
-                state: UserState.ACTIVE,
-                isEnabled: false
-            };
-
-            const updatedUser = { ...userMock.base, ...updateDto };
-            const responseDto = plainToClass(ResponseBaseUserDto, updatedUser);
-
-            mockManager.save = jest.fn().mockResolvedValue(updatedUser);
-            repository.findOne?.mockImplementation(async () => updatedUser);
-
-            const result = await service.updateBaseUser(userMock.base.id, updateDto);
-            expect(result).toEqual(responseDto);
-            expect(mockQueryRunner.startTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.release).toHaveBeenCalled();
-        });
-
-        it('should rollback transaction on error', async () => {
-            const updateDto: UpdateBaseUserDto = { state: UserState.ACTIVE };
-            const error = new Error('Database error');
-
-            mockManager.save = jest.fn().mockRejectedValue(error);
             repository.findOne?.mockImplementation(async () => userMock.base);
+            repository.save = jest.fn().mockResolvedValue(updatedUser);
 
-            await expect(service.updateBaseUser(userMock.base.id, updateDto))
+            const result = await service.updateBaseUser(userMock.base.id, updateDto, 'user-id');
+
+            expect(result).toEqual(plainToClass(ResponseBaseUserDto, updatedUser));
+            expect(repository.findOne).toHaveBeenCalledWith({
+                where: { id: userMock.base.id, deleted: false },
+                relations: ['loginCredentials']
+            });
+            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
+                OperationType.USER,
+                'updateBaseUser',
+                'SUCCESS',
+                expect.objectContaining({
+                    userId: 'user-id',
+                    targetId: userMock.base.id
+                })
+            );
+        });
+
+        it('should validate state transition', async () => {
+            const invalidStateDto = { ...updateDto, state: UserState.DEACTIVATED };
+            repository.findOne?.mockImplementation(async () => ({
+                ...userMock.base,
+                state: UserState.PENDING
+            }));
+
+            await expect(service.updateBaseUser(userMock.base.id, invalidStateDto, 'user-id'))
                 .rejects
-                .toThrow(error);
-
-            expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.release).toHaveBeenCalled();
+                .toThrow(BadRequestException);
         });
     });
 
     describe('removeBaseUser', () => {
-        it('should delete a user', async () => {
-            mockManager.delete = jest.fn().mockResolvedValue({ affected: 1, raw: [], generatedMaps: [] } as DeleteResult);
-            repository.findOne?.mockImplementation(async () => userMock.base);
+        it('should remove user when admin and no active credentials', async () => {
+            const user = { ...userMock.base, loginCredentials: [] };
+            repository.findOne?.mockImplementation(async () => user);
+            repository.remove = jest.fn().mockResolvedValue(user);
 
-            const result = await service.removeBaseUser(userMock.base.id);
+            const result = await service.removeBaseUser(user.id, 'admin-id');
+
             expect(result).toBe(true);
-            expect(mockQueryRunner.startTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.release).toHaveBeenCalled();
+            expect(repository.remove).toHaveBeenCalled();
+            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
+                OperationType.ADMIN,
+                'removeBaseUser',
+                'SUCCESS',
+                expect.objectContaining({
+                    userId: 'admin-id',
+                    targetId: user.id,
+                    changes: ['User permanently deleted']
+                })
+            );
         });
 
-        it('should rollback transaction on error', async () => {
-            const error = new Error('Database error');
-            mockManager.delete = jest.fn().mockRejectedValue(error);
-            repository.findOne?.mockImplementation(async () => userMock.base);
+        it('should throw BadRequestException when user has active credentials', async () => {
+            const user = {
+                ...userMock.base,
+                loginCredentials: [{ isEnabled: true }]
+            };
+            repository.findOne?.mockImplementation(async () => user);
 
-            await expect(service.removeBaseUser(userMock.base.id))
+            await expect(service.removeBaseUser(user.id, 'admin-id'))
                 .rejects
-                .toThrow(error);
+                .toThrow(BadRequestException);
+        });
+    });
 
-            expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
-            expect(mockQueryRunner.release).toHaveBeenCalled();
+    describe('softDeleteBaseUser', () => {
+        it('should soft delete user when admin and no active credentials', async () => {
+            const user = { ...userMock.base, loginCredentials: [] };
+            repository.findOne?.mockImplementation(async () => user);
+            repository.save = jest.fn().mockImplementation(async (entity) => entity);
+
+            await service.softDeleteBaseUser(user.id, 'admin-id');
+
+            expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
+                deleted: true,
+                deletedAt: expect.any(Date)
+            }));
+            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
+                OperationType.ADMIN,
+                'softDeleteBaseUser',
+                'SUCCESS',
+                expect.objectContaining({
+                    userId: 'admin-id',
+                    targetId: user.id
+                })
+            );
+        });
+
+        it('should throw UnauthorizedException when non-admin access', async () => {
+            jest.spyOn(service as any, 'validateAccess')
+                .mockRejectedValue(new UnauthorizedException());
+
+            await expect(service.softDeleteBaseUser('user-id', 'non-admin-id'))
+                .rejects
+                .toThrow(UnauthorizedException);
+        });
+    });
+
+    describe('validateStateTransition', () => {
+        const validTransitions = [
+            { from: UserState.PENDING, to: UserState.ACTIVE },
+            { from: UserState.ACTIVE, to: UserState.SUSPENDED },
+            { from: UserState.SUSPENDED, to: UserState.ACTIVE },
+            { from: UserState.ACTIVE, to: UserState.DEACTIVATED }
+        ];
+
+        const invalidTransitions = [
+            { from: UserState.DEACTIVATED, to: UserState.ACTIVE },
+            { from: UserState.PENDING, to: UserState.SUSPENDED }
+        ];
+
+        it.each(validTransitions)('should allow transition from $from to $to', async ({ from, to }) => {
+            await expect(service['validateStateTransition'](from, to))
+                .resolves
+                .not
+                .toThrow();
+        });
+
+        it.each(invalidTransitions)('should not allow transition from $from to $to', async ({ from, to }) => {
+            await expect(service['validateStateTransition'](from, to))
+                .rejects
+                .toThrow(BadRequestException);
         });
     });
 }); 

@@ -1,5 +1,60 @@
+/**
+ * Test suite for User entity model.
+ * Validates user management functionality, inheritance from BaseUser, and data integrity.
+ * 
+ * Test Categories:
+ * - Initialization: Default values and instance creation
+ * - Core Properties: User-specific fields
+ * - Inherited Properties: BaseUser fields and behavior
+ * - Preferences: Theme and notification settings
+ * - Relationships: Organization and credentials
+ * - Timestamps: Temporal tracking
+ * 
+ * Coverage Areas:
+ * - User Configuration:
+ *   - Username and display name management
+ *   - State management (PENDING, ACTIVE, etc.)
+ *   - Enable/disable functionality
+ *   - Preference customization
+ * 
+ * - Data Validation:
+ *   - Required fields (organizationId)
+ *   - Field formats and constraints
+ *   - Inheritance validation
+ * 
+ * - Preference Management:
+ *   - Theme settings (light/dark)
+ *   - Notification preferences (email/push)
+ *   - Complete preference overrides
+ * 
+ * - Relationship Management:
+ *   - Organization assignment
+ *   - Login credential collection
+ * 
+ * Test Structure:
+ * 1. Initialization
+ *    - Instance creation
+ *    - Default values
+ *    - ID handling
+ * 
+ * 2. Properties
+ *    - Core fields (username, displayname)
+ *    - Inherited fields (firstname, lastname, state)
+ *    - Preferences (theme, notifications)
+ * 
+ * 3. Relationships
+ *    - Organization assignment
+ *    - Login credentials collection
+ * 
+ * 4. Timestamps
+ *    - Creation tracking
+ *    - Modification tracking
+ *    - Last login tracking
+ */
+
 import { validate } from 'class-validator';
-import { User, NotificationPreferences } from './User';
+import { User } from './User';
+import { UserPreferences } from '@my-app/shared/dist/types/user';
 import { UserState } from '@my-app/shared';
 
 describe('User', () => {
@@ -9,6 +64,10 @@ describe('User', () => {
         user = new User();
     });
 
+    /**
+     * Tests for User instance initialization.
+     * Validates default state and basic functionality.
+     */
     describe('initialization', () => {
         it('should create a valid instance', () => {
             expect(user).toBeTruthy();
@@ -30,7 +89,15 @@ describe('User', () => {
         });
     });
 
+    /**
+     * Tests for User properties and validation.
+     * Ensures data integrity and constraint enforcement.
+     */
     describe('properties', () => {
+        /**
+         * Tests for core user properties.
+         * Validates username and display name management.
+         */
         describe('core properties', () => {
             it('should get and set username', () => {
                 const username = 'johndoe';
@@ -45,6 +112,10 @@ describe('User', () => {
             });
         });
 
+        /**
+         * Tests for properties inherited from BaseUser.
+         * Validates proper inheritance and behavior.
+         */
         describe('inherited properties', () => {
             it('should handle firstname from BaseUser', () => {
                 const firstname = 'John';
@@ -64,6 +135,10 @@ describe('User', () => {
             });
         });
 
+        /**
+         * Tests for user preferences.
+         * Validates theme and notification settings.
+         */
         describe('preferences', () => {
             it('should get and set theme', () => {
                 user.preferences.theme = 'dark';
@@ -95,7 +170,15 @@ describe('User', () => {
         });
     });
 
+    /**
+     * Tests for User relationships.
+     * Validates organization and credential management.
+     */
     describe('relationships', () => {
+        /**
+         * Tests for organization relationship.
+         * Ensures proper organization assignment.
+         */
         describe('organization relationship', () => {
             describe('foreign key', () => {
                 it('should get and set organizationId', () => {
@@ -113,6 +196,10 @@ describe('User', () => {
             });
         });
 
+        /**
+         * Tests for login credentials collection.
+         * Validates credential management functionality.
+         */
         describe('loginCredentials collection', () => {
             it('should initialize loginCredentials as empty array', () => {
                 expect(user.loginCredentials).toBeDefined();
@@ -122,6 +209,10 @@ describe('User', () => {
         });
     });
 
+    /**
+     * Tests for User temporal tracking.
+     * Validates timestamp management and login tracking.
+     */
     describe('timestamps', () => {
         it('should track creation and modification times', () => {
             const now = new Date();

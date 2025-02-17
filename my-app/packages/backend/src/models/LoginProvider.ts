@@ -57,6 +57,11 @@ export class LoginProvider {
     @IsBoolean()
     isEnabled: boolean = true;
 
+    /** Flag indicating if the provider has been soft deleted */
+    @Column({ type: 'boolean', default: false })
+    @IsBoolean()
+    deleted: boolean = false;
+
     // Relationship Fields
     /** Associated login credentials */
     @OneToMany(() => LoginCredential, credential => credential.loginProvider, {

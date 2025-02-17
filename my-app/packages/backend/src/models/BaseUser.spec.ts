@@ -1,3 +1,46 @@
+/**
+ * Test suite for BaseUser entity model.
+ * Validates core user functionality and data integrity.
+ * 
+ * Test Categories:
+ * - Initialization: Default values and instance creation
+ * - Properties: Core field validation and constraints
+ * - State Management: User state transitions and flags
+ * - Relationships: Credential associations
+ * - Timestamps: Temporal tracking and soft deletion
+ * 
+ * Coverage Areas:
+ * - Data Validation: Field constraints and types
+ * - State Transitions: Valid state changes
+ * - Relationship Integrity: Collection initialization
+ * - Temporal Tracking: Creation, modification, deletion
+ * 
+ * Test Structure:
+ * 1. Initialization
+ *    - Instance creation
+ *    - Default values
+ *    - ID handling
+ * 
+ * 2. Properties
+ *    - Core fields (firstname, lastname, email)
+ *    - Required field validation
+ *    - Format validation
+ * 
+ * 3. State Management
+ *    - State transitions
+ *    - Enable/disable functionality
+ *    - Login tracking
+ * 
+ * 4. Relationships
+ *    - LoginCredentials collection
+ *    - Collection initialization
+ * 
+ * 5. Timestamps
+ *    - Creation tracking
+ *    - Modification tracking
+ *    - Soft deletion support
+ */
+
 import { validate } from 'class-validator';
 import { BaseUser } from './BaseUser';
 import { UserState } from '@my-app/shared/dist/enums/UserState';
@@ -9,6 +52,10 @@ describe('BaseUser', () => {
         user = new BaseUser();
     });
 
+    /**
+     * Tests for BaseUser instance initialization.
+     * Validates default state and basic functionality.
+     */
     describe('initialization', () => {
         it('should create a valid instance', () => {
             expect(user).toBeTruthy();
@@ -27,7 +74,15 @@ describe('BaseUser', () => {
         });
     });
 
+    /**
+     * Tests for BaseUser properties and validation.
+     * Ensures data integrity and constraint enforcement.
+     */
     describe('properties', () => {
+        /**
+         * Tests for core user properties.
+         * Validates required fields and format constraints.
+         */
         describe('core properties', () => {
             it('should get and set firstname', () => {
                 const firstname = 'John';
@@ -69,6 +124,10 @@ describe('BaseUser', () => {
             });
         });
 
+        /**
+         * Tests for user state management.
+         * Validates state transitions and status flags.
+         */
         describe('state management', () => {
             it('should handle state transitions', () => {
                 const states = [
@@ -100,7 +159,15 @@ describe('BaseUser', () => {
         });
     });
 
+    /**
+     * Tests for BaseUser relationships.
+     * Validates association initialization and management.
+     */
     describe('relationships', () => {
+        /**
+         * Tests for login credentials collection.
+         * Ensures proper initialization and array handling.
+         */
         describe('loginCredentials collection', () => {
             it('should initialize loginCredentials as empty array', () => {
                 expect(user.loginCredentials).toBeDefined();
@@ -110,6 +177,10 @@ describe('BaseUser', () => {
         });
     });
 
+    /**
+     * Tests for BaseUser temporal tracking.
+     * Validates timestamp management and soft deletion.
+     */
     describe('timestamps', () => {
         it('should track creation and modification times', () => {
             const now = new Date();
