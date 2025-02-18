@@ -43,7 +43,10 @@
 
 import { validate } from 'class-validator';
 import { BaseUser } from './BaseUser';
-import { UserState } from '@my-app/shared/dist/enums/UserState';
+import { UserState } from '@my-app/shared';
+import { baseUser as baseUserMock } from '../__mocks__/models/baseUser.mock';
+import { loginCredential as loginCredentialMock } from '../__mocks__/models/loginCredential.mock';
+import { core } from '../__mocks__/models/core.mock';
 
 describe('BaseUser', () => {
     let user: BaseUser;
@@ -67,10 +70,16 @@ describe('BaseUser', () => {
             expect(user.lastLoginAt).toBeUndefined();
         });
 
-        it('should handle id field', () => {
-            const userId = '123e4567-e89b-12d3-a456-426614174000';
-            user.id = userId;
-            expect(user.id).toBe(userId);
+        it('should create valid instance from mock data', () => {
+            const mockUser = baseUserMock.instances.standard;
+            Object.assign(user, mockUser);
+            
+            expect(user.id).toBe(mockUser.id);
+            expect(user.firstname).toBe(mockUser.firstname);
+            expect(user.lastname).toBe(mockUser.lastname);
+            expect(user.contactEmail).toBe(mockUser.contactEmail);
+            expect(user.state).toBe(mockUser.state);
+            expect(user.isEnabled).toBe(mockUser.isEnabled);
         });
     });
 
@@ -85,9 +94,9 @@ describe('BaseUser', () => {
          */
         describe('core properties', () => {
             it('should get and set firstname', () => {
-                const firstname = 'John';
-                user.firstname = firstname;
-                expect(user.firstname).toBe(firstname);
+                const mockUser = baseUserMock.instances.standard;
+                user.firstname = mockUser.firstname;
+                expect(user.firstname).toBe(mockUser.firstname);
             });
 
             it('should require firstname', async () => {
@@ -98,9 +107,9 @@ describe('BaseUser', () => {
             });
 
             it('should get and set lastname', () => {
-                const lastname = 'Doe';
-                user.lastname = lastname;
-                expect(user.lastname).toBe(lastname);
+                const mockUser = baseUserMock.instances.standard;
+                user.lastname = mockUser.lastname;
+                expect(user.lastname).toBe(mockUser.lastname);
             });
 
             it('should require lastname', async () => {
@@ -111,9 +120,9 @@ describe('BaseUser', () => {
             });
 
             it('should get and set contact email', () => {
-                const email = 'john@example.com';
-                user.contactEmail = email;
-                expect(user.contactEmail).toBe(email);
+                const mockUser = baseUserMock.instances.standard;
+                user.contactEmail = mockUser.contactEmail;
+                expect(user.contactEmail).toBe(mockUser.contactEmail);
             });
 
             it('should require contact email', async () => {
@@ -144,17 +153,19 @@ describe('BaseUser', () => {
             });
 
             it('should handle enabled flag', () => {
-                user.isEnabled = false;
-                expect(user.isEnabled).toBe(false);
+                const mockDisabled = baseUserMock.instances.disabled;
+                user.isEnabled = mockDisabled.isEnabled;
+                expect(user.isEnabled).toBe(mockDisabled.isEnabled);
 
-                user.isEnabled = true;
-                expect(user.isEnabled).toBe(true);
+                const mockEnabled = baseUserMock.instances.standard;
+                user.isEnabled = mockEnabled.isEnabled;
+                expect(user.isEnabled).toBe(mockEnabled.isEnabled);
             });
 
             it('should handle last login time', () => {
-                const loginTime = new Date();
-                user.lastLoginAt = loginTime;
-                expect(user.lastLoginAt).toBe(loginTime);
+                const mockUser = baseUserMock.instances.standard;
+                user.lastLoginAt = mockUser.lastLoginAt;
+                expect(user.lastLoginAt).toBe(mockUser.lastLoginAt);
             });
         });
     });
@@ -174,6 +185,30 @@ describe('BaseUser', () => {
                 expect(Array.isArray(user.loginCredentials)).toBe(true);
                 expect(user.loginCredentials).toHaveLength(0);
             });
+
+            it('should handle multiple credentials', () => {
+                const mockUser = baseUserMock.instances.withMultipleCredentials;
+                Object.assign(user, mockUser);
+                
+                expect(user.loginCredentials).toHaveLength(2);
+                expect(user.loginCredentials).toContainEqual(
+                    expect.objectContaining({
+                        credentialType: loginCredentialMock.instances.password.standard.credentialType
+                    })
+                );
+                expect(user.loginCredentials).toContainEqual(
+                    expect.objectContaining({
+                        credentialType: loginCredentialMock.instances.oauth.google.credentialType
+                    })
+                );
+            });
+
+            it('should handle user without credentials', () => {
+                const mockUser = baseUserMock.instances.noCredentials;
+                Object.assign(user, mockUser);
+                
+                expect(user.loginCredentials).toHaveLength(0);
+            });
         });
     });
 
@@ -183,12 +218,12 @@ describe('BaseUser', () => {
      */
     describe('timestamps', () => {
         it('should track creation and modification times', () => {
-            const now = new Date();
-            user.createdAt = now;
-            user.modifiedAt = now;
+            const mockUser = baseUserMock.instances.standard;
+            user.createdAt = mockUser.createdAt;
+            user.modifiedAt = mockUser.modifiedAt;
 
-            expect(user.createdAt).toBe(now);
-            expect(user.modifiedAt).toBe(now);
+            expect(user.createdAt).toBe(mockUser.createdAt);
+            expect(user.modifiedAt).toBe(mockUser.modifiedAt);
         });
 
         it('should handle soft deletion', () => {
@@ -197,12 +232,11 @@ describe('BaseUser', () => {
             expect(user.deletedAt).toBeUndefined();
             
             // Mark as deleted
-            const deletionTime = new Date();
             user.deleted = true;
-            user.deletedAt = deletionTime;
+            user.deletedAt = core.timestamps.now;
             
             expect(user.deleted).toBe(true);
-            expect(user.deletedAt).toBe(deletionTime);
+            expect(user.deletedAt).toBe(core.timestamps.now);
         });
     });
 }); 

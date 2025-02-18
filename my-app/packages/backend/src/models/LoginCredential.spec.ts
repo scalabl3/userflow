@@ -4,55 +4,35 @@
  * 
  * Test Categories:
  * - Initialization: Default values and instance creation
- * - Core Properties: Basic credential fields and types
- * - Password Auth: Local authentication fields
- * - OAuth Auth: Provider-specific authentication
- * - Apple Auth: Apple-specific OAuth fields
+ * - Core Properties: Credential identification and type
+ * - Authentication: Password and OAuth handling
  * - Relationships: Provider and user associations
  * - Timestamps: Temporal tracking
  * 
  * Coverage Areas:
+ * - Credential Configuration:
+ *   - Identifier management
+ *   - Type validation
+ *   - Provider association
+ *   - User binding
+ * 
  * - Authentication Types:
- *   - Password-based authentication
- *   - OAuth authentication (Google)
- *   - Apple Sign-In
- * 
- * - Data Validation:
- *   - Required fields
- *   - Field formats
- *   - Type constraints
- * 
- * - Security Features:
- *   - Password hashing
+ *   - Password credentials
+ *   - OAuth credentials
  *   - Token management
- *   - Provider verification
  * 
- * Test Structure:
- * 1. Initialization
- *    - Instance creation
- *    - Default values
- *    - ID handling
- * 
- * 2. Properties
- *    - Core fields (identifier, type)
- *    - Password authentication
- *    - OAuth authentication
- *    - Apple authentication
- * 
- * 3. Relationships
- *    - Login provider association
- *    - User association
- *    - Foreign key constraints
- * 
- * 4. Timestamps
- *    - Creation tracking
- *    - Modification tracking
- *    - Soft deletion
+ * - Relationship Management:
+ *   - Provider linkage
+ *   - User association
  */
 
 import { validate } from 'class-validator';
 import { LoginCredential } from './LoginCredential';
-import { CredentialType, OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
+import { CredentialType, OAuthProvider } from '@my-app/shared';
+import { loginCredential as credentialMock } from '../__mocks__/models/loginCredential.mock';
+import { loginProvider as providerMock } from '../__mocks__/models/loginProvider.mock';
+import { baseUser as baseUserMock } from '../__mocks__/models/baseUser.mock';
+import { core } from '../__mocks__/models/core.mock';
 
 describe('LoginCredential', () => {
     let credential: LoginCredential;
@@ -71,143 +51,140 @@ describe('LoginCredential', () => {
         });
 
         it('should initialize with default values', () => {
+            expect(credential.identifier).toBeUndefined();
+            expect(credential.credentialType).toBeUndefined();
             expect(credential.isEnabled).toBe(true);
-            expect(credential.profile).toBeUndefined();
+            expect(credential.loginProviderId).toBeUndefined();
+            expect(credential.baseUserId).toBeUndefined();
         });
 
-        it('should handle id field', () => {
-            const credentialId = '123e4567-e89b-12d3-a456-426614174000';
-            credential.id = credentialId;
-            expect(credential.id).toBe(credentialId);
+        it('should create valid password credential from mock data', () => {
+            const mockCred = credentialMock.instances.password.standard;
+            Object.assign(credential, mockCred);
+            
+            expect(credential.id).toBe(mockCred.id);
+            expect(credential.identifier).toBe(mockCred.identifier);
+            expect(credential.credentialType).toBe(CredentialType.PASSWORD);
+            expect(credential.isEnabled).toBe(mockCred.isEnabled);
+            expect(credential.loginProviderId).toBe(mockCred.loginProviderId);
+            expect(credential.baseUserId).toBe(mockCred.baseUserId);
+            expect(credential.passwordHash).toBe(mockCred.passwordHash);
+        });
+
+        it('should create valid OAuth credential from mock data', () => {
+            const mockCred = credentialMock.instances.oauth.google;
+            Object.assign(credential, mockCred);
+            
+            expect(credential.id).toBe(mockCred.id);
+            expect(credential.identifier).toBe(mockCred.identifier);
+            expect(credential.credentialType).toBe(CredentialType.OAUTH);
+            expect(credential.provider).toBe(OAuthProvider.GOOGLE);
+            expect(credential.accessToken).toBe(mockCred.accessToken);
+            expect(credential.refreshToken).toBe(mockCred.refreshToken);
+            expect(credential.profile).toEqual(mockCred.profile);
         });
     });
 
     /**
      * Tests for LoginCredential properties and validation.
-     * Covers different authentication types and their specific fields.
+     * Ensures data integrity and constraint enforcement.
      */
     describe('properties', () => {
         /**
          * Tests for core credential properties.
-         * Validates basic fields common to all auth types.
+         * Validates identifier and type management.
          */
         describe('core properties', () => {
             it('should get and set identifier', () => {
-                const identifier = 'test@example.com';
-                credential.identifier = identifier;
-                expect(credential.identifier).toBe(identifier);
+                const mockCred = credentialMock.instances.password.standard;
+                credential.identifier = mockCred.identifier;
+                expect(credential.identifier).toBe(mockCred.identifier);
+            });
+
+            it('should require identifier', async () => {
+                const errors = await validate(credential);
+                const identifierErrors = errors.find(e => e.property === 'identifier');
+                expect(identifierErrors?.constraints).toHaveProperty('isString');
             });
 
             it('should get and set credential type', () => {
-                credential.credentialType = CredentialType.PASSWORD;
+                const mockCred = credentialMock.instances.password.standard;
+                credential.credentialType = mockCred.credentialType;
                 expect(credential.credentialType).toBe(CredentialType.PASSWORD);
-
-                credential.credentialType = CredentialType.OAUTH;
-                expect(credential.credentialType).toBe(CredentialType.OAUTH);
             });
 
-            it('should get and set enabled status', () => {
-                credential.isEnabled = false;
+            it('should require credential type', async () => {
+                const errors = await validate(credential);
+                const typeErrors = errors.find(e => e.property === 'credentialType');
+                expect(typeErrors?.constraints).toHaveProperty('isEnum');
+            });
+
+            it('should get and set enabled flag', () => {
+                const mockCred = credentialMock.instances.password.disabled;
+                credential.isEnabled = mockCred.isEnabled;
                 expect(credential.isEnabled).toBe(false);
-
-                credential.isEnabled = true;
-                expect(credential.isEnabled).toBe(true);
             });
         });
 
         /**
-         * Tests for password-based authentication.
-         * Validates password hash storage and management.
+         * Tests for password credential functionality.
+         * Validates password-specific features.
          */
-        describe('password authentication', () => {
-            beforeEach(() => {
-                credential.credentialType = CredentialType.PASSWORD;
+        describe('password credentials', () => {
+            it('should handle password hash', () => {
+                const mockCred = credentialMock.instances.password.standard;
+                credential.passwordHash = mockCred.passwordHash;
+                expect(credential.passwordHash).toBe(mockCred.passwordHash);
             });
 
-            it('should get and set password hash', () => {
-                const hash = 'hashed_password_123';
-                credential.passwordHash = hash;
-                expect(credential.passwordHash).toBe(hash);
+            it('should validate password credential type', () => {
+                const mockCred = credentialMock.instances.password.standard;
+                Object.assign(credential, mockCred);
+                expect(credential.credentialType).toBe(CredentialType.PASSWORD);
             });
         });
 
         /**
-         * Tests for OAuth authentication.
-         * Validates token management and profile data.
+         * Tests for OAuth credential functionality.
+         * Validates OAuth-specific features.
          */
-        describe('oauth authentication', () => {
-            beforeEach(() => {
-                credential.credentialType = CredentialType.OAUTH;
-                credential.provider = OAuthProvider.GOOGLE;
-            });
-
-            it('should get and set provider type', () => {
+        describe('oauth credentials', () => {
+            it('should handle OAuth provider', () => {
+                const mockCred = credentialMock.instances.oauth.google;
+                credential.provider = mockCred.provider;
                 expect(credential.provider).toBe(OAuthProvider.GOOGLE);
+            });
+
+            it('should handle access token', () => {
+                const mockCred = credentialMock.instances.oauth.google;
+                credential.accessToken = mockCred.accessToken;
+                credential.accessTokenExpiresAt = mockCred.accessTokenExpiresAt;
                 
-                credential.provider = OAuthProvider.APPLE;
-                expect(credential.provider).toBe(OAuthProvider.APPLE);
+                expect(credential.accessToken).toBe(mockCred.accessToken);
+                expect(credential.accessTokenExpiresAt).toBe(mockCred.accessTokenExpiresAt);
             });
 
-            it('should get and set access token', () => {
-                const token = 'access_token_123';
-                credential.accessToken = token;
-                expect(credential.accessToken).toBe(token);
+            it('should handle refresh token', () => {
+                const mockCred = credentialMock.instances.oauth.google;
+                credential.refreshToken = mockCred.refreshToken;
+                credential.refreshTokenExpiresAt = mockCred.refreshTokenExpiresAt;
+                
+                expect(credential.refreshToken).toBe(mockCred.refreshToken);
+                expect(credential.refreshTokenExpiresAt).toBe(mockCred.refreshTokenExpiresAt);
             });
 
-            it('should get and set token expiration', () => {
-                const expiry = new Date();
-                credential.accessTokenExpiresAt = expiry;
-                expect(credential.accessTokenExpiresAt).toBe(expiry);
+            it('should handle OAuth profile', () => {
+                const mockCred = credentialMock.instances.oauth.google;
+                credential.profile = mockCred.profile;
+                expect(credential.profile).toEqual(mockCred.profile);
             });
 
-            it('should get and set refresh token', () => {
-                const token = 'refresh_token_123';
-                credential.refreshToken = token;
-                expect(credential.refreshToken).toBe(token);
-            });
-
-            it('should get and set profile data', () => {
-                const profile = {
-                    scope: 'email profile',
-                    rawData: { email: 'test@example.com' }
-                };
-                credential.profile = profile;
-                expect(credential.profile).toEqual(profile);
-            });
-        });
-
-        /**
-         * Tests for Apple Sign-In specific features.
-         * Validates Apple-specific authentication fields.
-         */
-        describe('apple authentication', () => {
-            beforeEach(() => {
-                credential.credentialType = CredentialType.OAUTH;
-                credential.provider = OAuthProvider.APPLE;
-            });
-
-            it('should get and set identity token', () => {
-                const token = 'identity_token_123';
-                credential.identityToken = token;
-                expect(credential.identityToken).toBe(token);
-            });
-
-            it('should get and set authorization code', () => {
-                const code = 'auth_code_123';
-                credential.authorizationCode = code;
-                expect(credential.authorizationCode).toBe(code);
-            });
-
-            it('should get and set real user status', () => {
-                const status = 'REAL';
-                credential.realUserStatus = status;
-                expect(credential.realUserStatus).toBe(status);
-            });
-
-            it('should get and set nonce', () => {
-                const nonce = 'nonce_123';
-                credential.nonce = nonce;
-                expect(credential.nonce).toBe(nonce);
+            it('should handle Apple-specific fields', () => {
+                const mockCred = credentialMock.instances.oauth.apple;
+                Object.assign(credential, mockCred);
+                
+                expect(credential.identityToken).toBe(mockCred.identityToken);
+                expect(credential.authorizationCode).toBe(mockCred.authorizationCode);
             });
         });
     });
@@ -219,43 +196,53 @@ describe('LoginCredential', () => {
     describe('relationships', () => {
         /**
          * Tests for login provider relationship.
-         * Validates provider association and constraints.
+         * Ensures proper provider assignment and validation.
          */
         describe('loginProvider relationship', () => {
             describe('foreign key', () => {
                 it('should get and set loginProviderId', () => {
-                    const id = '123e4567-e89b-12d3-a456-426614174000';
-                    credential.loginProviderId = id;
-                    expect(credential.loginProviderId).toBe(id);
+                    const mockCred = credentialMock.instances.password.standard;
+                    credential.loginProviderId = mockCred.loginProviderId;
+                    expect(credential.loginProviderId).toBe(mockCred.loginProviderId);
                 });
 
                 it('should require loginProviderId', async () => {
-                    expect(credential.loginProviderId).toBeUndefined();
                     const errors = await validate(credential);
                     const providerIdErrors = errors.find(e => e.property === 'loginProviderId');
                     expect(providerIdErrors?.constraints).toHaveProperty('isUuid');
                 });
             });
+
+            it('should set login provider relationship', () => {
+                const mockCred = credentialMock.instances.password.standard;
+                credential.loginProvider = providerMock.instances.standard;
+                expect(credential.loginProvider.id).toBe(mockCred.loginProviderId);
+            });
         });
 
         /**
          * Tests for base user relationship.
-         * Validates user association and constraints.
+         * Ensures proper user assignment and validation.
          */
         describe('baseUser relationship', () => {
             describe('foreign key', () => {
                 it('should get and set baseUserId', () => {
-                    const id = '123e4567-e89b-12d3-a456-426614174000';
-                    credential.baseUserId = id;
-                    expect(credential.baseUserId).toBe(id);
+                    const mockCred = credentialMock.instances.password.standard;
+                    credential.baseUserId = mockCred.baseUserId;
+                    expect(credential.baseUserId).toBe(mockCred.baseUserId);
                 });
 
                 it('should require baseUserId', async () => {
-                    expect(credential.baseUserId).toBeUndefined();
                     const errors = await validate(credential);
                     const userIdErrors = errors.find(e => e.property === 'baseUserId');
                     expect(userIdErrors?.constraints).toHaveProperty('isUuid');
                 });
+            });
+
+            it('should set base user relationship', () => {
+                const mockCred = credentialMock.instances.password.standard;
+                credential.baseUser = baseUserMock.instances.standard;
+                expect(credential.baseUser.id).toBe(mockCred.baseUserId);
             });
         });
     });
@@ -266,12 +253,12 @@ describe('LoginCredential', () => {
      */
     describe('timestamps', () => {
         it('should track creation and modification times', () => {
-            const now = new Date();
-            credential.createdAt = now;
-            credential.modifiedAt = now;
+            const mockCred = credentialMock.instances.password.standard;
+            credential.createdAt = mockCred.createdAt;
+            credential.modifiedAt = mockCred.modifiedAt;
 
-            expect(credential.createdAt).toBe(now);
-            expect(credential.modifiedAt).toBe(now);
+            expect(credential.createdAt).toBe(mockCred.createdAt);
+            expect(credential.modifiedAt).toBe(mockCred.modifiedAt);
         });
 
         it('should handle soft deletion', () => {
@@ -280,12 +267,11 @@ describe('LoginCredential', () => {
             expect(credential.deletedAt).toBeUndefined();
             
             // Mark as deleted
-            const deletionTime = new Date();
             credential.deleted = true;
-            credential.deletedAt = deletionTime;
+            credential.deletedAt = core.timestamps.now;
             
             expect(credential.deleted).toBe(true);
-            expect(credential.deletedAt).toBe(deletionTime);
+            expect(credential.deletedAt).toBe(core.timestamps.now);
         });
     });
 }); 

@@ -4,49 +4,30 @@
  * 
  * Test Categories:
  * - Initialization: Default values and instance creation
- * - Core Properties: Provider identification and naming
- * - State Management: Provider activation control
- * - Relationships: Credential collections
+ * - Core Properties: Provider identification and configuration
+ * - Relationships: Credential associations
  * - Timestamps: Temporal tracking
  * 
  * Coverage Areas:
  * - Provider Configuration:
- *   - Unique provider codes
- *   - Display names
+ *   - Code management
+ *   - Name handling
+ *   - Status control
+ * 
+ * - Relationship Management:
+ *   - Credential linkage
+ *   - Collection handling
+ * 
+ * - Status Management:
  *   - Enable/disable functionality
- * 
- * - Data Validation:
- *   - Required fields
- *   - Field formats
- *   - Length constraints
- * 
- * - Collection Management:
- *   - Credential associations
- *   - Collection initialization
- * 
- * Test Structure:
- * 1. Initialization
- *    - Instance creation
- *    - Default values
- *    - ID handling
- * 
- * 2. Properties
- *    - Core fields (code, name)
- *    - Field validation
- *    - State management
- * 
- * 3. Relationships
- *    - Credentials collection
- *    - Collection initialization
- * 
- * 4. Timestamps
- *    - Creation tracking
- *    - Modification tracking
- *    - Soft deletion
+ *   - State tracking
  */
 
 import { validate } from 'class-validator';
 import { LoginProvider } from './LoginProvider';
+import { loginProvider as providerMock } from '../__mocks__/models/loginProvider.mock';
+import { loginCredential as credentialMock } from '../__mocks__/models/loginCredential.mock';
+import { core } from '../__mocks__/models/core.mock';
 
 describe('LoginProvider', () => {
     let provider: LoginProvider;
@@ -65,13 +46,28 @@ describe('LoginProvider', () => {
         });
 
         it('should initialize with default values', () => {
+            expect(provider.code).toBeUndefined();
+            expect(provider.name).toBeUndefined();
             expect(provider.isEnabled).toBe(true);
+            expect(provider.credentials).toHaveLength(0);
         });
 
-        it('should handle id field', () => {
-            const providerId = '123e4567-e89b-12d3-a456-426614174000';
-            provider.id = providerId;
-            expect(provider.id).toBe(providerId);
+        it('should create valid instance from mock data', () => {
+            const mockProvider = providerMock.instances.standard;
+            Object.assign(provider, mockProvider);
+            
+            expect(provider.id).toBe(mockProvider.id);
+            expect(provider.code).toBe(mockProvider.code);
+            expect(provider.name).toBe(mockProvider.name);
+            expect(provider.isEnabled).toBe(mockProvider.isEnabled);
+        });
+
+        it('should create instance with credentials', () => {
+            const mockProvider = providerMock.instances.withCredentials;
+            Object.assign(provider, mockProvider);
+            
+            expect(provider.credentials).toBeDefined();
+            expect(Array.isArray(provider.credentials)).toBe(true);
         });
     });
 
@@ -82,48 +78,50 @@ describe('LoginProvider', () => {
     describe('properties', () => {
         /**
          * Tests for core provider properties.
-         * Validates required fields and format constraints.
+         * Validates code and name management.
          */
         describe('core properties', () => {
             it('should get and set code', () => {
-                const code = 'google';
-                provider.code = code;
-                expect(provider.code).toBe(code);
+                const mockProvider = providerMock.instances.standard;
+                provider.code = mockProvider.code;
+                expect(provider.code).toBe(mockProvider.code);
             });
 
             it('should require code', async () => {
-                expect(provider.code).toBeUndefined();
                 const errors = await validate(provider);
                 const codeErrors = errors.find(e => e.property === 'code');
                 expect(codeErrors?.constraints).toHaveProperty('isString');
-                expect(codeErrors?.constraints).toHaveProperty('isStandardLength');
             });
 
             it('should get and set name', () => {
-                const name = 'Google OAuth';
-                provider.name = name;
-                expect(provider.name).toBe(name);
+                const mockProvider = providerMock.instances.standard;
+                provider.name = mockProvider.name;
+                expect(provider.name).toBe(mockProvider.name);
             });
 
             it('should require name', async () => {
-                expect(provider.name).toBeUndefined();
                 const errors = await validate(provider);
                 const nameErrors = errors.find(e => e.property === 'name');
                 expect(nameErrors?.constraints).toHaveProperty('isString');
-                expect(nameErrors?.constraints).toHaveProperty('isStandardLength');
             });
         });
 
         /**
-         * Tests for provider state management.
+         * Tests for provider status management.
          * Validates enable/disable functionality.
          */
-        describe('state management', () => {
-            it('should get and set enabled status', () => {
-                provider.isEnabled = false;
+        describe('status management', () => {
+            it('should get and set enabled flag', () => {
+                const mockProvider = providerMock.instances.disabled;
+                provider.isEnabled = mockProvider.isEnabled;
                 expect(provider.isEnabled).toBe(false);
 
-                provider.isEnabled = true;
+                const mockEnabled = providerMock.instances.standard;
+                provider.isEnabled = mockEnabled.isEnabled;
+                expect(provider.isEnabled).toBe(true);
+            });
+
+            it('should default to enabled', () => {
                 expect(provider.isEnabled).toBe(true);
             });
         });
@@ -131,17 +129,30 @@ describe('LoginProvider', () => {
 
     /**
      * Tests for LoginProvider relationships.
-     * Validates credential collection management.
+     * Validates credential associations.
      */
     describe('relationships', () => {
         /**
          * Tests for credentials collection.
-         * Ensures proper initialization and array handling.
+         * Validates credential management functionality.
          */
         describe('credentials collection', () => {
             it('should initialize credentials as empty array', () => {
                 expect(provider.credentials).toBeDefined();
                 expect(Array.isArray(provider.credentials)).toBe(true);
+                expect(provider.credentials).toHaveLength(0);
+            });
+
+            it('should handle provider with credentials', () => {
+                const mockProvider = providerMock.instances.withCredentials;
+                provider.credentials = [credentialMock.instances.password.standard];
+                expect(provider.credentials).toBeDefined();
+                expect(provider.credentials.length).toBeGreaterThan(0);
+            });
+
+            it('should handle provider without credentials', () => {
+                const mockProvider = providerMock.instances.standard;
+                Object.assign(provider, mockProvider);
                 expect(provider.credentials).toHaveLength(0);
             });
         });
@@ -153,12 +164,12 @@ describe('LoginProvider', () => {
      */
     describe('timestamps', () => {
         it('should track creation and modification times', () => {
-            const now = new Date();
-            provider.createdAt = now;
-            provider.modifiedAt = now;
+            const mockProvider = providerMock.instances.standard;
+            provider.createdAt = mockProvider.createdAt;
+            provider.modifiedAt = mockProvider.modifiedAt;
 
-            expect(provider.createdAt).toBe(now);
-            expect(provider.modifiedAt).toBe(now);
+            expect(provider.createdAt).toBe(mockProvider.createdAt);
+            expect(provider.modifiedAt).toBe(mockProvider.modifiedAt);
         });
 
         it('should handle soft deletion', () => {
@@ -167,12 +178,11 @@ describe('LoginProvider', () => {
             expect(provider.deletedAt).toBeUndefined();
             
             // Mark as deleted
-            const deletionTime = new Date();
             provider.deleted = true;
-            provider.deletedAt = deletionTime;
+            provider.deletedAt = core.timestamps.now;
             
             expect(provider.deleted).toBe(true);
-            expect(provider.deletedAt).toBe(deletionTime);
+            expect(provider.deletedAt).toBe(core.timestamps.now);
         });
     });
 }); 

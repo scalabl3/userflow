@@ -11,51 +11,19 @@
  * - Timestamps: Temporal tracking
  * 
  * Coverage Areas:
- * - User Configuration:
- *   - Username and display name management
- *   - State management (PENDING, ACTIVE, etc.)
- *   - Enable/disable functionality
- *   - Preference customization
- * 
- * - Data Validation:
- *   - Required fields (organizationId)
- *   - Field formats and constraints
- *   - Inheritance validation
- * 
- * - Preference Management:
- *   - Theme settings (light/dark)
- *   - Notification preferences (email/push)
- *   - Complete preference overrides
- * 
- * - Relationship Management:
- *   - Organization assignment
- *   - Login credential collection
- * 
- * Test Structure:
- * 1. Initialization
- *    - Instance creation
- *    - Default values
- *    - ID handling
- * 
- * 2. Properties
- *    - Core fields (username, displayname)
- *    - Inherited fields (firstname, lastname, state)
- *    - Preferences (theme, notifications)
- * 
- * 3. Relationships
- *    - Organization assignment
- *    - Login credentials collection
- * 
- * 4. Timestamps
- *    - Creation tracking
- *    - Modification tracking
- *    - Last login tracking
+ * - User Configuration
+ * - Data Validation
+ * - Preference Management
+ * - Relationship Management
  */
 
 import { validate } from 'class-validator';
 import { User } from './User';
-import { UserPreferences } from '@my-app/shared/dist/types/user';
 import { UserState } from '@my-app/shared';
+import { user as userMock } from '../__mocks__/models/user.mock';
+import { baseUser as baseUserMock } from '../__mocks__/models/baseUser.mock';
+import { organization as orgMock } from '../__mocks__/models/organization.mock';
+import { core } from '../__mocks__/models/core.mock';
 
 describe('User', () => {
     let user: User;
@@ -82,10 +50,15 @@ describe('User', () => {
             expect(user.preferences.notifications.push).toBe(true);
         });
 
-        it('should handle id field', () => {
-            const userId = '123e4567-e89b-12d3-a456-426614174000';
-            user.id = userId;
-            expect(user.id).toBe(userId);
+        it('should create valid instance from mock data', () => {
+            const mockUser = userMock.instances.standard;
+            Object.assign(user, mockUser);
+            
+            expect(user.id).toBe(mockUser.id);
+            expect(user.username).toBe(mockUser.username);
+            expect(user.displayname).toBe(mockUser.displayname);
+            expect(user.organizationId).toBe(mockUser.organizationId);
+            expect(user.preferences).toEqual(mockUser.preferences);
         });
     });
 
@@ -100,15 +73,15 @@ describe('User', () => {
          */
         describe('core properties', () => {
             it('should get and set username', () => {
-                const username = 'johndoe';
-                user.username = username;
-                expect(user.username).toBe(username);
+                const mockUser = userMock.instances.standard;
+                user.username = mockUser.username;
+                expect(user.username).toBe(mockUser.username);
             });
 
             it('should get and set displayname', () => {
-                const displayname = 'John Doe';
-                user.displayname = displayname;
-                expect(user.displayname).toBe(displayname);
+                const mockUser = userMock.instances.standard;
+                user.displayname = mockUser.displayname;
+                expect(user.displayname).toBe(mockUser.displayname);
             });
         });
 
@@ -118,20 +91,21 @@ describe('User', () => {
          */
         describe('inherited properties', () => {
             it('should handle firstname from BaseUser', () => {
-                const firstname = 'John';
-                user.firstname = firstname;
-                expect(user.firstname).toBe(firstname);
+                const mockUser = baseUserMock.instances.standard;
+                user.firstname = mockUser.firstname;
+                expect(user.firstname).toBe(mockUser.firstname);
             });
 
             it('should handle lastname from BaseUser', () => {
-                const lastname = 'Doe';
-                user.lastname = lastname;
-                expect(user.lastname).toBe(lastname);
+                const mockUser = baseUserMock.instances.standard;
+                user.lastname = mockUser.lastname;
+                expect(user.lastname).toBe(mockUser.lastname);
             });
 
             it('should handle state from BaseUser', () => {
-                user.state = UserState.ACTIVE;
-                expect(user.state).toBe(UserState.ACTIVE);
+                const mockUser = baseUserMock.instances.standard;
+                user.state = mockUser.state;
+                expect(user.state).toBe(mockUser.state);
             });
         });
 
@@ -141,31 +115,26 @@ describe('User', () => {
          */
         describe('preferences', () => {
             it('should get and set theme', () => {
-                user.preferences.theme = 'dark';
+                const mockUser = userMock.instances.withMultipleCredentials;
+                user.preferences = mockUser.preferences;
                 expect(user.preferences.theme).toBe('dark');
 
-                user.preferences.theme = 'light';
+                const mockStandard = userMock.instances.standard;
+                user.preferences = mockStandard.preferences;
                 expect(user.preferences.theme).toBe('light');
             });
 
             it('should get and set notification preferences', () => {
-                user.preferences.notifications.email = false;
+                const mockUser = userMock.instances.disabled;
+                user.preferences = mockUser.preferences;
                 expect(user.preferences.notifications.email).toBe(false);
-
-                user.preferences.notifications.push = false;
                 expect(user.preferences.notifications.push).toBe(false);
             });
 
             it('should handle complete preference override', () => {
-                const newPrefs = {
-                    theme: 'dark' as const,
-                    notifications: {
-                        email: false,
-                        push: true
-                    }
-                };
-                user.preferences = newPrefs;
-                expect(user.preferences).toEqual(newPrefs);
+                const mockUser = userMock.instances.withMultipleCredentials;
+                user.preferences = mockUser.preferences;
+                expect(user.preferences).toEqual(mockUser.preferences);
             });
         });
     });
@@ -182,9 +151,15 @@ describe('User', () => {
         describe('organization relationship', () => {
             describe('foreign key', () => {
                 it('should get and set organizationId', () => {
-                    const id = '123e4567-e89b-12d3-a456-426614174000';
-                    user.organizationId = id;
-                    expect(user.organizationId).toBe(id);
+                    const mockUser = userMock.instances.standard;
+                    user.organizationId = mockUser.organizationId;
+                    expect(user.organizationId).toBe(mockUser.organizationId);
+                });
+
+                it('should handle user without organization', () => {
+                    const mockUser = userMock.instances.noOrganization;
+                    user.organizationId = mockUser.organizationId;
+                    expect(user.organizationId).toBe('');
                 });
 
                 it('should require organizationId', async () => {
@@ -206,6 +181,19 @@ describe('User', () => {
                 expect(Array.isArray(user.loginCredentials)).toBe(true);
                 expect(user.loginCredentials).toHaveLength(0);
             });
+
+            it('should handle multiple credentials', () => {
+                const mockUser = userMock.instances.withMultipleCredentials;
+                Object.assign(user, mockUser);
+                expect(user.loginCredentials).toHaveLength(mockUser.loginCredentials.length);
+            });
+
+            it('should handle OAuth credentials', () => {
+                const mockUser = userMock.instances.withOAuth;
+                Object.assign(user, mockUser);
+                expect(user.loginCredentials).toHaveLength(1);
+                expect(user.loginCredentials[0].credentialType).toBe('OAUTH');
+            });
         });
     });
 
@@ -215,18 +203,18 @@ describe('User', () => {
      */
     describe('timestamps', () => {
         it('should track creation and modification times', () => {
-            const now = new Date();
-            user.createdAt = now;
-            user.modifiedAt = now;
+            const mockUser = userMock.instances.standard;
+            user.createdAt = mockUser.createdAt;
+            user.modifiedAt = mockUser.modifiedAt;
 
-            expect(user.createdAt).toBe(now);
-            expect(user.modifiedAt).toBe(now);
+            expect(user.createdAt).toBe(mockUser.createdAt);
+            expect(user.modifiedAt).toBe(mockUser.modifiedAt);
         });
 
         it('should track last login time from BaseUser', () => {
-            const loginTime = new Date();
-            user.lastLoginAt = loginTime;
-            expect(user.lastLoginAt).toBe(loginTime);
+            const mockUser = userMock.instances.standard;
+            user.lastLoginAt = mockUser.lastLoginAt;
+            expect(user.lastLoginAt).toBe(mockUser.lastLoginAt);
         });
     });
 }); 

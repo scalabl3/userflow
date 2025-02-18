@@ -47,6 +47,10 @@
 
 import { validate } from 'class-validator';
 import { Organization } from './Organization';
+import { SubscriptionStatus } from '@my-app/shared';
+import { organization as orgMock } from '../__mocks__/models/organization.mock';
+import { user as userMock } from '../__mocks__/models/user.mock';
+import { core } from '../__mocks__/models/core.mock';
 
 describe('Organization', () => {
     let organization: Organization;
@@ -69,12 +73,30 @@ describe('Organization', () => {
             expect(organization.visible).toBe(false);
             expect(organization.stripeCustomerId).toBeUndefined();
             expect(organization.subscriptionStatus).toBeUndefined();
+            expect(organization.users).toHaveLength(0);
+            expect(organization.adminUserId).toBeUndefined();
         });
 
-        it('should handle id field', () => {
-            const orgId = '123e4567-e89b-12d3-a456-426614174000';
-            organization.id = orgId;
-            expect(organization.id).toBe(orgId);
+        it('should create valid instance from mock data', () => {
+            const mockOrg = orgMock.instances.standard;
+            Object.assign(organization, mockOrg);
+            
+            expect(organization.id).toBe(mockOrg.id);
+            expect(organization.name).toBe(mockOrg.name);
+            expect(organization.adminUser.id).toBe(mockOrg.adminUser.id);
+            expect(organization.visible).toBe(mockOrg.visible);
+            expect(organization.stripeCustomerId).toBe(mockOrg.stripeCustomerId);
+            expect(organization.subscriptionStatus).toBe(mockOrg.subscriptionStatus);
+        });
+
+        it('should create instance with multiple users', () => {
+            const mockOrg = orgMock.instances.withUsers;
+            Object.assign(organization, mockOrg);
+            
+            expect(organization.users).toHaveLength(mockOrg.users.length);
+            expect(organization.users.map(u => u.id)).toEqual(
+                expect.arrayContaining(mockOrg.users.map(u => u.id))
+            );
         });
     });
 
@@ -89,13 +111,26 @@ describe('Organization', () => {
          */
         describe('core properties', () => {
             it('should get and set name', () => {
-                organization.name = 'Test Org';
-                expect(organization.name).toBe('Test Org');
+                const mockOrg = orgMock.instances.standard;
+                organization.name = mockOrg.name;
+                expect(organization.name).toBe(mockOrg.name);
+            });
+
+            it('should require name', async () => {
+                organization.name = undefined as any;
+                const errors = await validate(organization);
+                const nameErrors = errors.find(e => e.property === 'name');
+                expect(nameErrors?.constraints).toHaveProperty('isString');
             });
 
             it('should get and set visible flag', () => {
-                organization.visible = true;
-                expect(organization.visible).toBe(true);
+                const mockOrg = orgMock.instances.standard;
+                organization.visible = !mockOrg.visible;
+                expect(organization.visible).toBe(!mockOrg.visible);
+            });
+
+            it('should default visible to false', () => {
+                expect(organization.visible).toBe(false);
             });
         });
 
@@ -105,29 +140,35 @@ describe('Organization', () => {
          */
         describe('stripe integration', () => {
             it('should get and set stripeCustomerId', () => {
-                const customerId = 'cus_123456789';
-                organization.stripeCustomerId = customerId;
-                expect(organization.stripeCustomerId).toBe(customerId);
+                const mockOrg = orgMock.instances.standard;
+                organization.stripeCustomerId = mockOrg.stripeCustomerId;
+                expect(organization.stripeCustomerId).toBe(mockOrg.stripeCustomerId);
             });
 
-            it('should allow null stripeCustomerId', async () => {
-                organization.stripeCustomerId = undefined;
-                const errors = await validate(organization);
-                const stripeErrors = errors.find(e => e.property === 'stripeCustomerId');
-                expect(stripeErrors).toBeUndefined();
+            it('should allow organization without Stripe integration', () => {
+                const mockOrg = orgMock.instances.noStripe;
+                Object.assign(organization, mockOrg);
+                expect(organization.stripeCustomerId).toBeUndefined();
             });
 
             it('should get and set subscriptionStatus', () => {
-                const status = 'active';
-                organization.subscriptionStatus = status;
-                expect(organization.subscriptionStatus).toBe(status);
+                const mockOrg = orgMock.instances.pastDue;
+                organization.subscriptionStatus = mockOrg.subscriptionStatus;
+                expect(organization.subscriptionStatus).toBe(SubscriptionStatus.PAST_DUE);
             });
 
-            it('should allow null subscriptionStatus', async () => {
-                organization.subscriptionStatus = undefined;
-                const errors = await validate(organization);
-                const statusErrors = errors.find(e => e.property === 'subscriptionStatus');
-                expect(statusErrors).toBeUndefined();
+            it('should handle different subscription states', () => {
+                const states = [
+                    orgMock.instances.standard, // ACTIVE
+                    orgMock.instances.pastDue,  // PAST_DUE
+                    orgMock.instances.suspended, // SUSPENDED
+                    orgMock.instances.trial     // TRIAL
+                ];
+
+                states.forEach(org => {
+                    organization.subscriptionStatus = org.subscriptionStatus;
+                    expect(organization.subscriptionStatus).toBe(org.subscriptionStatus);
+                });
             });
         });
     });
@@ -144,9 +185,9 @@ describe('Organization', () => {
         describe('adminUser relationship', () => {
             describe('foreign key', () => {
                 it('should get and set adminUserId', () => {
-                    const id = '123e4567-e89b-12d3-a456-426614174000';
-                    organization.adminUserId = id;
-                    expect(organization.adminUserId).toBe(id);
+                    const mockOrg = orgMock.instances.standard;
+                    organization.adminUserId = mockOrg.adminUser.id;
+                    expect(organization.adminUserId).toBe(mockOrg.adminUser.id);
                 });
 
                 it('should require adminUserId', async () => {
@@ -155,6 +196,13 @@ describe('Organization', () => {
                     const adminUserIdErrors = errors.find(e => e.property === 'adminUserId');
                     expect(adminUserIdErrors?.constraints).toHaveProperty('isUuid');
                 });
+            });
+
+            it('should set admin user relationship', () => {
+                const mockOrg = orgMock.instances.standard;
+                organization.adminUser = mockOrg.adminUser;
+                expect(organization.adminUser).toBeDefined();
+                expect(organization.adminUser.id).toBe(mockOrg.adminUser.id);
             });
         });
 
@@ -168,6 +216,29 @@ describe('Organization', () => {
                 expect(Array.isArray(organization.users)).toBe(true);
                 expect(organization.users).toHaveLength(0);
             });
+
+            it('should handle multiple users', () => {
+                const mockOrg = orgMock.instances.withUsers;
+                organization.users = mockOrg.users;
+                expect(organization.users).toHaveLength(mockOrg.users.length);
+            });
+
+            it('should handle organization without users', () => {
+                const mockOrg = orgMock.instances.noUsers;
+                organization.users = mockOrg.users;
+                expect(organization.users).toHaveLength(0);
+            });
+
+            it('should maintain user references', () => {
+                const mockOrg = orgMock.instances.withUsers;
+                organization.users = mockOrg.users;
+                
+                mockOrg.users.forEach(mockUser => {
+                    const user = organization.users.find(u => u.id === mockUser.id);
+                    expect(user).toBeDefined();
+                    expect(user?.id).toBe(mockUser.id);
+                });
+            });
         });
     });
 
@@ -177,12 +248,12 @@ describe('Organization', () => {
      */
     describe('timestamps', () => {
         it('should track creation and modification times', () => {
-            const now = new Date();
-            organization.createdAt = now;
-            organization.modifiedAt = now;
+            const mockOrg = orgMock.instances.standard;
+            organization.createdAt = mockOrg.createdAt;
+            organization.modifiedAt = mockOrg.modifiedAt;
 
-            expect(organization.createdAt).toBe(now);
-            expect(organization.modifiedAt).toBe(now);
+            expect(organization.createdAt).toBe(mockOrg.createdAt);
+            expect(organization.modifiedAt).toBe(mockOrg.modifiedAt);
         });
 
         it('should handle soft deletion', () => {
@@ -191,12 +262,11 @@ describe('Organization', () => {
             expect(organization.deletedAt).toBeUndefined();
             
             // Mark as deleted
-            const deletionTime = new Date();
             organization.deleted = true;
-            organization.deletedAt = deletionTime;
+            organization.deletedAt = core.timestamps.now;
             
             expect(organization.deleted).toBe(true);
-            expect(organization.deletedAt).toBe(deletionTime);
+            expect(organization.deletedAt).toBe(core.timestamps.now);
         });
     });
 }); 
