@@ -20,4 +20,7 @@
 export * from './CredentialType';
 
 // Export user-related enums
-export * from './UserState'; 
+export * from './UserState';
+
+// Export new subscription status enum
+export * from './SubscriptionStatus'; 

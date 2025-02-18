@@ -36,9 +36,10 @@
  * - Billing information changes
  */
 
-import { IsString, IsOptional, IsBoolean, IsUUID, Length } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsUUID, Length, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { StandardString } from '../../utils/dto-utils';
+import { SubscriptionStatus } from '../../enums/SubscriptionStatus';
 
 export class UpdateOrganizationDto {
     @ApiProperty({
@@ -80,12 +81,13 @@ export class UpdateOrganizationDto {
     })
     stripeCustomerId?: string;
 
-    @StandardString({
+    @ApiProperty({
         description: 'Current subscription status',
-        example: 'active',
-        required: false,
-        minLength: 1,
-        maxLength: 50
+        enum: SubscriptionStatus,
+        example: SubscriptionStatus.ACTIVE,
+        required: false
     })
-    subscriptionStatus?: string;
+    @IsEnum(SubscriptionStatus)
+    @IsOptional()
+    subscriptionStatus?: SubscriptionStatus;
 }

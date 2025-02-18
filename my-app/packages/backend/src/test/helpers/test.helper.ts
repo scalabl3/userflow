@@ -15,8 +15,8 @@
  */
 
 import { INestApplication } from '@nestjs/common';
-import { auth } from '../../models/test/__mocks__';
-import { TestDataFactory } from '../../models/test/factories/test-data.factory';
+import { auth } from '../../__mocks__/models/auth.mock';
+import { TestDataFactory } from '../../__mocks__/factories/test-data.factory';
 import request from 'supertest';
 
 export class TestHelper {

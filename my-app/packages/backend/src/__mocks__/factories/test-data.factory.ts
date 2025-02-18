@@ -20,11 +20,13 @@
  * - Service Tests: Creating entities with proper relationships
  */
 
-import { auth, user, organization } from '../__mocks__';
-import { LoginProvider } from '../../LoginProvider';
-import { LoginCredential } from '../../LoginCredential';
-import { BaseUser } from '../../BaseUser';
-import { User } from '../../User';
+import { auth } from '../models/auth.mock';
+import { user } from '../models/user.mock';
+import { organization } from '../models/organization.mock';
+import { LoginProvider } from '../../models/LoginProvider';
+import { LoginCredential } from '../../models/LoginCredential';
+import { BaseUser } from '../../models/BaseUser';
+import { User } from '../../models/User';
 import { 
   CreatePasswordCredentialDto,
   CreateOAuthCredentialDto,
@@ -39,7 +41,7 @@ import {
   UpdateOrganizationDto,
   ResponseOrganizationDto
 } from '@my-app/shared';
-import { Organization } from '../../Organization';
+import { Organization } from '../../models/Organization';
 
 export class TestDataFactory {
   /**

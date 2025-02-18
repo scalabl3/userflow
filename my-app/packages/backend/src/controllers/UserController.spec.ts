@@ -5,7 +5,7 @@ import { CreateUserDto, UpdateUserDto, ResponseUserDto } from '@my-app/shared';
 import { NotFoundException, ConflictException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { User } from '../models/User';
 import { plainToClass } from 'class-transformer';
-import { user as userMock } from '../models/test/__mocks__/user.mock';
+import { user as userMock } from '../__mocks__/models/user.mock';
 import { DataSource } from 'typeorm';
 
 describe('UserController', () => {

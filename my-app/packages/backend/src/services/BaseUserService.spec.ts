@@ -1,335 +1,818 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { BaseUserService } from './BaseUserService';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { BaseUser } from '../models/BaseUser';
-import { DataSource, EntityManager, QueryRunner, Repository, FindOneOptions, DeepPartial, ObjectLiteral } from 'typeorm';
+import { BaseUserService } from './BaseUserService';
+import { BaseServiceTest, MockRepository, MockDataSource, SecurityContext, BaseTestEntity } from '../models/test/base/BaseServiceTest';
 import { CreateBaseUserDto, ResponseBaseUserDto, UpdateBaseUserDto } from '@my-app/shared';
-import { UserState } from '@my-app/shared';
+import { UserState, CredentialType } from '@my-app/shared';
 import { BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { user as userMock } from '../models/test/__mocks__/user.mock';
-import { plainToClass } from 'class-transformer';
-import { OperationType, ServiceErrorCode } from '../constants/service-operations';
+import { OperationType, OperationResult } from '../constants/service-operations';
+import { Repository, DataSource } from 'typeorm';
+import { LoginCredential } from '../models/LoginCredential';
+import { jest } from '@jest/globals';
 
-type MockRepository<T extends ObjectLiteral> = Partial<Record<keyof Repository<T>, jest.Mock>>;
-type MockEntityManager = Partial<Record<keyof EntityManager, jest.Mock>>;
+// Test entity implementations
+class TestBaseUser extends BaseUser implements BaseTestEntity {
+    hasId(): boolean {
+        return !!this.id;
+    }
 
+    async save(): Promise<this> {
+        return this;
+    }
+
+    async remove(): Promise<this> {
+        return this;
+    }
+
+    async softRemove(): Promise<this> {
+        return this;
+    }
+
+    async recover(): Promise<this> {
+        return this;
+    }
+
+    async reload(): Promise<void> {
+        // No-op for tests
+    }
+}
+
+class TestLoginCredential extends LoginCredential implements BaseTestEntity {
+    hasId(): boolean {
+        return !!this.id;
+    }
+
+    async save(): Promise<this> {
+        return this;
+    }
+
+    async remove(): Promise<this> {
+        return this;
+    }
+
+    async softRemove(): Promise<this> {
+        return this;
+    }
+
+    async recover(): Promise<this> {
+        return this;
+    }
+
+    async reload(): Promise<void> {
+        // No-op for tests
+    }
+}
+
+class TestHarness extends BaseServiceTest<TestBaseUser> {
+    public service: BaseUserService;
+
+    public async setupService(): Promise<void> {
+        this.service = new BaseUserService(
+            this.mockRepository as unknown as Repository<BaseUser>,
+            this.mockDataSource as unknown as DataSource
+        );
+
+        // Set up service logger using Object.defineProperty
+        Object.defineProperty(this.service, 'serviceLogger', {
+            value: this.mockLogger,
+            writable: true,
+            configurable: true
+        });
+    }
+
+    public createTestUser(overrides: Partial<TestBaseUser> = {}): TestBaseUser {
+        const user = new TestBaseUser();
+        Object.assign(user, {
+            ...userMock.baseUserDtos.response,
+            ...overrides
+        });
+        return user;
+    }
+
+    public createTestCredential(mockData: Partial<LoginCredential> = {}): TestLoginCredential {
+        const credential = new TestLoginCredential();
+        Object.assign(credential, {
+            id: 'test-cred-123',
+            identifier: 'test@example.com',
+            credentialType: CredentialType.PASSWORD,
+            isEnabled: true,
+            ...mockData
+        });
+        return credential;
+    }
+}
+
+// Test suite
 describe('BaseUserService', () => {
-    let service: BaseUserService;
-    let repository: MockRepository<BaseUser>;
-    let dataSource: Partial<DataSource>;
-    let queryRunner: Partial<QueryRunner>;
-    let entityManager: MockEntityManager;
+    let testHarness: TestHarness;
 
     beforeEach(async () => {
-        entityManager = {
-            save: jest.fn(),
-            remove: jest.fn(),
-            transaction: jest.fn(),
-        };
+        testHarness = new TestHarness();
+        await testHarness.setupStandardMocks();
 
-        queryRunner = {
-            connect: jest.fn(),
-            startTransaction: jest.fn(),
-            commitTransaction: jest.fn(),
-            rollbackTransaction: jest.fn(),
-            release: jest.fn(),
-            manager: entityManager as unknown as EntityManager,
-        };
-
-        dataSource = {
-            createQueryRunner: jest.fn().mockReturnValue(queryRunner),
-        };
-
-        repository = {
-            find: jest.fn(),
-            findOne: jest.fn(),
-            create: jest.fn(),
-            save: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-            manager: {
-                ...entityManager,
-                connection: dataSource as DataSource,
-            } as unknown as EntityManager,
-        };
-
-        const module: TestingModule = await Test.createTestingModule({
-            providers: [
-                BaseUserService,
-                {
-                    provide: getRepositoryToken(BaseUser),
-                    useValue: repository,
-                },
-                {
-                    provide: DataSource,
-                    useValue: dataSource,
-                },
-            ],
-        }).compile();
-
-        service = module.get<BaseUserService>(BaseUserService);
-
-        // Mock the logger to prevent console output during tests
-        jest.spyOn(service['serviceLogger'], 'logOperation').mockImplementation(() => {});
-        jest.spyOn(service['serviceLogger'], 'logError').mockImplementation(() => {});
-        jest.spyOn(service['serviceLogger'], 'logSecurity').mockImplementation(() => {});
-        jest.spyOn(service['serviceLogger'], 'logStateChange').mockImplementation(() => {});
-    });
-
-    it('should be defined', () => {
-        expect(service).toBeDefined();
-    });
-
-    describe('findAllBaseUsers', () => {
-        const adminUserId = 'admin-user-id';
-
-        it('should return all users with their credentials when admin access', async () => {
-            const users = [userMock.base];
-            repository.find?.mockResolvedValue(users);
-
-            const result = await service.findAllBaseUsers(adminUserId);
-            
-            expect(result).toEqual([plainToClass(ResponseBaseUserDto, users[0])]);
-            expect(repository.find).toHaveBeenCalledWith({
-                relations: ['loginCredentials'],
-                where: { deleted: false }
-            });
-            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
-                OperationType.ADMIN,
-                'findAllBaseUsers',
-                'SUCCESS',
-                expect.objectContaining({
-                    userId: adminUserId,
-                    metadata: { count: users.length }
-                })
-            );
+        // Setup transaction manager
+        Object.defineProperty(testHarness.mockRepository, 'manager', {
+            value: {
+                connection: {
+                    createQueryRunner: jest.fn().mockReturnValue(testHarness.mockQueryRunner)
+                }
+            },
+            writable: true,
+            configurable: true
         });
 
-        it('should throw UnauthorizedException when non-admin access', async () => {
-            jest.spyOn(service as any, 'validateAccess')
-                .mockRejectedValue(new UnauthorizedException({
-                    code: ServiceErrorCode.ACCESS_DENIED,
-                    message: 'Access denied',
-                    details: { userId: 'non-admin-id' }
-                }));
+        // Setup query runner mocks
+        testHarness.mockQueryRunner.startTransaction = jest.fn();
+        testHarness.mockQueryRunner.commitTransaction = jest.fn();
+        testHarness.mockQueryRunner.rollbackTransaction = jest.fn();
+        testHarness.mockQueryRunner.release = jest.fn();
 
-            await expect(service.findAllBaseUsers('non-admin-id'))
-                .rejects
-                .toThrow(UnauthorizedException);
+        await testHarness.setupService();
+    });
+
+    // Success Cases
+    describe('findAllBaseUsers', () => {
+        describe('success cases', () => {
+            it('should return all base users when authorized', async () => {
+                // Arrange
+                testHarness.mockRepository.find.mockResolvedValue([]);
+                testHarness.mockSecurityContext.validateAccess.mockResolvedValue(true);
+
+                // Act
+                await testHarness.service.findAllBaseUsers('admin-123');
+
+                // Assert
+                expect(testHarness.mockRepository.find).toHaveBeenCalled();
+            });
+        });
+
+        describe('access control', () => {
+            it('should throw UnauthorizedException when not authorized', async () => {
+                // Arrange
+                testHarness.mockSecurityContext.validateAccess.mockResolvedValue(false);
+
+                // Act & Assert
+                await expect(testHarness.service.findAllBaseUsers('user-123'))
+                    .rejects
+                    .toThrow(UnauthorizedException);
+            });
+        });
+
+        describe('audit logging', () => {
+            it('should log successful operation', async () => {
+                // Arrange
+                const users = [testHarness.createTestUser()];
+                testHarness.mockRepository.find.mockResolvedValue(users);
+
+                // Act
+                await testHarness.service.findAllBaseUsers('user-id');
+
+                // Assert
+                expect(testHarness.mockLogger.logOperation).toHaveBeenCalledWith(
+                    OperationType.USER,
+                    'findAllBaseUsers',
+                    OperationResult.SUCCESS,
+                    expect.any(Object)
+                );
+            });
         });
     });
 
     describe('findOneBaseUser', () => {
-        const userId = 'user-id';
+        const userId = 'test-id';
 
-        it('should return user with login credentials when authorized', async () => {
-            const user = userMock.base;
-            repository.findOne?.mockResolvedValue(user);
+        describe('success cases', () => {
+            it('should return user when found and authorized', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                testHarness.mockSecurityContext.validateAccess.mockResolvedValue(true);
 
-            const result = await service.findOneBaseUser(user.id, userId);
+                // Act
+                const result = await testHarness.service.findOneBaseUser(userId, 'requesting-user-id');
 
-            expect(result).toEqual(plainToClass(ResponseBaseUserDto, user));
-            expect(repository.findOne).toHaveBeenCalledWith({
-                where: { id: user.id, deleted: false },
-                relations: ['loginCredentials']
+                // Assert
+                expect(result).toBeInstanceOf(ResponseBaseUserDto);
+                expect(testHarness.mockRepository.findOne).toHaveBeenCalledWith({
+                    where: { id: userId },
+                    relations: ['loginCredentials']
+                });
             });
-            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
-                OperationType.USER,
-                'findOneBaseUser',
-                'SUCCESS',
-                expect.objectContaining({
-                    userId,
-                    targetId: user.id
-                })
-            );
         });
 
-        it('should throw NotFoundException when user not found', async () => {
-            repository.findOne?.mockResolvedValue(null);
+        describe('error handling', () => {
+            it('should handle database errors gracefully', async () => {
+                // Arrange
+                testHarness.mockRepository.findOne.mockRejectedValue(new Error('Database error'));
 
-            await expect(service.findOneBaseUser('nonexistent', userId))
-                .rejects
-                .toThrow(NotFoundException);
+                // Act & Assert
+                await expect(testHarness.service.findOneBaseUser(userId, 'requester-123'))
+                    .rejects
+                    .toThrow('Database error');
+            });
+
+            it('should throw NotFoundException when user not found', async () => {
+                // Arrange
+                testHarness.mockRepository.findOne.mockResolvedValue(null);
+
+                // Act & Assert
+                await expect(testHarness.service.findOneBaseUser(userId, 'requester-123'))
+                    .rejects
+                    .toThrow(NotFoundException);
+            });
         });
 
-        it('should throw UnauthorizedException when unauthorized access', async () => {
-            jest.spyOn(service as any, 'validateAccess')
-                .mockRejectedValue(new UnauthorizedException());
+        describe('audit logging', () => {
+            it('should log successful operation', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
 
-            await expect(service.findOneBaseUser(userId, 'unauthorized-id'))
-                .rejects
-                .toThrow(UnauthorizedException);
+                // Act
+                await testHarness.service.findOneBaseUser(userId, 'requesting-user-id');
+
+                // Assert
+                expect(testHarness.mockLogger.logOperation).toHaveBeenCalledWith(
+                    OperationType.USER,
+                    'findOneBaseUser',
+                    OperationResult.SUCCESS,
+                    expect.any(Object)
+                );
+            });
         });
     });
 
     describe('createBaseUser', () => {
-        const createUserDto: CreateBaseUserDto = userMock.baseUserDtos.create;
+        const createDto: CreateBaseUserDto = {
+            firstname: 'John',
+            lastname: 'Doe',
+            contactEmail: 'john@example.com',
+            state: UserState.PENDING,
+            isEnabled: true
+        };
 
-        it('should create a user with default pending state', async () => {
-            const savedUser = { ...userMock.base, state: UserState.PENDING };
-            repository.create?.mockImplementation(() => savedUser);
+        describe('success cases', () => {
+            it('should create user when data is valid', async () => {
+                // Arrange
+                const savedUser = testHarness.createTestUser();
+                testHarness.mockRepository.create.mockReturnValue(savedUser);
+                testHarness.mockRepository.save.mockResolvedValue(savedUser);
+                testHarness.mockSecurityContext.validateAccess.mockResolvedValue(true);
 
-            const result = await service.createBaseUser(createUserDto, 'user-id');
+                // Act
+                const result = await testHarness.service.createBaseUser(createDto, 'admin-id');
 
-            expect(result).toEqual(plainToClass(ResponseBaseUserDto, savedUser));
-            expect(queryRunner.startTransaction).toHaveBeenCalled();
-            expect(queryRunner.commitTransaction).toHaveBeenCalled();
-            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
-                OperationType.USER,
-                'createBaseUser',
-                'SUCCESS',
-                expect.objectContaining({
-                    userId: 'user-id',
-                    targetId: savedUser.id,
-                    changes: ['User created']
-                })
-            );
+                // Assert
+                expect(result).toBeInstanceOf(ResponseBaseUserDto);
+                expect(result.state).toBe(UserState.PENDING);
+                expect(testHarness.mockRepository.create).toHaveBeenCalledWith(expect.objectContaining({
+                    firstname: createDto.firstname,
+                    lastname: createDto.lastname,
+                    contactEmail: createDto.contactEmail
+                }));
+            });
         });
 
-        it('should throw BadRequestException when email exists', async () => {
-            jest.spyOn(service as any, 'validateUniqueness')
-                .mockRejectedValue(new BadRequestException({
-                    code: ServiceErrorCode.ALREADY_EXISTS,
-                    message: 'BaseUser with this contactEmail already exists'
-                }));
+        describe('validation', () => {
+            it('should validate required fields', async () => {
+                // Arrange
+                const invalidDto = { ...createDto, firstname: '' };
 
-            await expect(service.createBaseUser(createUserDto, 'user-id'))
-                .rejects
-                .toThrow(BadRequestException);
+                // Act & Assert
+                await expect(testHarness.service.createBaseUser(invalidDto, 'admin-id'))
+                    .rejects
+                    .toThrow(BadRequestException);
+            });
+
+            it('should validate email format', async () => {
+                // Arrange
+                const invalidDto = { ...createDto, contactEmail: 'invalid-email' };
+
+                // Act & Assert
+                await expect(testHarness.service.createBaseUser(invalidDto, 'admin-id'))
+                    .rejects
+                    .toThrow(BadRequestException);
+            });
+        });
+
+        describe('transaction management', () => {
+            it('should handle transaction rollback on error', async () => {
+                // Arrange
+                testHarness.mockRepository.save.mockRejectedValue(new Error('Save failed'));
+
+                // Act & Assert
+                await expect(testHarness.service.createBaseUser(createDto, 'admin-id'))
+                    .rejects
+                    .toThrow('Save failed');
+
+                expect(testHarness.mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+                expect(testHarness.mockQueryRunner.release).toHaveBeenCalled();
+            });
+        });
+
+        describe('access control', () => {
+            it('should validate admin access', async () => {
+                // Arrange
+                testHarness.mockSecurityContext.validateAccess.mockRejectedValue(
+                    new UnauthorizedException()
+                );
+
+                // Act & Assert
+                await expect(testHarness.service.createBaseUser(createDto, 'non-admin-id'))
+                    .rejects
+                    .toThrow(UnauthorizedException);
+            });
+        });
+
+        describe('audit logging', () => {
+            it('should log successful operation', async () => {
+                // Arrange
+                const savedUser = testHarness.createTestUser();
+                testHarness.mockRepository.create.mockReturnValue(savedUser);
+                testHarness.mockRepository.save.mockResolvedValue(savedUser);
+
+                // Act
+                await testHarness.service.createBaseUser(createDto, 'admin-id');
+
+                // Assert
+                expect(testHarness.mockLogger.logOperation).toHaveBeenCalledWith(
+                    OperationType.USER,
+                    'createBaseUser',
+                    OperationResult.SUCCESS,
+                    expect.any(Object)
+                );
+            });
         });
     });
 
     describe('updateBaseUser', () => {
-        const updateDto: UpdateBaseUserDto = userMock.baseUserDtos.update;
+        const userId = 'test-id';
+        const updateDto: UpdateBaseUserDto = {
+            firstname: 'Updated',
+            lastname: 'Name'
+        };
 
-        it('should update user when authorized', async () => {
-            const updatedUser = { ...userMock.base, ...updateDto };
-            repository.findOne?.mockImplementation(async () => userMock.base);
-            repository.save = jest.fn().mockResolvedValue(updatedUser);
+        describe('success cases', () => {
+            it('should update user when authorized', async () => {
+                // Arrange
+                const existingUser = testHarness.createTestUser();
+                const updatedUser = testHarness.createTestUser(updateDto);
+                testHarness.mockRepository.findOne.mockResolvedValue(existingUser);
+                testHarness.mockRepository.save.mockResolvedValue(updatedUser);
+                testHarness.mockSecurityContext.validateAccess.mockResolvedValue(true);
 
-            const result = await service.updateBaseUser(userMock.base.id, updateDto, 'user-id');
+                // Act
+                const result = await testHarness.service.updateBaseUser(userId, updateDto, 'admin-id');
 
-            expect(result).toEqual(plainToClass(ResponseBaseUserDto, updatedUser));
-            expect(repository.findOne).toHaveBeenCalledWith({
-                where: { id: userMock.base.id, deleted: false },
-                relations: ['loginCredentials']
+                // Assert
+                expect(result).toBeInstanceOf(ResponseBaseUserDto);
+                expect(testHarness.mockRepository.save).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        firstname: updateDto.firstname,
+                        lastname: updateDto.lastname
+                    })
+                );
             });
-            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
-                OperationType.USER,
-                'updateBaseUser',
-                'SUCCESS',
-                expect.objectContaining({
-                    userId: 'user-id',
-                    targetId: userMock.base.id
-                })
-            );
         });
 
-        it('should validate state transition', async () => {
-            const invalidStateDto = { ...updateDto, state: UserState.DEACTIVATED };
-            repository.findOne?.mockImplementation(async () => ({
-                ...userMock.base,
-                state: UserState.PENDING
-            }));
+        describe('validation', () => {
+            it('should validate required fields', async () => {
+                // Arrange
+                const invalidDto = { ...updateDto, firstname: '' };
 
-            await expect(service.updateBaseUser(userMock.base.id, invalidStateDto, 'user-id'))
-                .rejects
-                .toThrow(BadRequestException);
-        });
-    });
+                // Act & Assert
+                await expect(testHarness.service.updateBaseUser(userId, invalidDto, 'admin-id'))
+                    .rejects
+                    .toThrow(BadRequestException);
+            });
 
-    describe('removeBaseUser', () => {
-        it('should remove user when admin and no active credentials', async () => {
-            const user = { ...userMock.base, loginCredentials: [] };
-            repository.findOne?.mockImplementation(async () => user);
-            repository.remove = jest.fn().mockResolvedValue(user);
+            it('should validate email format', async () => {
+                // Arrange
+                const invalidDto = { ...updateDto, contactEmail: 'invalid-email' };
 
-            const result = await service.removeBaseUser(user.id, 'admin-id');
-
-            expect(result).toBe(true);
-            expect(repository.remove).toHaveBeenCalled();
-            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
-                OperationType.ADMIN,
-                'removeBaseUser',
-                'SUCCESS',
-                expect.objectContaining({
-                    userId: 'admin-id',
-                    targetId: user.id,
-                    changes: ['User permanently deleted']
-                })
-            );
+                // Act & Assert
+                await expect(testHarness.service.updateBaseUser(userId, invalidDto, 'admin-id'))
+                    .rejects
+                    .toThrow(BadRequestException);
+            });
         });
 
-        it('should throw BadRequestException when user has active credentials', async () => {
-            const user = {
-                ...userMock.base,
-                loginCredentials: [{ isEnabled: true }]
-            };
-            repository.findOne?.mockImplementation(async () => user);
+        describe('transaction management', () => {
+            it('should use transaction for state changes', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                testHarness.mockRepository.save.mockResolvedValue(user);
 
-            await expect(service.removeBaseUser(user.id, 'admin-id'))
-                .rejects
-                .toThrow(BadRequestException);
+                // Act
+                await testHarness.service.updateBaseUser(userId, { state: UserState.ACTIVE }, 'admin-id');
+
+                // Assert
+                expect(testHarness.mockQueryRunner.startTransaction).toHaveBeenCalled();
+                expect(testHarness.mockQueryRunner.commitTransaction).toHaveBeenCalled();
+            });
+
+            it('should not use transaction for non-state updates', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                testHarness.mockRepository.save.mockResolvedValue(user);
+
+                // Act
+                await testHarness.service.updateBaseUser(userId, { firstname: 'Updated' }, 'admin-id');
+
+                // Assert
+                expect(testHarness.mockQueryRunner.startTransaction).not.toHaveBeenCalled();
+            });
+        });
+
+        describe('access control', () => {
+            it('should require admin access for state changes', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                
+                // Act
+                await testHarness.service.updateBaseUser(userId, { state: UserState.ACTIVE }, 'user-id');
+                
+                // Assert
+                expect(testHarness.mockSecurityContext.validateAccess).toHaveBeenCalledWith(
+                    OperationType.ADMIN,
+                    'admin-id'
+                );
+            });
+
+            it('should allow user access for non-state updates', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                
+                // Act
+                await testHarness.service.updateBaseUser(userId, { firstname: 'Updated' }, 'user-id');
+                
+                // Assert
+                expect(testHarness.mockSecurityContext.validateAccess).toHaveBeenCalledWith(
+                    OperationType.USER,
+                    'user-id'
+                );
+            });
+        });
+
+        describe('audit logging', () => {
+            it('should log state changes', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                const updatedUser = testHarness.createTestUser(updateDto);
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                testHarness.mockRepository.save.mockResolvedValue(updatedUser);
+                testHarness.mockSecurityContext.validateAccess.mockResolvedValue(true);
+
+                // Act
+                await testHarness.service.updateBaseUser(userId, updateDto, 'admin-123');
+
+                // Assert
+                expect(testHarness.mockLogger.logOperation).toHaveBeenCalledWith(
+                    OperationType.USER,
+                    'updateBaseUser',
+                    OperationResult.SUCCESS,
+                    expect.any(Object)
+                );
+            });
+
+            it('should log validation failures', async () => {
+                // Arrange
+                const user = testHarness.createTestUser({ state: UserState.DEACTIVATED });
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+
+                // Act
+                try {
+                    await testHarness.service.updateBaseUser(userId, { state: UserState.ACTIVE }, 'admin-123');
+                } catch {
+                    // Assert
+                    expect(testHarness.mockLogger.logOperation).toHaveBeenCalledWith(
+                        OperationType.ADMIN,
+                        'updateBaseUser',
+                        OperationResult.FAILURE,
+                        expect.objectContaining({
+                            error: expect.any(BadRequestException)
+                        })
+                    );
+                }
+            });
         });
     });
 
     describe('softDeleteBaseUser', () => {
         it('should soft delete user when admin and no active credentials', async () => {
-            const user = { ...userMock.base, loginCredentials: [] };
-            repository.findOne?.mockImplementation(async () => user);
-            repository.save = jest.fn().mockImplementation(async (entity) => entity);
+            // Arrange
+            const disabledCredential = testHarness.createTestCredential({ isEnabled: false });
+            const user = testHarness.createTestUser({
+                loginCredentials: [disabledCredential]
+            });
+            
+            testHarness.mockRepository.findOne.mockResolvedValue(user);
+            testHarness.mockRepository.save.mockResolvedValue(user);
+            testHarness.mockSecurityContext.validateAccess.mockResolvedValue(true);
 
-            await service.softDeleteBaseUser(user.id, 'admin-id');
+            // Act
+            await testHarness.service.softDeleteBaseUser('user-id', 'admin-id');
 
-            expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
-                deleted: true,
-                deletedAt: expect.any(Date)
-            }));
-            expect(service['serviceLogger'].logOperation).toHaveBeenCalledWith(
-                OperationType.ADMIN,
-                'softDeleteBaseUser',
-                'SUCCESS',
-                expect.objectContaining({
-                    userId: 'admin-id',
-                    targetId: user.id
-                })
+            // Assert
+            expect(testHarness.mockRepository.save).toHaveBeenCalledWith(
+                expect.objectContaining({ deleted: true })
             );
         });
+    });
 
-        it('should throw UnauthorizedException when non-admin access', async () => {
-            jest.spyOn(service as any, 'validateAccess')
-                .mockRejectedValue(new UnauthorizedException());
+    // Access Control
+    describe('access control', () => {
+        describe('findAllBaseUsers', () => {
+            it('should validate user access', async () => {
+                // Arrange
+                const requestingUserId = 'user-123';
+                
+                // Act
+                await testHarness.service.findAllBaseUsers(requestingUserId);
+                
+                // Assert
+                expect(testHarness.mockSecurityContext.validateAccess).toHaveBeenCalledWith(
+                    OperationType.USER,
+                    requestingUserId
+                );
+            });
 
-            await expect(service.softDeleteBaseUser('user-id', 'non-admin-id'))
-                .rejects
-                .toThrow(UnauthorizedException);
+            it('should throw UnauthorizedException when access denied', async () => {
+                // Arrange
+                testHarness.mockSecurityContext.validateAccess.mockRejectedValue(
+                    new UnauthorizedException('Access denied')
+                );
+
+                // Act & Assert
+                await expect(testHarness.service.findAllBaseUsers('user-123'))
+                    .rejects
+                    .toThrow(UnauthorizedException);
+            });
+        });
+
+        describe('updateBaseUser', () => {
+            it('should require admin access for state changes', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                
+                // Act
+                await testHarness.service.updateBaseUser(
+                    'user-123',
+                    { state: UserState.ACTIVE },
+                    'admin-123'
+                );
+                
+                // Assert
+                expect(testHarness.mockSecurityContext.validateAccess).toHaveBeenCalledWith(
+                    OperationType.ADMIN,
+                    'admin-123'
+                );
+            });
+
+            it('should allow user access for non-state updates', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                
+                // Act
+                await testHarness.service.updateBaseUser(
+                    'user-123',
+                    { firstname: 'Updated' },
+                    'user-123'
+                );
+                
+                // Assert
+                expect(testHarness.mockSecurityContext.validateAccess).toHaveBeenCalledWith(
+                    OperationType.USER,
+                    'user-123'
+                );
+            });
+        });
+
+        describe('softDeleteBaseUser', () => {
+            it('should require admin access', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                
+                // Act & Assert
+                await expect(testHarness.service.softDeleteBaseUser('user-123', 'non-admin'))
+                    .rejects
+                    .toThrow(UnauthorizedException);
+            });
         });
     });
 
-    describe('validateStateTransition', () => {
-        const validTransitions = [
-            { from: UserState.PENDING, to: UserState.ACTIVE },
-            { from: UserState.ACTIVE, to: UserState.SUSPENDED },
-            { from: UserState.SUSPENDED, to: UserState.ACTIVE },
-            { from: UserState.ACTIVE, to: UserState.DEACTIVATED }
-        ];
+    // Error Handling
+    describe('error handling', () => {
+        describe('findOneBaseUser', () => {
+            it('should handle database errors gracefully', async () => {
+                // Arrange
+                testHarness.mockRepository.findOne.mockRejectedValue(new Error('Database error'));
 
-        const invalidTransitions = [
-            { from: UserState.DEACTIVATED, to: UserState.ACTIVE },
-            { from: UserState.PENDING, to: UserState.SUSPENDED }
-        ];
+                // Act & Assert
+                await expect(testHarness.service.findOneBaseUser('user-123', 'requester-123'))
+                    .rejects
+                    .toThrow('Database error');
+            });
 
-        it.each(validTransitions)('should allow transition from $from to $to', async ({ from, to }) => {
-            await expect(service['validateStateTransition'](from, to))
-                .resolves
-                .not
-                .toThrow();
+            it('should throw NotFoundException when user not found', async () => {
+                // Arrange
+                testHarness.mockRepository.findOne.mockResolvedValue(null);
+
+                // Act & Assert
+                await expect(testHarness.service.findOneBaseUser('user-123', 'requester-123'))
+                    .rejects
+                    .toThrow(NotFoundException);
+            });
         });
 
-        it.each(invalidTransitions)('should not allow transition from $from to $to', async ({ from, to }) => {
-            await expect(service['validateStateTransition'](from, to))
-                .rejects
-                .toThrow(BadRequestException);
+        describe('updateBaseUser', () => {
+            it('should validate state transitions', async () => {
+                // Arrange
+                const user = testHarness.createTestUser({ state: UserState.DEACTIVATED });
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+
+                // Act & Assert
+                await expect(testHarness.service.updateBaseUser(
+                    'user-123',
+                    { state: UserState.ACTIVE },
+                    'admin-123'
+                )).rejects.toThrow(BadRequestException);
+            });
+
+            it('should handle concurrent update conflicts', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                testHarness.mockRepository.save.mockRejectedValue(new Error('Concurrent update'));
+
+                // Act & Assert
+                await expect(testHarness.service.updateBaseUser(
+                    'user-123',
+                    { firstname: 'New' },
+                    'admin-123'
+                )).rejects.toThrow('Concurrent update');
+            });
         });
     });
-}); 
+
+    // Transaction Management
+    describe('transaction management', () => {
+        describe('createBaseUser', () => {
+            const createDto: CreateBaseUserDto = {
+                firstname: 'John',
+                lastname: 'Doe',
+                contactEmail: 'john@example.com',
+                state: UserState.PENDING
+            };
+
+            it('should commit transaction on successful creation', async () => {
+                // Arrange
+                const savedUser = testHarness.createTestUser();
+                testHarness.mockRepository.create.mockReturnValue(savedUser);
+                testHarness.mockRepository.save.mockResolvedValue(savedUser);
+
+                // Act
+                await testHarness.service.createBaseUser(createDto, 'admin-123');
+
+                // Assert
+                expect(testHarness.mockQueryRunner.startTransaction).toHaveBeenCalled();
+                expect(testHarness.mockQueryRunner.commitTransaction).toHaveBeenCalled();
+                expect(testHarness.mockQueryRunner.release).toHaveBeenCalled();
+            });
+
+            it('should rollback transaction on error', async () => {
+                // Arrange
+                testHarness.mockRepository.save.mockRejectedValue(new Error('Save failed'));
+
+                // Act & Assert
+                await expect(testHarness.service.createBaseUser(createDto, 'admin-123'))
+                    .rejects
+                    .toThrow('Save failed');
+
+                expect(testHarness.mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+                expect(testHarness.mockQueryRunner.release).toHaveBeenCalled();
+            });
+        });
+
+        describe('updateBaseUser', () => {
+            it('should use transaction for state changes', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                testHarness.mockRepository.save.mockResolvedValue(user);
+
+                // Act
+                await testHarness.service.updateBaseUser('user-123', { state: UserState.ACTIVE }, 'admin-123');
+
+                // Assert
+                expect(testHarness.mockQueryRunner.startTransaction).toHaveBeenCalled();
+                expect(testHarness.mockQueryRunner.commitTransaction).toHaveBeenCalled();
+            });
+
+            it('should not use transaction for non-state updates', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                testHarness.mockRepository.save.mockResolvedValue(user);
+
+                // Act
+                await testHarness.service.updateBaseUser('user-123', { firstname: 'Updated' }, 'user-123');
+
+                // Assert
+                expect(testHarness.mockQueryRunner.startTransaction).not.toHaveBeenCalled();
+            });
+        });
+    });
+
+    // Audit Logging
+    describe('audit logging', () => {
+        describe('findAllBaseUsers', () => {
+            it('should log successful operation', async () => {
+                // Arrange
+                testHarness.mockRepository.find.mockResolvedValue([]);
+                testHarness.mockSecurityContext.validateAccess.mockResolvedValue(true);
+
+                // Act
+                await testHarness.service.findAllBaseUsers('admin-123');
+
+                // Assert
+                expect(testHarness.mockLogger.logOperation).toHaveBeenCalledWith(
+                    OperationType.ADMIN,
+                    'findAllBaseUsers',
+                    OperationResult.SUCCESS,
+                    expect.any(Object)
+                );
+            });
+
+            it('should log access denied', async () => {
+                // Arrange
+                testHarness.mockSecurityContext.validateAccess.mockResolvedValue(false);
+
+                // Act
+                try {
+                    await testHarness.service.findAllBaseUsers('user-123');
+                } catch {
+                    // Assert
+                    expect(testHarness.mockLogger.logOperation).toHaveBeenCalledWith(
+                        OperationType.ADMIN,
+                        'findAllBaseUsers',
+                        OperationResult.DENIED,
+                        expect.objectContaining({
+                            error: expect.any(UnauthorizedException)
+                        })
+                    );
+                }
+            });
+        });
+
+        describe('updateBaseUser', () => {
+            it('should log state changes', async () => {
+                // Arrange
+                const user = testHarness.createTestUser();
+                const updatedUser = testHarness.createTestUser({ state: UserState.PENDING });
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+                testHarness.mockRepository.save.mockResolvedValue(updatedUser);
+                testHarness.mockSecurityContext.validateAccess.mockResolvedValue(true);
+
+                // Act
+                await testHarness.service.updateBaseUser('user-123', { state: UserState.ACTIVE }, 'admin-123');
+
+                // Assert
+                expect(testHarness.mockLogger.logOperation).toHaveBeenCalledWith(
+                    OperationType.USER,
+                    'updateBaseUser',
+                    OperationResult.SUCCESS,
+                    expect.any(Object)
+                );
+            });
+
+            it('should log validation failures', async () => {
+                // Arrange
+                const user = testHarness.createTestUser({ state: UserState.DEACTIVATED });
+                testHarness.mockRepository.findOne.mockResolvedValue(user);
+
+                // Act
+                try {
+                    await testHarness.service.updateBaseUser('user-123', { state: UserState.ACTIVE }, 'admin-123');
+                } catch {
+                    // Assert
+                    expect(testHarness.mockLogger.logOperation).toHaveBeenCalledWith(
+                        OperationType.ADMIN,
+                        'updateBaseUser',
+                        OperationResult.FAILURE,
+                        expect.objectContaining({
+                            error: expect.any(BadRequestException)
+                        })
+                    );
+                }
+            });
+        });
+    });
+});

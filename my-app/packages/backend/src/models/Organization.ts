@@ -1,8 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
-import { IsString, IsBoolean, IsUUID, IsOptional } from 'class-validator';
+import { IsString, IsBoolean, IsUUID, IsOptional, IsEnum } from 'class-validator';
 import { User } from './User';
 import { getModelRelationConfig } from '../migrations/helpers';
 import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
+import { SubscriptionStatus } from '@my-app/shared/dist/enums/SubscriptionStatus';
 
 /**
  * Organization entity represents a company or group in the system.
@@ -72,11 +73,15 @@ export class Organization {
     stripeCustomerId?: string;
 
     /** Organization's subscription status */
-    @Column({ type: 'varchar', length: 50, nullable: true })
-    @IsString()
+    @Column({ 
+        type: 'varchar',
+        enum: SubscriptionStatus,
+        enumName: 'subscription_status',
+        nullable: true 
+    })
+    @IsEnum(SubscriptionStatus)
     @IsOptional()
-    @IsStandardLength('CODE')
-    subscriptionStatus?: string;  // 'active', 'past_due', 'canceled', etc.
+    subscriptionStatus?: SubscriptionStatus;
 
     // User Relationship (1:M)
     /** Users belonging to this organization */

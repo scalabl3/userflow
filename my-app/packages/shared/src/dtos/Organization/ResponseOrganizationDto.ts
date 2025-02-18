@@ -43,6 +43,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose, Type } from 'class-transformer';
 import { ResponseUserDto } from '../User/ResponseUserDto';
+import { SubscriptionStatus } from '../../enums/SubscriptionStatus';
 
 @Exclude()
 export class ResponseOrganizationDto {
@@ -99,12 +100,11 @@ export class ResponseOrganizationDto {
     @Expose()
     @ApiProperty({
         description: 'Current subscription status',
-        example: 'active',
-        required: false,
-        minLength: 1,
-        maxLength: 50
+        enum: SubscriptionStatus,
+        example: SubscriptionStatus.ACTIVE,
+        required: false
     })
-    subscriptionStatus?: string;
+    subscriptionStatus?: SubscriptionStatus;
 
     @Expose()
     @ApiProperty({

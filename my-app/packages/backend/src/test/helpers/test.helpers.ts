@@ -18,7 +18,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../app.module';
 import { User } from '../../models/User';
-import { user as userMock } from '../../models/test/__mocks__/user.mock';
+import { user as userMock } from '../../__mocks__/models/user.mock';
 const request = require('supertest');
 
 /**

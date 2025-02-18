@@ -6,7 +6,7 @@ import { Repository, QueryFailedError } from 'typeorm';
 import { CreateLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/CreateLoginProviderDto';
 import { UpdateLoginProviderDto } from '@my-app/shared/dist/dtos/LoginProvider/UpdateLoginProviderDto';
 import { mockRepository } from '../test/setup';
-import { auth as authMock } from '../models/test/__mocks__/auth.mock';
+import { auth as authMock } from '../__mocks__/models/auth.mock';
 
 describe('LoginProviderService', () => {
     let service: LoginProviderService;

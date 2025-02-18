@@ -5,7 +5,7 @@ import { CreateOrganizationDto, UpdateOrganizationDto, ResponseOrganizationDto }
 import { NotFoundException, BadRequestException, InternalServerErrorException, ConflictException } from '@nestjs/common';
 import { Organization } from '../models/Organization';
 import { plainToClass } from 'class-transformer';
-import { organization as orgMock } from '../models/test/__mocks__/organization.mock';
+import { organization as orgMock } from '../__mocks__/models/organization.mock';
 import { DataSource } from 'typeorm';
 
 describe('OrganizationController', () => {
