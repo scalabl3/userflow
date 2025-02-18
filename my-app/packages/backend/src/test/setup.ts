@@ -1,41 +1,57 @@
-import { DataSource, Repository } from 'typeorm';
-import { Test } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository, DataSource, EntityManager, QueryRunner } from 'typeorm';
 
-type MockType<T> = {
-    [P in keyof T]?: jest.Mock<any>;
+export type MockType<T> = {
+    [P in keyof T]?: jest.Mock<any, any>;
 };
 
-// Mock TypeORM's Repository
-export const mockRepository = () => ({
-  find: jest.fn(),
-  findOne: jest.fn(),
-  findOneBy: jest.fn(),
-  save: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
-  remove: jest.fn(),
-  create: jest.fn(dto => dto),
-  createQueryBuilder: jest.fn(() => ({
-    where: jest.fn().mockReturnThis(),
-    andWhere: jest.fn().mockReturnThis(),
-    getOne: jest.fn(),
-    getMany: jest.fn(),
-    leftJoinAndSelect: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-  })),
-}) as MockType<Repository<any>>;
+export const mockManager = {
+    save: jest.fn(),
+    remove: jest.fn(),
+    findOne: jest.fn(),
+    find: jest.fn(),
+    create: jest.fn()
+} as unknown as jest.Mocked<EntityManager>;
 
-// Mock DataSource
-export const mockDataSource = {
-  createQueryRunner: jest.fn(() => ({
+const mockDataSourceInstance = {
+    createQueryRunner: jest.fn(),
+    getRepository: jest.fn(),
+    manager: mockManager,
+    isInitialized: true,
+    options: {},
+    driver: {} as any
+} as unknown as jest.Mocked<DataSource>;
+
+export const mockQueryRunner = {
     connect: jest.fn(),
     startTransaction: jest.fn(),
     commitTransaction: jest.fn(),
     rollbackTransaction: jest.fn(),
     release: jest.fn(),
-  })),
-} as unknown as DataSource;
+    manager: mockManager,
+    connection: mockDataSourceInstance
+} as unknown as jest.Mocked<QueryRunner>;
+
+mockDataSourceInstance.createQueryRunner.mockReturnValue(mockQueryRunner);
+
+export const mockDataSource = mockDataSourceInstance;
+
+export const mockRepository = () => {
+    const repo = {
+        find: jest.fn(),
+        findOne: jest.fn(),
+        findOneBy: jest.fn(),
+        save: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        remove: jest.fn(),
+        manager: {
+            ...mockManager,
+            connection: mockDataSource
+        }
+    };
+    return repo as unknown as jest.Mocked<Repository<any>>;
+};
 
 // Global Jest configuration
 beforeAll(() => {
@@ -48,4 +64,4 @@ afterAll(() => {
 
 beforeEach(() => {
   jest.clearAllMocks();
-}); 
+});

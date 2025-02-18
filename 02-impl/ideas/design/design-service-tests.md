@@ -3,298 +3,189 @@
 ## Overview
 This document outlines the standards for testing service layer components, ensuring consistent test coverage and patterns across all services while maintaining flexibility and maintainability.
 
-Mocks: `my-app/packages/backend/src/models/test/__mocks__`
-Factory: `my-app/packages/backend/src/models/test/factories/test-data.factory.ts`
+Mocks: `my-app/packages/backend/src/__mocks__`
+Factory: `my-app/packages/backend/src/__mocks__/factories/test-data.factory.ts`
+
 ## Core Principles
 
-1. **Balanced Structure**
-   - Consistent patterns without over-constraining
-   - Reusable verification utilities
-   - Flexible entity handling
-   - Clear separation of concerns
+1. **Simplicity First**
+   - Keep test setup minimal and clear
+   - Use standardized mocks directly
+   - Avoid complex test harnesses
+   - Focus on readability
 
-2. **Focus on Unit Testing**
-   - Test service methods in isolation
-   - Mock all dependencies (Repository, DataSource, etc.)
-   - No database or external service integration
-   - Clear and maintainable tests
+2. **Standard Test Structure**
+   ```typescript
+   describe('ServiceName', () => {
+     let service: ServiceName;
+     let repository: Repository<Entity>;
+     let dataSource: DataSource;
 
-3. **Test Categories**
-   - Method validation and business logic
-   - Error handling and edge cases
-   - Transaction management
-   - Service-level access control
-   - Audit logging verification
+     beforeEach(async () => {
+       const module: TestingModule = await Test.createTestingModule({
+         providers: [
+           ServiceName,
+           {
+             provide: getRepositoryToken(Entity),
+             useFactory: mockRepository,
+           },
+           {
+             provide: DataSource,
+             useValue: mockDataSource
+           },
+         ],
+       }).compile();
 
-4. **Out of Scope**
-   - Integration tests
-   - End-to-end testing
-   - Performance testing
-   - Cross-service interactions
-   - Real database operations
+       service = module.get<ServiceName>(ServiceName);
+       repository = module.get<Repository<Entity>>(getRepositoryToken(Entity));
+       dataSource = module.get<DataSource>(DataSource);
 
-## Test Infrastructure
+       jest.clearAllMocks();
+     });
 
-### 1. Service Test Harness
-```typescript
-export abstract class ServiceTestHarness<T> {
-    protected mockRepository: MockRepository<T>;
-    protected mockDataSource: MockDataSource;
-    protected mockQueryRunner: MockQueryRunner;
-    protected mockSecurityContext: SecurityContext;
-    protected mockLogger: ReturnType<typeof createServiceLogger>;
+     describe('methodName', () => {
+       describe('success cases', () => {
+         it('should handle normal operation', async () => {
+           // Arrange - Use standardized mocks
+           const mockEntity = entityMock.instances.standard;
+           repository.findOne.mockResolvedValue(mockEntity);
 
-    protected abstract setupService(): void;
-    protected abstract setupMocks(): void;
+           // Act
+           const result = await service.methodName(params);
 
-    protected async beforeEach() {
-        await this.setupStandardMocks();
-        this.setupService();
-        this.setupMocks();
-    }
+           // Assert
+           expect(result).toEqual(expect.any(ResponseDto));
+         });
+       });
 
-    protected async setupStandardMocks() {
-        this.mockRepository = this.createMockRepository();
-        this.mockDataSource = this.createMockDataSource();
-        this.mockQueryRunner = this.createMockQueryRunner();
-        this.mockSecurityContext = this.createMockSecurityContext();
-        this.mockLogger = this.createMockLogger();
-    }
-}
-```
+       describe('error handling', () => {
+         it('should handle not found', async () => {
+           repository.findOne.mockResolvedValue(null);
+           await expect(service.methodName(params))
+             .rejects.toThrow(NotFoundException);
+         });
+       });
+     });
+   });
+   ```
 
-### 2. Mock Interfaces
-```typescript
-export interface MockRepository<T> {
-    find: jest.Mock<Promise<T[]>>;
-    findOne: jest.Mock<Promise<T | null>>;
-    findBy: jest.Mock<Promise<T[]>>;
-    findOneBy: jest.Mock<Promise<T | null>>;
-    save: jest.Mock<Promise<T>>;
-    create: jest.Mock<T>;
-    update: jest.Mock<Promise<T>>;
-    delete: jest.Mock<Promise<T>>;
-    softDelete: jest.Mock<Promise<T>>;
-}
+3. **Mock Data Usage**
+   - Use standardized mock instances from `__mocks__` directory
+   - Leverage mock DTOs for input validation
+   - Use mock lists for collection testing
+   - Keep test-specific overrides minimal
 
-export interface MockQueryRunner {
-    startTransaction: jest.Mock;
-    commitTransaction: jest.Mock;
-    rollbackTransaction: jest.Mock;
-    release: jest.Mock;
-    connect: jest.Mock;
-    manager: {
-        save: jest.Mock;
-        remove: jest.Mock;
-    };
-}
+4. **Test Categories**
+   - Success Cases
+     - Normal operation
+     - Edge cases with valid data
+     - Optional parameter handling
+   
+   - Error Handling
+     - Not found scenarios
+     - Validation failures
+     - Conflict handling
+     - Database errors
+   
+   - Transaction Management (when needed)
+     - Commit on success
+     - Rollback on error
+     - Resource cleanup
 
-export interface SecurityContext {
-    validateAccess: jest.Mock;
-    getCurrentUser: jest.Mock;
-    hasRole: jest.Mock;
-    validateOrganizationAccess: jest.Mock;
-}
-```
+5. **Best Practices**
+   - One assertion per test when possible
+   - Clear test descriptions
+   - Minimal setup in beforeEach
+   - Clean mock reset between tests
+   - Use type-safe mock data
 
-### 3. Test Data Factory
-```typescript
-export class TestDataFactory {
-    static createMockEntity<T>(
-        baseFields: Partial<T> & { id: string },
-        additionalFields: Partial<T> = {}
-    ): T {
-        return {
-            createdAt: new Date(),
-            modifiedAt: new Date(),
-            ...baseFields,
-            ...additionalFields
-        } as T;
-    }
-
-    static createMockUser(overrides = {}) {
-        return this.createMockEntity({
-            id: 'test-user-id',
-            firstname: 'Test',
-            lastname: 'User',
-            ...overrides
-        });
-    }
-
-    static createMockOrganization(overrides = {}) {
-        return this.createMockEntity({
-            id: 'test-org-id',
-            name: 'Test Organization',
-            ...overrides
-        });
-    }
-}
-```
-
-## Verification Utilities
-
-### 1. Transaction Verification
-```typescript
-protected async verifyTransaction(operation: () => Promise<void>) {
-    await operation();
-    
-    expect(this.mockQueryRunner.startTransaction).toHaveBeenCalled();
-    expect(this.mockQueryRunner.commitTransaction).toHaveBeenCalled();
-    expect(this.mockQueryRunner.release).toHaveBeenCalled();
-}
-
-protected async verifyTransactionRollback(operation: () => Promise<void>) {
-    await expect(operation()).rejects.toThrow();
-    expect(this.mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
-    expect(this.mockQueryRunner.release).toHaveBeenCalled();
-}
-```
-
-### 2. Access Control Verification
-```typescript
-protected verifyAccessControl(
-    operationType: OperationType,
-    requestingUserId: string,
-    organizationId?: string
-) {
-    expect(this.mockSecurityContext.validateAccess)
-        .toHaveBeenCalledWith(operationType, requestingUserId, organizationId);
-}
-
-protected verifyOrganizationAccess(
-    requestingUserId: string,
-    organizationId: string
-) {
-    expect(this.mockSecurityContext.validateOrganizationAccess)
-        .toHaveBeenCalledWith(requestingUserId, organizationId);
-}
-```
-
-### 3. Audit Log Verification
-```typescript
-protected verifyAuditLog(
-    operationType: OperationType,
-    operation: string,
-    result: OperationResult,
-    context: Record<string, any> = {}
-) {
-    expect(this.mockLogger.logOperation)
-        .toHaveBeenCalledWith(operationType, operation, result, context);
-}
-```
-
-## Implementation Example
+## Example Implementation
 
 ```typescript
-class UserServiceTest extends ServiceTestHarness<User> {
-    private service: UserService;
+describe('UserService', () => {
+  let service: UserService;
+  let repository: Repository<User>;
+  let dataSource: DataSource;
 
-    protected setupService() {
-        this.service = new UserService(
-            this.mockRepository,
-            this.mockDataSource
+  beforeEach(async () => {
+    // Standard NestJS test module setup
+    // ... (as shown above)
+  });
+
+  describe('createUser', () => {
+    const createDto = userMock.dtos.create.standard;
+
+    describe('success cases', () => {
+      it('should create user with valid data', async () => {
+        // Arrange
+        const mockUser = userMock.instances.standard;
+        repository.create.mockReturnValue(mockUser);
+        repository.save.mockResolvedValue(mockUser);
+
+        // Act
+        const result = await service.createUser(createDto);
+
+        // Assert
+        expect(result).toEqual(
+          expect.objectContaining({
+            id: mockUser.id,
+            username: createDto.username
+          })
         );
-    }
-
-    protected setupMocks() {
-        const mockUsers = [
-            TestDataFactory.createMockUser({ id: 'user-1' }),
-            TestDataFactory.createMockUser({ id: 'user-2' })
-        ];
-        this.mockRepository.find.mockResolvedValue(mockUsers);
-    }
-
-    describe('findAllUsers', () => {
-        it('should handle transactions correctly', async () => {
-            await this.verifyTransaction(async () => {
-                await this.service.findAllUsers('org-1', 'user-1');
-            });
-        });
-
-        it('should validate access', async () => {
-            await this.service.findAllUsers('org-1', 'user-1');
-            this.verifyAccessControl(OperationType.READ, 'user-1', 'org-1');
-        });
-
-        it('should handle unauthorized access', async () => {
-            this.mockSecurityContext.validateAccess
-                .mockRejectedValue(new UnauthorizedException());
-
-            await expect(
-                this.service.findAllUsers('org-1', 'user-1')
-            ).rejects.toThrow(UnauthorizedException);
-        });
+      });
     });
-}
-```
 
-## Best Practices
+    describe('error handling', () => {
+      it('should handle duplicate username', async () => {
+        // Arrange
+        repository.findOne.mockResolvedValue(userMock.instances.standard);
 
-### 1. Mock Setup
-- Use TestDataFactory for consistent entity creation
-- Reset mocks between tests
-- Mock only what's necessary for each test
-- Keep mock data minimal and focused
-
-### 2. Test Organization
-```typescript
-describe('ServiceName', () => {
-    describe('methodName', () => {
-        describe('success cases', () => {
-            // Happy path tests
-        });
-
-        describe('validation', () => {
-            // Input validation tests
-        });
-
-        describe('error handling', () => {
-            // Error cases and rollbacks
-        });
-
-        describe('access control', () => {
-            // Authorization checks
-        });
-
-        describe('audit logging', () => {
-            // Operation logging
-        });
+        // Act & Assert
+        await expect(service.createUser(createDto))
+          .rejects.toThrow(ConflictException);
+      });
     });
-});
-```
 
-### 3. Common Test Patterns
+    describe('transaction management', () => {
+      it('should rollback on error', async () => {
+        // Arrange
+        const queryRunner = dataSource.createQueryRunner();
+        repository.save.mockRejectedValue(new Error('DB Error'));
 
-#### Transaction Testing
-```typescript
-it('should handle transaction rollback', async () => {
-    this.mockRepository.save.mockRejectedValue(new Error());
-    await this.verifyTransactionRollback(async () => {
-        await this.service.someOperation();
+        // Act
+        await expect(service.createUser(createDto))
+          .rejects.toThrow('DB Error');
+
+        // Assert
+        expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
+        expect(queryRunner.release).toHaveBeenCalled();
+      });
     });
+  });
 });
 ```
 
-#### Access Control Testing
-```typescript
-it('should deny unauthorized access', async () => {
-    this.mockSecurityContext.validateAccess
-        .mockRejectedValue(new UnauthorizedException());
-    await expect(operation())
-        .rejects.toThrow(UnauthorizedException);
-});
-```
+## Key Differences from Previous Approach
 
-#### Organization Access Testing
-```typescript
-it('should validate organization access', async () => {
-    const userId = 'user-1';
-    const orgId = 'org-1';
-    
-    await this.service.someOperation(orgId, userId);
-    this.verifyOrganizationAccess(userId, orgId);
-});
-```
+1. **Removed Complexity**
+   - No ServiceTestHarness abstraction
+   - No custom verification utilities
+   - Direct use of mock data
+
+2. **Improved Clarity**
+   - Standard NestJS testing patterns
+   - Clear test organization
+   - Minimal boilerplate
+
+3. **Better Maintainability**
+   - Less code to maintain
+   - Easier to understand
+   - More flexible for edge cases
+
+4. **Leverages Existing Tools**
+   - Uses NestJS testing utilities
+   - Standard Jest patterns
+   - TypeORM mock patterns
 
 ## Migration Strategy
 

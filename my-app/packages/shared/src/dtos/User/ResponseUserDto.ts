@@ -50,7 +50,7 @@ import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { ResponseBaseUserDto } from '../BaseUser/ResponseBaseUserDto';
 import { ResponseOrganizationDto } from '../Organization/ResponseOrganizationDto';
-import { UserPreferences } from '../../types/user';
+
 
 export class ResponseUserDto extends ResponseBaseUserDto {
     @Expose()
@@ -82,18 +82,5 @@ export class ResponseUserDto extends ResponseBaseUserDto {
     })
     organization?: ResponseOrganizationDto;
 
-    @Expose()
-    @Type(() => UserPreferences)
-    @ApiProperty({
-        description: 'User preferences including theme and notifications',
-        type: () => UserPreferences,
-        example: {
-            theme: 'light',
-            notifications: {
-                email: true,
-                push: true
-            }
-        }
-    })
-    preferences!: UserPreferences;
+    
 }

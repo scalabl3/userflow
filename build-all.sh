@@ -1,7 +1,7 @@
 cd my-app/packages/shared
-npm run build
+npm run build 
 # cd ../frontend
 #npm run build
-cd ../backend
-npm run build
-cd ../..
+#cd ../backend
+#npm run build
+#cd ../..

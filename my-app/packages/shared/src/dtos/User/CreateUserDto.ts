@@ -51,7 +51,6 @@ import { IsObject, IsOptional, IsUUID, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { CreateBaseUserDto } from '../BaseUser/CreateBaseUserDto';
-import { UserPreferences } from '../../types/user';
 import { StandardString } from '../../utils/dto-utils';
 
 export class CreateUserDto extends CreateBaseUserDto {
@@ -80,14 +79,5 @@ export class CreateUserDto extends CreateBaseUserDto {
     @IsUUID()
     organizationId!: string;
 
-    @ApiProperty({
-        description: 'User preferences including theme and notifications',
-        type: () => UserPreferences,
-        required: false
-    })
-    @IsObject()
-    @ValidateNested()
-    @Type(() => UserPreferences)
-    @IsOptional()
-    preferences?: UserPreferences;
+
 }

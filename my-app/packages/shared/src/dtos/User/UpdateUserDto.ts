@@ -50,7 +50,6 @@ import { IsOptional, IsString, IsUUID, IsObject, ValidateNested } from 'class-va
 import { ApiProperty } from '@nestjs/swagger';
 import { UpdateBaseUserDto } from '../BaseUser/UpdateBaseUserDto';
 import { Type } from 'class-transformer';
-import { UserPreferences } from '../../types/user';
 import { StandardString } from '../../utils/dto-utils';
 
 export class UpdateUserDto extends UpdateBaseUserDto {
@@ -83,14 +82,5 @@ export class UpdateUserDto extends UpdateBaseUserDto {
     @IsUUID()
     organizationId?: string;
 
-    @ApiProperty({
-        description: 'User preferences including theme and notifications',
-        type: () => UserPreferences,
-        required: false
-    })
-    @IsObject()
-    @ValidateNested()
-    @Type(() => UserPreferences)
-    @IsOptional()
-    preferences?: UserPreferences;
+    
 }
