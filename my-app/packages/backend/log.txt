@@ -1,0 +1,6 @@
+
+> @my-app/backend@1.0.0 build
+> nest build
+
+Found 287 error(s).
+

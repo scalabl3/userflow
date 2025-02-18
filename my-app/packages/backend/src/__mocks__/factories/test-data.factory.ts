@@ -79,7 +79,8 @@ export class TestDataFactory {
   static createBaseUser(withCredentials = true, overrides = {}) {
     const baseUser = { ...user.base, ...overrides };
     if (withCredentials) {
-      baseUser.loginCredentials = [auth.credentials.password];
+      const credential = this.createCredential('password', {});
+      baseUser.loginCredentials = [credential];
     }
     return baseUser as BaseUser;
   }
@@ -132,7 +133,7 @@ export class TestDataFactory {
     overrides = {}
   ): T {
     const base = user.baseUserDtos[dtoType];
-    return { ...base, ...overrides } as T;
+    return { ...base.standard, ...overrides } as unknown as T;
   }
 
   /**
@@ -149,7 +150,7 @@ export class TestDataFactory {
     overrides = {}
   ): T {
     const base = user.dtos[dtoType];
-    return { ...base, ...overrides } as T;
+    return { ...base.standard, ...overrides } as unknown as T;
   }
 
   /**
@@ -228,7 +229,7 @@ export class TestDataFactory {
    * @returns Configured Organization instance
    */
   static createOrganization(overrides = {}) {
-    return { ...organization.standard, ...overrides } as Organization;
+    return { ...organization.instances.standard, ...overrides } as Organization;
   }
 
   /**
@@ -245,6 +246,6 @@ export class TestDataFactory {
     overrides = {}
   ): T {
     const base = organization.dtos[dtoType];
-    return { ...base, ...overrides } as T;
+    return { ...base.standard, ...overrides } as unknown as T;
   }
 } 

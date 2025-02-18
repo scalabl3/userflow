@@ -1,0 +1,81 @@
+{
+    "oauth": {
+        "enabled": true,
+        "providers": {
+            "google": {
+                "enabled": true,
+                "clientId": "GOOGLE_CLIENT_ID",
+                "clientSecret": "GOOGLE_CLIENT_SECRET",
+                "redirectUri": "/auth/google/callback",
+                "scope": ["email", "profile"],
+                "responseType": "code",
+                "authUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+                "tokenUrl": "https://oauth2.googleapis.com/token"
+            },
+            "github": {
+                "enabled": true,
+                "clientId": "GITHUB_CLIENT_ID",
+                "clientSecret": "GITHUB_CLIENT_SECRET",
+                "redirectUri": "/auth/github/callback",
+                "scope": ["user:email"],
+                "responseType": "code",
+                "authUrl": "https://github.com/login/oauth/authorize",
+                "tokenUrl": "https://github.com/login/oauth/access_token"
+            }
+        }
+    },
+    "apple": {
+        "enabled": true,
+        "clientId": "APPLE_CLIENT_ID",
+        "teamId": "APPLE_TEAM_ID",
+        "keyId": "APPLE_KEY_ID",
+        "privateKeyPath": "path/to/AuthKey.p8",
+        "redirectUri": "/auth/apple/callback",
+        "scope": ["name", "email"],
+        "responseType": "code",
+        "responseMode": "form_post",
+        "authUrl": "https://appleid.apple.com/auth/authorize",
+        "tokenUrl": "https://appleid.apple.com/auth/token"
+    },
+    "password": {
+        "enabled": true,
+        "minLength": 8,
+        "requireUppercase": true,
+        "requireLowercase": true,
+        "requireNumbers": true,
+        "requireSpecialChars": true,
+        "saltRounds": 10,
+        "maxAttempts": 5,
+        "lockoutDuration": 900
+    },
+    "phone": {
+        "enabled": true,
+        "provider": "twilio",
+        "accountSid": "TWILIO_ACCOUNT_SID",
+        "authToken": "TWILIO_AUTH_TOKEN",
+        "fromNumber": "TWILIO_PHONE_NUMBER",
+        "codeLength": 6,
+        "codeTTL": 300,
+        "maxAttempts": 3,
+        "cooldownPeriod": 60
+    },
+    "magicLink": {
+        "enabled": true,
+        "tokenLength": 32,
+        "tokenTTL": 3600,
+        "maxAttempts": 3,
+        "cooldownPeriod": 300,
+        "emailSubject": "Your Login Link",
+        "emailTemplate": "magic-link-template"
+    },
+    "biometric": {
+        "enabled": true,
+        "allowedTypes": ["fingerprint", "face"],
+        "rpName": "Your App Name",
+        "rpId": "yourdomain.com",
+        "attestation": "direct",
+        "authenticatorAttachment": "platform",
+        "userVerification": "preferred",
+        "timeout": 60000
+    }
+} 

@@ -20,3 +20,5 @@ dist/
 01-meta/
 
 00-archive/
+
+auth.config.json

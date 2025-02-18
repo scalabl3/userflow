@@ -295,3 +295,18 @@ Common Responsibilities:
 2. Single Source: No duplicate type definitions across packages
 3. Clear Boundaries: Each package has distinct responsibilities
 4. Type Safety: All cross-package communication uses shared types
+
+## Key Directories
+
+### managers/
+- Singleton pattern implementations
+- Configuration management
+- Event-driven updates
+- Hot-reloading support
+- Type-safe validation
+
+### models/
+- Database entity definitions
+- Relationship mappings
+- Validation decorators
+- Type-safe enums

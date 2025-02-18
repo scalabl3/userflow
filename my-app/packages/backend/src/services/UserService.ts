@@ -6,7 +6,6 @@ import { CreateUserDto } from '@my-app/shared/dist/dtos/User/CreateUserDto';
 import { UpdateUserDto } from '@my-app/shared/dist/dtos/User/UpdateUserDto';
 import { ResponseUserDto } from '@my-app/shared/dist/dtos/User/ResponseUserDto';
 import { ServiceBase } from '../utils/service-utils';
-import { UserPreferences } from '@my-app/shared/dist/types/user';
 import { UserState } from '@my-app/shared/dist/enums/UserState';
 import { OperationType, ServiceErrorCode, OperationResult, OperationLogContext } from '../constants/service-operations';
 
@@ -16,7 +15,7 @@ import { OperationType, ServiceErrorCode, OperationResult, OperationLogContext }
  * Core Features:
  * - User CRUD operations within organizations
  * - Organization-scoped user management
- * - User state and preferences management
+ * - User state 
  * - Batch operations for user status
  * - Organization membership control
  * 
@@ -34,7 +33,7 @@ import { OperationType, ServiceErrorCode, OperationResult, OperationLogContext }
  * - USER_OP:
  *   - findOneUser: View own profile
  *   - findByUsername: Find users (elevated to ADMIN for org-wide)
- *   - updateUserPreferences: Update own preferences
+ *
  */
 @Injectable()
 export class UserService extends ServiceBase<User> {
@@ -287,74 +286,7 @@ export class UserService extends ServiceBase<User> {
         }
     }
 
-    /**
-     * Update user preferences.
-     * Users can only update their own preferences.
-     * 
-     * @param id - User ID to update
-     * @param preferences - New preferences
-     * @param requestingUserId - ID of the user making the request
-     * @returns Updated user DTO
-     * @throws UnauthorizedException if access denied
-     * @throws NotFoundException if user not found
-     * @throws BadRequestException if trying to update another user's preferences
-     */
-    async updateUserPreferences(
-        id: string,
-        preferences: Partial<UserPreferences>,
-        requestingUserId: string
-    ): Promise<ResponseUserDto> {
-        try {
-            const user = await this.validateExists(id);
-            
-            // Users can only update their own preferences
-            if (id !== requestingUserId) {
-                throw new BadRequestException({
-                    code: ServiceErrorCode.ACCESS_DENIED,
-                    message: 'Cannot update preferences for another user',
-                    details: { id, requestingUserId }
-                });
-            }
-            
-            await this.validateAccess(OperationType.USER, requestingUserId);
-            
-            return this.withTransaction(
-                async (queryRunner) => {
-                    const updatedPreferences = {
-                        ...user.preferences,
-                        ...preferences
-                    };
-                    
-                    const entity = await this.update(
-                        id,
-                        { preferences: updatedPreferences } as DeepPartial<User>,
-                        queryRunner
-                    );
-                    
-                    this.logOperation(OperationType.USER, 'updateUserPreferences', OperationResult.SUCCESS, {
-                        userId: requestingUserId,
-                        targetId: id,
-                        changes: Object.keys(preferences)
-                    });
-                    
-                    return this.toResponseDto(entity!, ResponseUserDto)!;
-                },
-                OperationType.USER,
-                'updateUserPreferences',
-                {
-                    userId: requestingUserId,
-                    targetId: id,
-                    changes: Object.keys(preferences)
-                }
-            );
-        } catch (error) {
-            this.handleError(error as Error, OperationType.USER, 'updateUserPreferences', {
-                userId: requestingUserId,
-                targetId: id,
-                preferences: Object.keys(preferences)
-            });
-        }
-    }
+    
 
     /**
      * Find organization admin user.
@@ -781,7 +713,6 @@ export class UserService extends ServiceBase<User> {
     protected override isSensitiveField(field: string): boolean {
         const userSensitiveFields = [
             'loginCredentials',
-            'preferences',
             ...super.isSensitiveField(field) ? [field] : []
         ];
         return userSensitiveFields.some(sensitive => field.toLowerCase().includes(sensitive));

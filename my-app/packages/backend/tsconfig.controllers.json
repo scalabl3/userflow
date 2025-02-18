@@ -1,0 +1,15 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "composite": true,
+      "declaration": true,
+      "outDir": "./dist/controllers"
+    },
+    "include": [
+      "src/models/**/*",
+    "src/migrations/helpers.ts"
+    ],
+    "exclude": [
+      "**/*.spec.ts"
+    ]
+  } 

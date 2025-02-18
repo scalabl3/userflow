@@ -5,7 +5,7 @@ import { IsString, IsUUID, IsObject, IsOptional, ValidateNested } from 'class-va
 import { Type } from 'class-transformer';
 import { getModelRelationConfig } from '../migrations/helpers';
 import { IsStandardLength, IsStandardName } from '@my-app/shared/dist/decorators/validation';
-import { UserPreferences } from '@my-app/shared/dist/types/user';
+
 
 /**
  * User entity extends BaseUser with organization-specific properties.
@@ -68,16 +68,5 @@ export class User extends BaseUser {
     @JoinColumn({ name: 'organizationId' })
     organization!: Organization;
 
-    // Optional Fields
-    /** User's customizable preferences */
-    @Column({ 
-        type: 'simple-json', 
-        nullable: true,
-        default: () => new UserPreferences()
-    })
-    @IsObject()
-    @ValidateNested()
-    @Type(() => UserPreferences)
-    @IsOptional()
-    preferences: UserPreferences = new UserPreferences();
+     
 }

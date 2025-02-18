@@ -6,14 +6,12 @@
  * - Initialization: Default values and instance creation
  * - Core Properties: User-specific fields
  * - Inherited Properties: BaseUser fields and behavior
- * - Preferences: Theme and notification settings
  * - Relationships: Organization and credentials
  * - Timestamps: Temporal tracking
  * 
  * Coverage Areas:
  * - User Configuration
  * - Data Validation
- * - Preference Management
  * - Relationship Management
  */
 
@@ -44,10 +42,6 @@ describe('User', () => {
         it('should initialize with default values', () => {
             expect(user.state).toBe(UserState.PENDING);
             expect(user.isEnabled).toBe(true);
-            expect(user.preferences).toBeDefined();
-            expect(user.preferences.theme).toBe('light');
-            expect(user.preferences.notifications.email).toBe(true);
-            expect(user.preferences.notifications.push).toBe(true);
         });
 
         it('should create valid instance from mock data', () => {
@@ -58,7 +52,6 @@ describe('User', () => {
             expect(user.username).toBe(mockUser.username);
             expect(user.displayname).toBe(mockUser.displayname);
             expect(user.organizationId).toBe(mockUser.organizationId);
-            expect(user.preferences).toEqual(mockUser.preferences);
         });
     });
 
@@ -108,35 +101,7 @@ describe('User', () => {
                 expect(user.state).toBe(mockUser.state);
             });
         });
-
-        /**
-         * Tests for user preferences.
-         * Validates theme and notification settings.
-         */
-        describe('preferences', () => {
-            it('should get and set theme', () => {
-                const mockUser = userMock.instances.withMultipleCredentials;
-                user.preferences = mockUser.preferences;
-                expect(user.preferences.theme).toBe('dark');
-
-                const mockStandard = userMock.instances.standard;
-                user.preferences = mockStandard.preferences;
-                expect(user.preferences.theme).toBe('light');
-            });
-
-            it('should get and set notification preferences', () => {
-                const mockUser = userMock.instances.disabled;
-                user.preferences = mockUser.preferences;
-                expect(user.preferences.notifications.email).toBe(false);
-                expect(user.preferences.notifications.push).toBe(false);
-            });
-
-            it('should handle complete preference override', () => {
-                const mockUser = userMock.instances.withMultipleCredentials;
-                user.preferences = mockUser.preferences;
-                expect(user.preferences).toEqual(mockUser.preferences);
-            });
-        });
+       
     });
 
     /**

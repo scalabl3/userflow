@@ -1,223 +1,247 @@
-# Service Test Design Standards
+# Service Test Design
 
-## Overview
-This document outlines the standards for testing service layer components, ensuring consistent test coverage and patterns across all services while maintaining flexibility and maintainability.
+## Core Structure
 
-Mocks: `my-app/packages/backend/src/__mocks__`
-Factory: `my-app/packages/backend/src/__mocks__/factories/test-data.factory.ts`
-
-## Core Principles
-
-1. **Simplicity First**
-   - Keep test setup minimal and clear
-   - Use standardized mocks directly
-   - Avoid complex test harnesses
-   - Focus on readability
-
-2. **Standard Test Structure**
-   ```typescript
-   describe('ServiceName', () => {
-     let service: ServiceName;
-     let repository: Repository<Entity>;
-     let dataSource: DataSource;
-
-     beforeEach(async () => {
-       const module: TestingModule = await Test.createTestingModule({
-         providers: [
-           ServiceName,
-           {
-             provide: getRepositoryToken(Entity),
-             useFactory: mockRepository,
-           },
-           {
-             provide: DataSource,
-             useValue: mockDataSource
-           },
-         ],
-       }).compile();
-
-       service = module.get<ServiceName>(ServiceName);
-       repository = module.get<Repository<Entity>>(getRepositoryToken(Entity));
-       dataSource = module.get<DataSource>(DataSource);
-
-       jest.clearAllMocks();
-     });
-
-     describe('methodName', () => {
-       describe('success cases', () => {
-         it('should handle normal operation', async () => {
-           // Arrange - Use standardized mocks
-           const mockEntity = entityMock.instances.standard;
-           repository.findOne.mockResolvedValue(mockEntity);
-
-           // Act
-           const result = await service.methodName(params);
-
-           // Assert
-           expect(result).toEqual(expect.any(ResponseDto));
-         });
-       });
-
-       describe('error handling', () => {
-         it('should handle not found', async () => {
-           repository.findOne.mockResolvedValue(null);
-           await expect(service.methodName(params))
-             .rejects.toThrow(NotFoundException);
-         });
-       });
-     });
-   });
-   ```
-
-3. **Mock Data Usage**
-   - Use standardized mock instances from `__mocks__` directory
-   - Leverage mock DTOs for input validation
-   - Use mock lists for collection testing
-   - Keep test-specific overrides minimal
-
-4. **Test Categories**
-   - Success Cases
-     - Normal operation
-     - Edge cases with valid data
-     - Optional parameter handling
-   
-   - Error Handling
-     - Not found scenarios
-     - Validation failures
-     - Conflict handling
-     - Database errors
-   
-   - Transaction Management (when needed)
-     - Commit on success
-     - Rollback on error
-     - Resource cleanup
-
-5. **Best Practices**
-   - One assertion per test when possible
-   - Clear test descriptions
-   - Minimal setup in beforeEach
-   - Clean mock reset between tests
-   - Use type-safe mock data
-
-## Example Implementation
+All service tests MUST follow this structure for consistency and maintainability:
 
 ```typescript
-describe('UserService', () => {
-  let service: UserService;
-  let repository: Repository<User>;
-  let dataSource: DataSource;
+describe('ServiceName', () => {
+    // Test setup
+    let service: ServiceName;
+    let repository: jest.Mocked<Repository<Entity>>;
+    
+    // Mock data setup using TestDataFactory
+    const mockData = {
+        entity: TestDataFactory.createEntity(),
+        createDto: TestDataFactory.createEntityDto('create'),
+        updateDto: TestDataFactory.createEntityDto('update')
+    };
 
-  beforeEach(async () => {
-    // Standard NestJS test module setup
-    // ... (as shown above)
-  });
-
-  describe('createUser', () => {
-    const createDto = userMock.dtos.create.standard;
+    beforeEach(() => {
+        // Standard setup using mockRepository
+        repository = mockRepository<Entity>();
+    });
 
     describe('success cases', () => {
-      it('should create user with valid data', async () => {
-        // Arrange
-        const mockUser = userMock.instances.standard;
-        repository.create.mockReturnValue(mockUser);
-        repository.save.mockResolvedValue(mockUser);
-
-        // Act
-        const result = await service.createUser(createDto);
-
-        // Assert
-        expect(result).toEqual(
-          expect.objectContaining({
-            id: mockUser.id,
-            username: createDto.username
-          })
-        );
-      });
+        // Group by operation pattern
+        describe('read operations', () => {
+            it('finds all entities')
+            it('finds one entity')
+            it('finds by specific field')
+        });
+        
+        describe('write operations', () => {
+            it('creates entity')
+            it('updates entity')
+            it('removes entity')
+        });
     });
 
     describe('error handling', () => {
-      it('should handle duplicate username', async () => {
-        // Arrange
-        repository.findOne.mockResolvedValue(userMock.instances.standard);
-
-        // Act & Assert
-        await expect(service.createUser(createDto))
-          .rejects.toThrow(ConflictException);
-      });
+        // Group by error type
+        describe('not found errors', () => {
+            it('handles entity not found in find')
+            it('handles entity not found in update')
+            it('handles entity not found in remove')
+        });
+        
+        describe('validation errors', () => {
+            it('handles invalid data in create')
+            it('handles invalid data in update')
+        });
+        
+        describe('conflict errors', () => {
+            it('handles duplicate unique fields')
+            it('handles constraint violations')
+        });
+        
+        describe('authorization errors', () => {
+            it('handles unauthorized access')
+            it('handles forbidden operations')
+        });
     });
 
     describe('transaction management', () => {
-      it('should rollback on error', async () => {
-        // Arrange
-        const queryRunner = dataSource.createQueryRunner();
-        repository.save.mockRejectedValue(new Error('DB Error'));
-
-        // Act
-        await expect(service.createUser(createDto))
-          .rejects.toThrow('DB Error');
-
-        // Assert
-        expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
-        expect(queryRunner.release).toHaveBeenCalled();
-      });
+        // Group by transaction pattern
+        describe('write operations', () => {
+            it('commits successful create')
+            it('commits successful update')
+            it('commits successful remove')
+        });
+        
+        describe('rollback scenarios', () => {
+            it('rolls back failed create')
+            it('rolls back failed update')
+            it('rolls back failed remove')
+        });
     });
-  });
 });
 ```
 
-## Key Differences from Previous Approach
+## Implementation Guidelines
 
-1. **Removed Complexity**
-   - No ServiceTestHarness abstraction
-   - No custom verification utilities
-   - Direct use of mock data
+1. **Test Setup**
+   - Use `mockRepository<T>()` for repository mocks
+   - Use `TestDataFactory` for consistent test data
+   - Keep mock data at the top level for reuse
 
-2. **Improved Clarity**
-   - Standard NestJS testing patterns
-   - Clear test organization
-   - Minimal boilerplate
+2. **Success Cases**
+   - Group by operation pattern (read/write)
+   - Test happy path thoroughly
+   - Verify correct repository method calls
+   - Validate return values
+   ```typescript
+   describe('success cases', () => {
+       describe('read operations', () => {
+           it('finds all entities', async () => {
+               repository.find.mockResolvedValue([mockData.entity]);
+               const result = await service.findAll();
+               expect(result).toEqual([mockData.entity]);
+               expect(repository.find).toHaveBeenCalled();
+           });
+       });
+   });
+   ```
 
-3. **Better Maintainability**
-   - Less code to maintain
-   - Easier to understand
-   - More flexible for edge cases
+3. **Error Handling**
+   - Group by error type
+   - Test all expected exceptions
+   - Verify error messages
+   - Check error status codes
+   ```typescript
+   describe('error handling', () => {
+       describe('not found errors', () => {
+           it('handles entity not found', async () => {
+               repository.findOne.mockResolvedValue(null);
+               await expect(service.findOne('id'))
+                   .rejects.toThrow(NotFoundException);
+           });
+       });
+   });
+   ```
 
-4. **Leverages Existing Tools**
-   - Uses NestJS testing utilities
-   - Standard Jest patterns
-   - TypeORM mock patterns
+4. **Transaction Management**
+   - Test transaction boundaries
+   - Verify commit/rollback behavior
+   - Check cleanup (release)
+   ```typescript
+   describe('transaction management', () => {
+       describe('write operations', () => {
+           it('commits successful create', async () => {
+               repository.save.mockResolvedValue(mockData.entity);
+               await service.create(mockData.createDto);
+               expect(repository.save).toHaveBeenCalled();
+           });
+       });
+   });
+   ```
 
-## Migration Strategy
+## Mock Setup Patterns
 
-1. **Phase 1: Infrastructure**
-   - Implement new ServiceTestHarness
-   - Create/update TestDataFactory
-   - Set up mock interfaces
-   - Add verification utilities
+1. **Repository Mocks**
+   ```typescript
+   const repository = mockRepository<Entity>();
+   repository.findOne
+       .mockResolvedValueOnce(mockUser)  // validateAccess
+       .mockResolvedValueOnce(null);     // uniqueness check
+   ```
 
-2. **Phase 2: Service Migration**
-   - Migrate one service at a time
-   - Start with simpler services
-   - Update test data creation
-   - Add missing verifications
+2. **Transaction Mocks**
+   ```typescript
+   // Transaction success
+   repository.save.mockResolvedValue(entity);
 
-3. **Phase 3: Cleanup**
-   - Remove old base classes
-   - Update documentation
-   - Add missing test coverage
-   - Standardize test patterns
+   // Transaction failure
+   repository.save.mockRejectedValue(new Error('DB Error'));
+   ```
 
-## Conclusion
+3. **Validation Chain**
+   ```typescript
+   // Multiple validation steps
+   repository.findOne
+       .mockResolvedValueOnce(mockUser)   // access check
+       .mockResolvedValueOnce(mockUser)   // existence check
+       .mockResolvedValueOnce(null);      // uniqueness check
+   ```
 
-This design provides:
-- Structure where it helps
-- Flexibility where it matters
-- Clear patterns to follow
-- Easy maintenance and extension
-- Type safety without constraints
+## Anti-Patterns to Avoid
 
-The focus is on making tests:
-- Easy to write
-- Easy to maintain
-- Comprehensive
-- Reliable
+1. **❌ Don't mix test categories**
+   ```typescript
+   // Bad: Mixed concerns
+   describe('findOne', () => {
+       it('finds entity')
+       it('handles not found')
+   });
+
+   // Good: Separated concerns
+   describe('success cases', () => {
+       it('finds entity')
+   });
+   describe('error handling', () => {
+       it('handles not found')
+   });
+   ```
+
+2. **❌ Don't nest too deeply**
+   ```typescript
+   // Bad: Too many levels
+   describe('success cases', () => {
+       describe('read operations', () => {
+           describe('findOne', () => {
+               describe('with id', () => {
+                   it('works')
+               });
+           });
+       });
+   });
+
+   // Good: Max 3 levels
+   describe('success cases', () => {
+       describe('read operations', () => {
+           it('finds one by id')
+       });
+   });
+   ```
+
+3. **❌ Don't duplicate setup**
+   ```typescript
+   // Bad: Repeated setup
+   it('test1', () => {
+       repository = mockRepository();
+       service = new Service(repository);
+   });
+
+   // Good: Use beforeEach
+   beforeEach(() => {
+       repository = mockRepository();
+       service = new Service(repository);
+   });
+   ```
+
+## Best Practices
+
+1. **Organization**
+   - Follow the prescribed structure exactly
+   - Keep nesting to maximum 3 levels
+   - Group related tests logically
+
+2. **Mock Data**
+   - Use TestDataFactory consistently
+   - Define mock data at describe block level
+   - Use clear, descriptive mock values
+
+3. **Assertions**
+   - Test both return values and side effects
+   - Use type-safe assertions
+   - Include repository method call checks
+
+4. **Error Testing**
+   - Test all error paths
+   - Verify error types and messages
+   - Check error status codes
+
+5. **Transaction Testing**
+   - Test both commit and rollback
+   - Verify cleanup
+   - Check error propagation

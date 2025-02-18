@@ -31,10 +31,16 @@ backend/
 │   ├── controllers/   # HTTP request handlers
 │   ├── services/      # Business logic
 │   ├── models/        # Database entities
+│   ├── managers/      # Singleton managers
+│   │   └── auth/      # Authentication management
 │   ├── modules/       # NestJS modules
 │   ├── migrations/    # Database migrations
-│   └── test/         # Test files and mocks
-│       └── __mocks__/ # Shared test mocks
+│   ├── utils/         # Utility functions
+│   ├── constants/     # Shared constants
+│   ├── __mocks__/     # Mock data for testing
+│   └── test/          # Test utilities and helpers
+├── tsconfig.json      # TypeScript configuration
+└── package.json       # Package dependencies
 ```
 
 #### Shared Package (`/packages/shared`)
@@ -134,4 +140,46 @@ Stripe Integration:
 
 ## Notes
 
-This document reflects the current state of implementation and should be updated as new features are added. 
+This document reflects the current state of implementation and should be updated as new features are added.
+
+# Application Architecture
+
+## Core Components
+
+### Singleton Managers
+Located in `backend/src/managers/`, these provide centralized management of system-wide functionality:
+
+1. Authentication Manager
+   - Credential type management
+   - Provider configuration
+   - Validation rules
+   - Hot-reloading support
+   - Event-driven updates
+
+2. Future Managers (planned)
+   - Notification Manager: Push notifications, emails
+   - Payment Manager: Payment processing, subscriptions
+   - Cache Manager: System-wide caching
+   - Feature Flag Manager: Feature toggles
+
+Key Characteristics:
+- Singleton pattern implementation
+- Configuration management
+- Event-driven architecture
+- Hot-reloading capability
+- Type-safe interfaces
+
+### Authentication System
+The authentication system uses a singleton manager pattern:
+
+1. Components:
+   - AuthenticationManager: Central singleton for auth logic
+   - LoginCredential: Database entity for stored credentials
+   - CredentialType: Type-safe enum for auth methods
+
+2. Features:
+   - Multiple authentication methods (OAuth, password, etc.)
+   - Centralized configuration
+   - Hot-reloadable settings
+   - Type-safe credential validation
+   - Event-driven updates 

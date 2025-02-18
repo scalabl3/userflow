@@ -5,103 +5,183 @@ This document provides a comprehensive summary of the database entities, their r
 
 ## User Entities
 
-### User Entity Tree
+### Base User Entity Tree
 ```
 ├── models/
-│   ├── BaseUser.ts              # Core user entity with authentication relations
-│   ├── User.ts                  # Extended user entity with organizational and preference details
-│   └── User.spec.ts             # Unit tests for user validation
+│   ├── BaseUser.ts              # Core user entity with authentication
+│   └── BaseUser.spec.ts         # Base user validation tests
 ├── services/
-│   ├── BaseUserService.ts       # Core user service handling basic operations
-│   ├── BaseUserService.spec.ts  # Tests for base service operations
-│   ├── UserService.ts           # Extended service including org and preference logic
-│   └── UserService.spec.ts      # Extended service test coverage
+│   ├── BaseUserService.ts       # Core user operations
+│   └── BaseUserService.spec.ts  # Base service tests
 ├── controllers/
-│   ├── BaseUserController.ts    # Handles core user CRUD endpoints
-│   ├── UserController.ts        # Manages extended user operations
-│   └── UserController.spec.ts   # Controller tests
-└── test/
-    └── __mocks__/
-        └── user.mock.ts         # Shared mock data for user entities
+│   ├── BaseUserController.ts    # Base user endpoints
+│   └── BaseUserController.spec.ts # Base controller tests
+└── __mocks__/
+    └── models/
+        └── baseUser.mock.ts     # Base user test data
+```
+
+### BaseUser Relationships
+```
+BaseUser [1] ----< [M] LoginCredential
+```
+
+Key Characteristics:
+- One-to-Many relationship with LoginCredential
+- Cascade deletion of credentials with user
+- Credentials are required for authentication
+- Each credential has a unique type per user
+- Soft deletion support for audit trail
+
+### User Entity Tree (extends BaseUser)
+```
+├── models/
+│   ├── User.ts                  # Extended user with org details
+│   └── User.spec.ts             # Extended user validation
+├── services/
+│   ├── UserService.ts           # Extended user operations
+│   └── UserService.spec.ts      # Extended service tests
+├── controllers/
+│   ├── UserController.ts        # Extended user endpoints
+│   └── UserController.spec.ts   # Extended controller tests
+└── __mocks__/
+    └── models/
+        └── user.mock.ts         # Extended user test data
 ```
 
 ### Key Relationships for Users
-- One-to-many relationship between a User and their LoginCredentials
-- Each User is associated with an Organization
+- User inherits LoginCredentials relationship from BaseUser
+- User extends BaseUser (inheritance)
+- User belongs to Organization (M:1)
 
 ## Organization Entities
 
 ### Organization Entity Tree
 ```
 ├── models/
-│   ├── Organization.ts          # Defines the organization structure and user associations
-│   └── Organization.spec.ts     # Validation and constraint tests
+│   ├── Organization.ts          # Organization entity
+│   └── Organization.spec.ts     # Organization validation
 ├── services/
-│   ├── OrganizationService.ts   # Manages organization creation and member relations
-│   └── OrganizationService.spec.ts  # Service test coverage
+│   ├── OrganizationService.ts   # Organization operations
+│   └── OrganizationService.spec.ts  # Service tests
 ├── controllers/
-│   ├── OrganizationController.ts    # API endpoints for organization management
+│   ├── OrganizationController.ts    # Organization endpoints
 │   └── OrganizationController.spec.ts # Controller tests
-└── test/
-    └── __mocks__/
-        └── organization.mock.ts  # Fixture data for organizations
+└── __mocks__/
+    └── models/
+        └── organization.mock.ts  # Organization test data
 ```
 
 ### Key Relationships for Organizations
-- An Organization has many Users
-- Enforced unique constraints on organization identifiers and names
+- Organization has many Users (1:M)
+- Organization has one admin User (1:1)
+- Organization has Stripe integration:
+  - Stripe Customer ID for payment processing
+  - Subscription status tracking
+  - Payment processing handled by Stripe
+  - No direct storage of payment methods
 
 ## Authentication Entities
 
 ### Login Credential Entity Tree
 ```
 ├── models/
-│   ├── LoginCredential.ts       # Stores user authentication details
-│   └── LoginCredential.spec.ts  # Security and validation tests
+│   ├── LoginCredential.ts       # Credential storage
+│   └── LoginCredential.spec.ts  # Credential validation
+├── managers/
+│   └── auth/
+│       ├── AuthenticationManager.ts  # Auth singleton
+│       └── auth.config.ts           # Auth configuration
+└── __mocks__/
+    └── models/
+        └── loginCredential.mock.ts  # Credential test data
 ```
 
-### Login Provider Entity Tree
+### Authentication Entity Relationships
+
+#### LoginCredential to AuthenticationManager
+```
+LoginCredential [M] -----> [1] AuthenticationManager (Singleton)
+```
+
+Key Characteristics:
+- Many-to-One conceptual relationship (M:1)
+- LoginCredential references CredentialType from AuthenticationManager
+- AuthenticationManager provides configuration and validation
+- No database relationship (AuthenticationManager is a singleton)
+- Configuration loaded from auth.config.json in root
+- Hot-reloading support for configuration changes
+
+Implementation Notes:
+- LoginCredential uses CredentialType enum for type safety
+- AuthenticationManager validates credentials based on type
+- Configuration changes trigger events for subscribers
+- Credential validation rules defined in AuthenticationManager
+- Type-specific validation logic encapsulated in manager
+
+## Payment Integration Entities
+
+### Payment Method Entity Tree
 ```
 ├── models/
-│   ├── LoginProvider.ts         # Configures external authentication providers (OAuth, etc.)
-│   └── LoginProvider.spec.ts    # Tests for provider configuration
+│   ├── CustomerPaymentMethod.ts       # Payment method entity
+│   └── CustomerPaymentMethod.spec.ts  # Payment validation
+├── services/
+│   ├── CustomerPaymentMethodService.ts    # Payment operations
+│   └── CustomerPaymentMethodService.spec.ts # Service tests
+├── managers/
+│   └── payment/                      # Future payment manager
+└── __mocks__/
+    └── models/
+        └── payment.mock.ts           # Payment test data
 ```
 
-### Stripe Integration in Entities
+### Stripe Integration
+The Organization entity includes Stripe-specific fields:
+- `stripeCustomerId`: String (255 chars) for Stripe Customer ID
+- `subscriptionStatus`: Enum for subscription state tracking
 
-The Organization entity has been extended to support Stripe payment processing. The following fields have been added:
-- `stripeCustomerId`: A string (up to 255 characters) that stores the Stripe Customer ID associated with the organization.
-- `subscriptionStatus`: A string (up to 50 characters) indicating the current subscription status (e.g., 'active', 'past_due', 'canceled').
+CustomerPaymentMethod entity includes:
+- Masked card details
+- Card type and expiration
+- Stripe payment method token
+- Default payment method flag
 
-These fields are used to manage payment integrations and track subscription statuses via Stripe.
+### Payment Integration Relationships
+```
+Organization [1] ----< [M] CustomerPaymentMethod
+```
 
-## Payment Method Entity
-
-The CustomerPaymentMethod entity is used to store detailed payment method information associated with an organization. It typically includes:
-- Card details (stored in a secure, masked format)
-- Expiration dates and card type
-- A token or reference ID provided by Stripe
-
-This entity works in conjunction with the Stripe fields in the Organization entity to manage recurring billing and payment validations.
+Key Characteristics:
+- One-to-Many relationship (1:M)
+- Organization owns payment methods
+- Soft deletion support
+- Default payment method tracking
+- Stripe token storage
 
 ## Entity Relationships and Validation
 
-- All entities use UUIDs as primary keys for consistency.
-- Timestamps and audit fields (createdAt, updatedAt) are maintained across entities.
-- Composite unique constraints and proper indexing are applied where necessary.
-- Inheritance patterns are leveraged for shared fields and relationships.
+- All entities use UUIDs as primary keys
+- Timestamps and audit fields on all entities
+- Soft deletion support where appropriate
+- Type-safe enums for status fields
+- Proper indexing for relationships
+- Composite unique constraints as needed
 
-## Testing Strategy and Data Seeding
+## Testing Strategy
 
-- Comprehensive unit tests for entity validations and constraints.
-- Integration tests to ensure relationship integrity across entities.
-- Use of shared mocks and fixture data for repeatable tests.
+- Entity validation tests
+- Relationship integrity tests
+- Mock data for all entities
+- Consistent test patterns
+- Transaction testing
+- Soft delete verification
 
-## Notes
+## Security Notes
 
-4. **Security Notes**:
-   - No sensitive payment data stored locally
-   - All payment processing through Stripe
-   - Webhook signature verification
-   - Secure API key handling
-   - Organization-level access control 
+- No sensitive payment data stored
+- Stripe handles payment processing
+- Secure token storage
+- Webhook signature verification
+- Organization-level access control
+- Audit trail maintenance 

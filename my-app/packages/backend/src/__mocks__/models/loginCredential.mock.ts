@@ -2,20 +2,25 @@
  * LoginCredential mock data for testing authentication credentials.
  * 
  * Core Features:
- * - Mock credential instances
- * - Mock credential DTOs
- * - Standard test data setup
+ * - Mock credential instances (password and OAuth)
+ * - Credential creation method
+ * - DTOs for API operations
  * 
  * Structure:
- * - Instances: Individual credentials (password, OAuth)
- * - Lists: Collections for testing
+ * - instances: Credential instances by type
+ * - lists: Collections for testing
  * - DTOs: Create, Response
+ * 
+ * Relationships:
+ * - Belongs to LoginProvider (M:1)
+ * - Belongs to BaseUser (M:1)
  */
 
 import { LoginCredential } from '@my-app/backend/src/models/LoginCredential';
-import { CredentialType, OAuthProvider } from '@my-app/shared';
+import { CredentialType } from '@my-app/shared';
 import { core } from './core.mock';
 import { loginProvider } from './loginProvider.mock';
+import { baseUser } from './baseUser.mock';
 import { 
   CreatePasswordCredentialDto,
   CreateOAuthCredentialDto,
@@ -23,8 +28,15 @@ import {
 } from '@my-app/shared';
 
 /**
- * Create a mock LoginCredential instance.
+ * Create a LoginCredential instance.
+ * 
+ * @param id - Credential identifier
+ * @param identifier - User identifier (email/OAuth ID)
+ * @param providerId - Associated provider ID
+ * @param type - Credential type (PASSWORD/OAUTH)
+ * @param baseUserId - Associated base user ID
  * @param overrides - Optional property overrides
+ * @returns Configured LoginCredential instance
  */
 const createLoginCredential = (
   id: string,
@@ -39,16 +51,27 @@ const createLoginCredential = (
   credential.identifier = identifier;
   credential.loginProviderId = providerId;
   credential.credentialType = type;
-  credential.isEnabled = true;
   credential.baseUserId = baseUserId;
+  credential.isEnabled = true;
   credential.createdAt = core.timestamps.past;
   credential.modifiedAt = core.timestamps.now;
   credential.deleted = false;
+
+  // Set type-specific fields
+  if (type === CredentialType.PASSWORD) {
+    credential.passwordHash = 'hashed_' + core.constants.password;
+  } else if (type === CredentialType.OAUTH) {
+    credential.accessToken = core.constants.oauthToken;
+    credential.refreshToken = core.constants.oauthRefresh;
+    credential.accessTokenExpiresAt = core.timestamps.future;
+    credential.refreshTokenExpiresAt = core.timestamps.future;
+  }
+
   return Object.assign(credential, overrides);
 };
 
 /**
- * Mock credential instances for different test scenarios
+ * Mock credential instances by type
  */
 const instances = {
   // Password credentials
@@ -58,19 +81,15 @@ const instances = {
       core.constants.email,
       core.ids.emailProvider,
       CredentialType.PASSWORD,
-      core.ids.baseUser,
-      { passwordHash: 'hashed_password' }
+      core.ids.baseUser
     ),
     disabled: createLoginCredential(
-      'password-disabled',
-      core.constants.email,
+      'cred-pass-disabled',
+      'disabled@example.com',
       core.ids.emailProvider,
       CredentialType.PASSWORD,
-      core.ids.baseUser,
-      { 
-        isEnabled: false,
-        passwordHash: 'hashed_password'
-      }
+      'base-user-disabled',
+      { isEnabled: false }
     )
   },
 
@@ -81,43 +100,25 @@ const instances = {
       'google-user-id',
       core.ids.googleProvider,
       CredentialType.OAUTH,
-      core.ids.baseUser,
-      {
-        provider: OAuthProvider.GOOGLE,
+      core.ids.baseUser2,
+      { 
         accessToken: core.constants.oauthToken,
-        accessTokenExpiresAt: core.timestamps.future,
         refreshToken: core.constants.oauthRefresh,
-        refreshTokenExpiresAt: core.timestamps.future,
-        profile: {
-          scope: 'email profile',
-          rawData: { 
-            email: core.constants.email,
-            name: 'John Doe'
-          }
-        }
+        accessTokenExpiresAt: core.timestamps.future,
+        refreshTokenExpiresAt: core.timestamps.future
       }
     ),
     apple: createLoginCredential(
       core.ids.appleCred,
       'apple-user-id',
       core.ids.appleProvider,
-      CredentialType.OAUTH,
-      core.ids.baseUser,
+      CredentialType.APPLE,
+      core.ids.baseUser3,
       {
-        provider: OAuthProvider.APPLE,
         accessToken: core.constants.oauthToken,
-        accessTokenExpiresAt: core.timestamps.future,
         refreshToken: core.constants.oauthRefresh,
-        refreshTokenExpiresAt: core.timestamps.future,
-        identityToken: 'apple-identity-token',
-        authorizationCode: 'apple-auth-code',
-        profile: {
-          scope: 'email name',
-          rawData: { 
-            email: core.constants.email,
-            name: 'John Doe'
-          }
-        }
+        accessTokenExpiresAt: core.timestamps.future,
+        refreshTokenExpiresAt: core.timestamps.future
       }
     )
   }
@@ -130,47 +131,20 @@ const dtos = {
   create: {
     password: {
       identifier: core.constants.email,
+      password: core.constants.password,
       loginProviderId: core.ids.emailProvider,
       credentialType: CredentialType.PASSWORD,
-      password: core.constants.password,
-      isEnabled: true,
       baseUserId: core.ids.baseUser
     } as CreatePasswordCredentialDto,
     google: {
       identifier: 'google-user-id',
       loginProviderId: core.ids.googleProvider,
       credentialType: CredentialType.OAUTH,
-      provider: OAuthProvider.GOOGLE,
       accessToken: core.constants.oauthToken,
       accessTokenExpiresAt: core.timestamps.future,
       refreshToken: core.constants.oauthRefresh,
       refreshTokenExpiresAt: core.timestamps.future,
-      scope: 'email profile',
-      rawProfile: { 
-        email: core.constants.email,
-        name: 'John Doe'
-      },
-      isEnabled: true,
-      baseUserId: core.ids.baseUser
-    } as CreateOAuthCredentialDto,
-    apple: {
-      identifier: 'apple-user-id',
-      loginProviderId: core.ids.appleProvider,
-      credentialType: CredentialType.OAUTH,
-      provider: OAuthProvider.APPLE,
-      accessToken: core.constants.oauthToken,
-      accessTokenExpiresAt: core.timestamps.future,
-      refreshToken: core.constants.oauthRefresh,
-      refreshTokenExpiresAt: core.timestamps.future,
-      identityToken: 'apple-identity-token',
-      authorizationCode: 'apple-auth-code',
-      scope: 'email name',
-      rawProfile: { 
-        email: core.constants.email,
-        name: 'John Doe'
-      },
-      isEnabled: true,
-      baseUserId: core.ids.baseUser
+      baseUserId: core.ids.baseUser2
     } as CreateOAuthCredentialDto
   },
   response: {
@@ -178,11 +152,8 @@ const dtos = {
       id: core.ids.passwordCred,
       identifier: core.constants.email,
       loginProviderId: core.ids.emailProvider,
-      loginProvider: loginProvider.dtos.response.email,
       credentialType: CredentialType.PASSWORD,
       isEnabled: true,
-      hasPassword: true,
-      baseUserId: core.ids.baseUser,
       createdAt: core.timestamps.past,
       modifiedAt: core.timestamps.now
     } as ResponseLoginCredentialDto,
@@ -190,41 +161,8 @@ const dtos = {
       id: core.ids.googleCred,
       identifier: 'google-user-id',
       loginProviderId: core.ids.googleProvider,
-      loginProvider: loginProvider.dtos.response.google,
       credentialType: CredentialType.OAUTH,
       isEnabled: true,
-      provider: OAuthProvider.GOOGLE,
-      accessTokenExpiresAt: core.timestamps.future,
-      hasRefreshToken: true,
-      refreshTokenExpiresAt: core.timestamps.future,
-      scope: 'email profile',
-      rawProfile: { 
-        email: core.constants.email,
-        name: 'John Doe'
-      },
-      baseUserId: core.ids.baseUser,
-      createdAt: core.timestamps.past,
-      modifiedAt: core.timestamps.now
-    } as ResponseLoginCredentialDto,
-    apple: {
-      id: core.ids.appleCred,
-      identifier: 'apple-user-id',
-      loginProviderId: core.ids.appleProvider,
-      loginProvider: loginProvider.dtos.response.apple,
-      credentialType: CredentialType.OAUTH,
-      isEnabled: true,
-      provider: OAuthProvider.APPLE,
-      accessTokenExpiresAt: core.timestamps.future,
-      hasRefreshToken: true,
-      refreshTokenExpiresAt: core.timestamps.future,
-      hasIdentityToken: true,
-      hasAuthorizationCode: true,
-      scope: 'email name',
-      rawProfile: { 
-        email: core.constants.email,
-        name: 'John Doe'
-      },
-      baseUserId: core.ids.baseUser,
       createdAt: core.timestamps.past,
       modifiedAt: core.timestamps.now
     } as ResponseLoginCredentialDto
@@ -239,28 +177,21 @@ const lists = {
   single: [instances.password.standard],
   multiple: [
     instances.password.standard,
-    instances.oauth.google,
-    instances.oauth.apple
+    instances.oauth.google
   ],
   byType: {
     password: [instances.password.standard],
-    oauth: [
-      instances.oauth.google,
-      instances.oauth.apple
-    ]
+    oauth: [instances.oauth.google, instances.oauth.apple]
   },
   byProvider: {
-    email: [instances.password.standard],
-    google: [instances.oauth.google],
-    apple: [instances.oauth.apple]
+    [core.ids.emailProvider]: [instances.password.standard],
+    [core.ids.googleProvider]: [instances.oauth.google],
+    [core.ids.appleProvider]: [instances.oauth.apple]
   },
-  enabled: [
-    instances.password.standard,
-    instances.oauth.google
-  ],
-  disabled: [
-    instances.password.disabled
-  ]
+  byState: {
+    enabled: [instances.password.standard, instances.oauth.google],
+    disabled: [instances.password.disabled]
+  }
 };
 
 /**

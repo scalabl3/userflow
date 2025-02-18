@@ -181,7 +181,7 @@ export abstract class ServiceBase<T extends ObjectLiteral> {
      */
     protected async validateExists(id: string): Promise<T> {
         const entity = await this.repository.findOne({
-            where: { id } as any,
+            where: { id, deleted: false } as any,
             relations: this.defaultRelations
         });
 

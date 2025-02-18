@@ -80,5 +80,74 @@ export const auth = {
         refreshToken: 'invalid.refresh.format'
       }
     }
+  },
+
+  // Provider instances
+  providers: {
+    email: {
+      id: core.ids.emailProvider,
+      code: 'email',
+      name: 'Email Provider',
+      isEnabled: true
+    },
+    google: {
+      id: core.ids.googleProvider,
+      code: 'google',
+      name: 'Google OAuth',
+      isEnabled: true
+    }
+  },
+
+  // Credential instances
+  credentials: {
+    password: {
+      id: core.ids.passwordCred,
+      identifier: core.constants.email,
+      loginProviderId: core.ids.emailProvider,
+      credentialType: 'PASSWORD',
+      isEnabled: true,
+      passwordHash: 'hashed_password'
+    },
+    google: {
+      id: core.ids.googleCred,
+      identifier: 'google-user-id',
+      loginProviderId: core.ids.googleProvider,
+      credentialType: 'OAUTH',
+      isEnabled: true,
+      provider: OAuthProvider.GOOGLE
+    }
+  },
+
+  // DTO instances
+  credentialDtos: {
+    create: {
+      password: {
+        identifier: core.constants.email,
+        password: core.constants.password,
+        loginProviderId: core.ids.emailProvider
+      },
+      google: {
+        identifier: 'google-user-id',
+        loginProviderId: core.ids.googleProvider,
+        provider: OAuthProvider.GOOGLE
+      }
+    },
+    response: {
+      password: {
+        id: core.ids.passwordCred,
+        identifier: core.constants.email,
+        loginProviderId: core.ids.emailProvider,
+        credentialType: 'PASSWORD',
+        isEnabled: true
+      },
+      google: {
+        id: core.ids.googleCred,
+        identifier: 'google-user-id',
+        loginProviderId: core.ids.googleProvider,
+        credentialType: 'OAUTH',
+        isEnabled: true,
+        provider: OAuthProvider.GOOGLE
+      }
+    }
   }
 }; 

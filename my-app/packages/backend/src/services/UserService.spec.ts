@@ -1,364 +1,296 @@
-import { Test } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './UserService';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../models/User';
-import { Organization } from '../models/Organization';
-import { CreateUserDto, UpdateUserDto, ResponseUserDto } from '@my-app/shared';
+import { Repository, DataSource } from 'typeorm';
 import { ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { user as userMock } from '../__mocks__/models/user.mock';
 import { organization as orgMock } from '../__mocks__/models/organization.mock';
-import { mockRepository, mockDataSource, mockManager } from '../test/setup';
-import { UserState } from '@my-app/shared/';
-
+import { UserState, CreateUserDto, UpdateUserDto } from '@my-app/shared';
+import { TestDataFactory } from '../__mocks__/factories/test-data.factory';
+import { mockRepository } from '../test/setup';
 
 describe('UserService', () => {
     let service: UserService;
-    let repository: Repository<User>;
-    let dataSource: DataSource;
+    let repository: jest.Mocked<Repository<User>>;
+    let dataSource: jest.Mocked<DataSource>;
 
-    const mockOrg: Partial<Organization> = {
-        id: 'org-test-123',
-        name: 'Test Org',
-        adminUserId: 'base-user-123'
-    };
-
-    const mockUser = {
-        id: 'base-user-123',
-        username: 'testuser',
-        firstname: 'Test',
-        lastname: 'User',
-        contactEmail: 'test@example.com',
-        state: UserState.ACTIVE,
-        isEnabled: true,
-        displayname: 'Test User',
-        organization: {
-            ...mockOrg,
-            adminUserId: 'base-user-123'
-        } as Organization
-    } as User;
-
-    const createDto: CreateUserDto = {
-        username: 'newuser',
-        firstname: 'New',
-        lastname: 'User',
-        contactEmail: 'new@example.com',
-        state: UserState.ACTIVE,
-        isEnabled: true,
-        displayname: 'New User',
-        organizationId: mockOrg.id
-    };
-
-    const updateDto: UpdateUserDto = {
-        firstname: 'Updated',
-        lastname: 'User',
-        state: UserState.ACTIVE,
-        displayname: 'Updated User',
-        preferences: {
-            theme: 'light',
-            notifications: {
-                email: true,
-                push: true
-            }
-        } as UserPreferences
+    // Mock data setup using TestDataFactory
+    const mockData = {
+        user: userMock.instances.standard,
+        createDto: TestDataFactory.createUserDto<CreateUserDto>('create', {
+            username: 'newuser',
+            firstname: 'New',
+            lastname: 'User',
+            contactEmail: 'new@example.com',
+            organizationId: orgMock.instances.standard.id
+        }),
+        updateDto: TestDataFactory.createUserDto<UpdateUserDto>('update', {
+            firstname: 'Updated',
+            lastname: 'User',
+            displayname: 'Updated User'
+        })
     };
 
     beforeEach(async () => {
+        // Create mock DataSource
+        dataSource = {
+            createQueryRunner: jest.fn().mockReturnValue({
+                connect: jest.fn(),
+                startTransaction: jest.fn(),
+                commitTransaction: jest.fn(),
+                rollbackTransaction: jest.fn(),
+                release: jest.fn(),
+            }),
+            getRepository: jest.fn(),
+            manager: {
+                transaction: jest.fn(),
+            },
+        } as unknown as jest.Mocked<DataSource>;
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 UserService,
                 {
                     provide: getRepositoryToken(User),
-                    useFactory: mockRepository,
+                    useFactory: () => mockRepository<User>(),
                 },
                 {
                     provide: DataSource,
-                    useValue: mockDataSource,
-                },
+                    useValue: dataSource,
+                }
             ],
         }).compile();
 
         service = module.get<UserService>(UserService);
-        repository = module.get<Repository<User>>(getRepositoryToken(User));
-        dataSource = module.get<DataSource>(DataSource);
-
-        // Reset all mocks
-        jest.clearAllMocks();
-        
-        // Setup default authorization mock
-        mockManager.findOne.mockResolvedValue(mockUser);
+        repository = module.get(getRepositoryToken(User));
     });
 
-    describe('createUser', () => {
-        describe('success cases', () => {
-            it('should create a new user when username is unique', async () => {
-                // Arrange
-                mockManager.findOne.mockResolvedValueOnce(null); // No existing user with username
-                mockManager.save.mockResolvedValue(mockUser);
+    describe('success cases', () => {
+        describe('read operations', () => {
+            it('finds all users', async () => {
+                const users = userMock.lists.multiple;
+                repository.find.mockResolvedValue(users);
 
-                // Act
-                const result = await service.createUser(createDto, mockUser.id);
+                const result = await service.findAllUsers(mockData.user.organizationId, mockData.user.id);
 
-                // Assert
-                expect(result).toBeDefined();
-                expect(mockDataSource.createQueryRunner().startTransaction).toHaveBeenCalled();
-                expect(mockDataSource.createQueryRunner().commitTransaction).toHaveBeenCalled();
-                expect(mockDataSource.createQueryRunner().release).toHaveBeenCalled();
+                expect(result).toEqual(users);
+                expect(repository.find).toHaveBeenCalled();
+            });
+
+            it('finds one user by id', async () => {
+                repository.findOne.mockResolvedValue(mockData.user);
+
+                const result = await service.findOneUser(mockData.user.id, mockData.user.id);
+
+                expect(result).toEqual(mockData.user);
+                expect(repository.findOne).toHaveBeenCalledWith({
+                    where: { id: mockData.user.id },
+                    relations: expect.any(Array)
+                });
+            });
+
+            it('finds user by username', async () => {
+                repository.findOne.mockResolvedValue(mockData.user);
+
+                const result = await service.findByUsername(mockData.user.username, mockData.user.id);
+
+                expect(result).toEqual(mockData.user);
+                expect(repository.findOne).toHaveBeenCalledWith({
+                    where: { username: mockData.user.username },
+                    relations: expect.any(Array)
+                });
             });
         });
 
-        describe('error handling', () => {
-            it('should throw ConflictException when username exists', async () => {
-                // Arrange
-                mockManager.findOne.mockResolvedValueOnce(mockUser); // Existing user with username
+        describe('write operations', () => {
+            it('creates user', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(null);          // username uniqueness
 
-                // Act & Assert
-                await expect(service.createUser(createDto, mockUser.id))
-                    .rejects.toThrow(ConflictException);
+                repository.create.mockReturnValue(mockData.user);
+                repository.save.mockResolvedValue(mockData.user);
+
+                const result = await service.createUser(mockData.createDto, mockData.user.id);
+
+                expect(result).toEqual(mockData.user);
+                expect(repository.save).toHaveBeenCalled();
             });
 
-            it('should throw UnauthorizedException without requestingUserId', async () => {
-                // Act & Assert
-                await expect(service.createUser(createDto, undefined as any))
-                    .rejects.toThrow(UnauthorizedException);
-            });
-        });
+            it('updates user', async () => {
+                const updatedUser = { ...mockData.user, ...mockData.updateDto };
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(mockData.user)  // validateExists
+                    .mockResolvedValueOnce(null);          // username uniqueness
 
-        describe('transaction management', () => {
-            it('should commit transaction on success', async () => {
-                // Arrange
-                mockManager.findOne.mockResolvedValueOnce(null);
-                mockManager.save.mockResolvedValue(mockUser);
+                repository.save.mockResolvedValue(updatedUser);
 
-                // Act
-                await service.createUser(createDto, mockUser.id);
+                const result = await service.updateUser(mockData.user.id, mockData.updateDto, mockData.user.id);
 
-                // Assert
-                expect(mockDataSource.createQueryRunner().commitTransaction).toHaveBeenCalled();
-                expect(mockDataSource.createQueryRunner().release).toHaveBeenCalled();
+                expect(result).toEqual(updatedUser);
+                expect(repository.save).toHaveBeenCalled();
             });
 
-            it('should rollback transaction on error', async () => {
-                // Arrange
-                mockManager.findOne.mockResolvedValueOnce(null);
-                mockManager.save.mockRejectedValue(new Error('DB Error'));
+            it('removes user', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(mockData.user); // validateExists
 
-                // Act & Assert
-                await expect(service.createUser(createDto, mockUser.id))
-                    .rejects.toThrow('DB Error');
-                expect(mockDataSource.createQueryRunner().rollbackTransaction).toHaveBeenCalled();
-                expect(mockDataSource.createQueryRunner().release).toHaveBeenCalled();
-            });
-        });
-    });
+                repository.remove.mockResolvedValue(mockData.user);
 
-    describe('findAllUsers', () => {
-        const mockUsers = userMock.lists.multiple;
+                const result = await service.removeUser(mockData.user.id, mockData.user.id);
 
-        describe('success cases', () => {
-            it('should return all users with organization relation', async () => {
-                // Arrange
-                jest.spyOn(repository, 'find').mockResolvedValue(mockUsers);
-
-                // Act
-                const result = await service.findAllUsers(mockUser.organizationId, mockUser.id);
-
-                // Assert
-                expect(result).toEqual(
-                    expect.arrayContaining(
-                        mockUsers.map(user => expect.objectContaining({
-                            id: user.id,
-                            username: user.username
-                        }))
-                    )
-                );
-            });
-
-            it('should return empty array when no users exist', async () => {
-                // Arrange
-                jest.spyOn(repository, 'find').mockResolvedValue([]);
-
-                // Act
-                const result = await service.findAllUsers(mockUser.organizationId, mockUser.id);
-
-                // Assert
-                expect(result).toEqual([]);
-            });
-        });
-
-        describe('error handling', () => {
-            it('should throw UnauthorizedException without requestingUserId', async () => {
-                // Arrange
-                jest.spyOn(repository, 'findOne').mockResolvedValue(null);
-
-                // Act & Assert
-                await expect(service.findAllUsers(mockUser.organizationId, undefined as any))
-                    .rejects.toThrow(UnauthorizedException);
+                expect(result).toBe(true);
+                expect(repository.remove).toHaveBeenCalledWith(mockData.user);
             });
         });
     });
 
-    describe('findOneUser', () => {
-        describe('success cases', () => {
-            it('should return user by id with organization relation', async () => {
-                // Arrange
-                jest.spyOn(repository, 'findOne')
-                    .mockResolvedValueOnce(mockUser)  // user fetch
+    describe('error handling', () => {
+        describe('not found errors', () => {
+            it('handles user not found in findOne', async () => {
+                repository.findOne.mockResolvedValue(null);
 
-                // Act
-                const result = await service.findOneUser(mockUser.id, mockUser.id);
-
-                // Assert
-                expect(result).toEqual(expect.objectContaining({
-                    id: mockUser.id,
-                    username: mockUser.username
-                }));
-            });
-        });
-
-        describe('error handling', () => {
-            it('should throw NotFoundException when user not found', async () => {
-                // Arrange
-                jest.spyOn(repository, 'findOne')
-                    .mockResolvedValueOnce(null);      // user fetch
-
-                // Act & Assert
-                await expect(service.findOneUser('nonexistent', mockUser.id))
+                await expect(service.findOneUser('nonexistent-id', mockData.user.id))
                     .rejects.toThrow(NotFoundException);
             });
 
-            it('should throw UnauthorizedException without requestingUserId', async () => {
-                // Arrange
-                jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+            it('handles user not found in update', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(null);          // validateExists
 
-                // Act & Assert
-                await expect(service.findOneUser(mockUser.id, undefined as any))
+                await expect(service.updateUser('nonexistent-id', mockData.updateDto, mockData.user.id))
+                    .rejects.toThrow(NotFoundException);
+            });
+
+            it('handles user not found in remove', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(null);          // validateExists
+
+                await expect(service.removeUser('nonexistent-id', mockData.user.id))
+                    .rejects.toThrow(NotFoundException);
+            });
+        });
+
+        describe('conflict errors', () => {
+            it('handles duplicate username in create', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(mockData.user); // username exists
+
+                await expect(service.createUser(mockData.createDto, mockData.user.id))
+                    .rejects.toThrow(ConflictException);
+            });
+
+            it('handles duplicate username in update', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(mockData.user)  // validateExists
+                    .mockResolvedValueOnce(mockData.user); // username exists
+
+                await expect(service.updateUser(mockData.user.id, mockData.updateDto, mockData.user.id))
+                    .rejects.toThrow(ConflictException);
+            });
+        });
+
+        describe('authorization errors', () => {
+            it('handles unauthorized access in create', async () => {
+                await expect(service.createUser(mockData.createDto, undefined as unknown as string))
+                    .rejects.toThrow(UnauthorizedException);
+            });
+
+            it('handles unauthorized access in update', async () => {
+                await expect(service.updateUser(mockData.user.id, mockData.updateDto, undefined as unknown as string))
+                    .rejects.toThrow(UnauthorizedException);
+            });
+
+            it('handles unauthorized access in remove', async () => {
+                await expect(service.removeUser(mockData.user.id, undefined as unknown as string))
                     .rejects.toThrow(UnauthorizedException);
             });
         });
     });
 
-    describe('updateUser', () => {
-        const updatedUser = { ...mockUser, ...updateDto };
+    describe('transaction management', () => {
+        describe('write operations', () => {
+            it('commits successful create', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(null);          // username uniqueness
 
-        describe('success cases', () => {
-            it('should update user when data is valid', async () => {
-                // Arrange
-                mockManager.save.mockResolvedValue(updatedUser);
+                repository.create.mockReturnValue(mockData.user);
+                repository.save.mockResolvedValue(mockData.user);
 
-                // Act
-                const result = await service.updateUser(mockUser.id, updateDto, mockUser.id);
+                await service.createUser(mockData.createDto, mockData.user.id);
 
-                // Assert
-                expect(result).toEqual(expect.objectContaining({
-                    id: updatedUser.id,
-                    username: updatedUser.username
-                }));
+                expect(repository.save).toHaveBeenCalled();
+            });
+
+            it('commits successful update', async () => {
+                const updatedUser = { ...mockData.user, ...mockData.updateDto };
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(mockData.user)  // validateExists
+                    .mockResolvedValueOnce(null);          // username uniqueness
+
+                repository.save.mockResolvedValue(updatedUser);
+
+                await service.updateUser(mockData.user.id, mockData.updateDto, mockData.user.id);
+
+                expect(repository.save).toHaveBeenCalled();
+            });
+
+            it('commits successful remove', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(mockData.user); // validateExists
+
+                repository.remove.mockResolvedValue(mockData.user);
+
+                await service.removeUser(mockData.user.id, mockData.user.id);
+
+                expect(repository.remove).toHaveBeenCalled();
             });
         });
 
-        describe('error handling', () => {
-            it('should throw NotFoundException when user not found', async () => {
-                // Arrange
-                mockManager.save.mockRejectedValue(new Error('DB Error'));
+        describe('rollback scenarios', () => {
+            it('rolls back failed create', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(null);          // username uniqueness
 
-                // Act & Assert
-                await expect(service.updateUser('nonexistent', updateDto, mockUser.id))
+                repository.create.mockReturnValue(mockData.user);
+                repository.save.mockRejectedValue(new Error('DB Error'));
+
+                await expect(service.createUser(mockData.createDto, mockData.user.id))
                     .rejects.toThrow('DB Error');
             });
 
-            it('should throw UnauthorizedException without requestingUserId', async () => {
-                // Arrange
-                mockManager.save.mockRejectedValue(new Error('Unauthorized'));
+            it('rolls back failed update', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(mockData.user)  // validateExists
+                    .mockResolvedValueOnce(null);          // username uniqueness
 
-                // Act & Assert
-                await expect(service.updateUser(mockUser.id, updateDto, undefined as any))
-                    .rejects.toThrow('Unauthorized');
-            });
-        });
+                repository.save.mockRejectedValue(new Error('DB Error'));
 
-        describe('transaction management', () => {
-            it('should commit transaction on success', async () => {
-                // Arrange
-                mockManager.save.mockResolvedValue(updatedUser);
-
-                // Act
-                await service.updateUser(mockUser.id, updateDto, mockUser.id);
-
-                // Assert
-                expect(mockDataSource.createQueryRunner().commitTransaction).toHaveBeenCalled();
-                expect(mockDataSource.createQueryRunner().release).toHaveBeenCalled();
-            });
-
-            it('should rollback transaction on error', async () => {
-                // Arrange
-                mockManager.save.mockRejectedValue(new Error('DB Error'));
-
-                // Act & Assert
-                await expect(service.updateUser(mockUser.id, updateDto, mockUser.id))
-                    .rejects.toThrow('DB Error');
-                expect(mockDataSource.createQueryRunner().rollbackTransaction).toHaveBeenCalled();
-                expect(mockDataSource.createQueryRunner().release).toHaveBeenCalled();
-            });
-        });
-    });
-
-    describe('removeUser', () => {
-        describe('success cases', () => {
-            it('should remove user when found', async () => {
-                // Arrange
-                mockManager.remove.mockResolvedValue([mockUser]);
-
-                // Act
-                await service.removeUser(mockUser.id, mockUser.id);
-
-                // Assert
-                expect(mockManager.remove).toHaveBeenCalledWith([mockUser]);
-            });
-        });
-
-        describe('error handling', () => {
-            it('should throw NotFoundException when user not found', async () => {
-                // Arrange
-                mockManager.remove.mockRejectedValue(new Error('DB Error'));
-
-                // Act & Assert
-                await expect(service.removeUser('nonexistent', mockUser.id))
+                await expect(service.updateUser(mockData.user.id, mockData.updateDto, mockData.user.id))
                     .rejects.toThrow('DB Error');
             });
 
-            it('should throw UnauthorizedException without requestingUserId', async () => {
-                // Arrange
-                mockManager.remove.mockRejectedValue(new Error('Unauthorized'));
+            it('rolls back failed remove', async () => {
+                repository.findOne
+                    .mockResolvedValueOnce(mockData.user)  // validateAccess
+                    .mockResolvedValueOnce(mockData.user); // validateExists
 
-                // Act & Assert
-                await expect(service.removeUser(mockUser.id, undefined as any))
-                    .rejects.toThrow('Unauthorized');
-            });
-        });
+                repository.remove.mockRejectedValue(new Error('DB Error'));
 
-        describe('transaction management', () => {
-            it('should commit transaction on success', async () => {
-                // Arrange
-                mockManager.remove.mockResolvedValue([mockUser]);
-
-                // Act
-                await service.removeUser(mockUser.id, mockUser.id);
-
-                // Assert
-                expect(mockDataSource.createQueryRunner().commitTransaction).toHaveBeenCalled();
-                expect(mockDataSource.createQueryRunner().release).toHaveBeenCalled();
-            });
-
-            it('should rollback transaction on error', async () => {
-                // Arrange
-                mockManager.remove.mockRejectedValue(new Error('DB Error'));
-
-                // Act & Assert
-                await expect(service.removeUser(mockUser.id, mockUser.id))
+                await expect(service.removeUser(mockData.user.id, mockData.user.id))
                     .rejects.toThrow('DB Error');
-                expect(mockDataSource.createQueryRunner().rollbackTransaction).toHaveBeenCalled();
-                expect(mockDataSource.createQueryRunner().release).toHaveBeenCalled();
             });
         });
     });

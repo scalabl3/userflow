@@ -1,7 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { LoginProvider } from './LoginProvider';
 import { BaseUser } from './BaseUser';
-import { CredentialType, OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
+import { CredentialType } from '../managers/AuthenticationManager';
+import { OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
 import { 
     IsString, 
     IsUUID, 
@@ -33,33 +34,26 @@ class OAuthProfile {
 }
 
 /**
- * LoginCredential entity represents authentication methods for users.
+ * LoginCredential entity represents user authentication credentials.
  * 
  * Core Features:
- * - Flexible authentication methods (password/OAuth)
- * - Provider-specific data storage
- * - Security token management
+ * - Unique identifier for each credential
+ * - Credential type (password, OAuth, etc.)
+ * - Provider-specific details
  * - Soft deletion support
  * 
  * Relationships:
- * - Many LoginCredentials belong to one LoginProvider (M:1)
- * - Many LoginCredentials belong to one BaseUser (M:1)
- * - Both relationships are required and protected (RESTRICT)
+ * - Belongs to BaseUser (M:1)
  * 
- * Authentication Types:
- * - Password: Basic email/password authentication
- * - OAuth: Third-party authentication (Google, Apple)
- * - Provider-specific: Apple Sign In with extra fields
+ * Examples:
+ * - Password: Email + hashed password
+ * - OAuth: Provider token + refresh token
+ * - Phone: Verified phone number
  * 
  * Constraints:
- * - Unique identifier per provider
- * - Required relationship to provider and user
- * - Type-specific field validation
- * 
- * Soft Deletion:
- * - Uses deleted flag and deletedAt timestamp
- * - Maintains referential integrity
- * - Allows credential recovery if needed
+ * - Unique (identifier, loginProviderId) pair
+ * - Cannot be orphaned (user required)
+ * - Must have valid credential type
  */
 @Entity()
 @Index(['identifier', 'loginProviderId'], { unique: true })
@@ -72,13 +66,13 @@ export class LoginCredential {
     id!: string;
 
     // Required Core Fields
-    /** Identifier used for authentication (email, phone, etc.) */
-    @Column()
+    /** User identifier (email, phone, OAuth ID) */
+    @Column({ type: 'varchar', length: 255 })
     @IsString()
     @IsStandardLength('IDENTIFIER')
     identifier!: string;
 
-    /** Type of credential (password/OAuth) */
+    /** Type of credential (PASSWORD, OAUTH, etc.) */
     @Column({ 
         type: 'varchar',
         enum: CredentialType,
@@ -87,133 +81,67 @@ export class LoginCredential {
     @IsEnum(CredentialType)
     credentialType!: CredentialType;
 
+    /** Provider code for this credential */
+    @Column({ type: 'varchar', length: 30 })
+    @IsString()
+    @IsStandardLength('CODE')
+    providerCode!: string;
+
     // Optional Core Fields
     /** Flag indicating if the credential is enabled */
-    @Column({ default: true })
+    @Column({ type: 'boolean', default: true })
     @IsBoolean()
     isEnabled: boolean = true;
 
-    // Relationship Fields
-    /** ID of the associated login provider */
-    @Column({ type: 'uuid', nullable: false })
-    @IsUUID()
-    loginProviderId!: string;
+    /** Flag indicating if the credential has been soft deleted */
+    @Column({ type: 'boolean', default: false })
+    @IsBoolean()
+    deleted: boolean = false;
 
-    /** Associated login provider */
-    @ManyToOne(() => LoginProvider, getModelRelationConfig(true, 'RESTRICT').relationOptions)
-    @JoinColumn({ name: 'loginProviderId' })
-    loginProvider!: LoginProvider;
-
-    /** ID of the associated base user */
-    @Column({ type: 'uuid', nullable: false })
-    @IsUUID()
-    baseUserId!: string;
-
-    /** Associated base user */
-    @ManyToOne(() => BaseUser, baseUser => baseUser.loginCredentials, getModelRelationConfig(true, 'RESTRICT').relationOptions)
-    @JoinColumn({ name: 'baseUserId' })
-    baseUser!: BaseUser;
-
-    // Password-specific Fields
-    /** Hashed password for password-based authentication */
-    @ValidateIf(o => o.credentialType === CredentialType.PASSWORD)
-    @Column({ nullable: true })
+    // Type-Specific Fields
+    /** Hashed password for PASSWORD type */
+    @Column({ type: 'varchar', length: 255, nullable: true })
     @IsString()
     @IsOptional()
     @IsStandardLength('PASSWORD_HASH')
     passwordHash?: string;
 
-    // OAuth-specific Fields
-    /** OAuth provider type (Google, Apple, etc.) */
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
-    @Column({ 
-        type: 'varchar',
-        enum: OAuthProvider,
-        enumName: 'oauth_provider',
-        nullable: true 
-    })
-    @IsEnum(OAuthProvider)
-    @IsOptional()
-    provider?: OAuthProvider;
-
     /** OAuth access token */
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
-    @Column({ nullable: true })
+    @Column({ type: 'varchar', length: 2048, nullable: true })
     @IsString()
     @IsOptional()
     @IsStandardLength('TOKEN')
     accessToken?: string;
 
-    /** OAuth access token expiration */
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
-    @Column({ type: 'datetime', nullable: true })
-    @IsDate()
-    @IsOptional()
-    accessTokenExpiresAt?: Date;
-
     /** OAuth refresh token */
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
-    @Column({ nullable: true })
+    @Column({ type: 'varchar', length: 2048, nullable: true })
     @IsString()
     @IsOptional()
     @IsStandardLength('TOKEN')
     refreshToken?: string;
 
+    /** OAuth access token expiration */
+    @Column({ type: 'datetime', nullable: true })
+    @IsDate()
+    @IsOptional()
+    accessTokenExpiresAt?: Date;
+
     /** OAuth refresh token expiration */
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
     @Column({ type: 'datetime', nullable: true })
     @IsDate()
     @IsOptional()
     refreshTokenExpiresAt?: Date;
 
-    /** OAuth profile data */
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
-    @Column({ 
-        type: 'simple-json', 
-        nullable: true,
-        default: {
-            scope: '',
-            rawData: {}
-        }
-    })
-    @IsObject()
-    @ValidateNested()
-    @Type(() => OAuthProfile)
-    @IsOptional()
-    profile?: OAuthProfile;
+    // Relationship Fields
+    /** ID of the user this credential belongs to */
+    @Column(getModelRelationConfig(true, 'CASCADE').columnOptions)
+    @IsUUID()
+    baseUserId!: string;
 
-    // Apple-specific Fields
-    /** Apple identity token */
-    @ValidateIf(o => o.provider === OAuthProvider.APPLE)
-    @Column({ nullable: true })
-    @IsString()
-    @IsOptional()
-    @IsStandardLength('TOKEN')
-    identityToken?: string;
-
-    /** Apple authorization code */
-    @ValidateIf(o => o.provider === OAuthProvider.APPLE)
-    @Column({ nullable: true })
-    @IsString()
-    @IsOptional()
-    @IsStandardLength('AUTH_CODE')
-    authorizationCode?: string;
-
-    /** Apple real user status */
-    @ValidateIf(o => o.provider === OAuthProvider.APPLE)
-    @Column({ nullable: true })
-    @IsString()
-    @IsOptional()
-    @IsStandardLength('REAL_USER_STATUS')
-    realUserStatus?: string;
-
-    /** Apple nonce for token verification */
-    @ValidateIf(o => o.provider === OAuthProvider.APPLE)
-    @Column({ nullable: true })
-    @IsString()
-    @IsOptional()
-    @IsStandardLength('NONCE')
-    nonce?: string;
+    /** The user this credential belongs to */
+    @ManyToOne(() => BaseUser, user => user.loginCredentials, getModelRelationConfig(true, 'CASCADE').relationOptions)
+    @JoinColumn({ name: 'baseUserId' })
+    baseUser!: BaseUser;
 
     // Timestamps
     /** Timestamp of when the credential was created */
@@ -229,11 +157,6 @@ export class LoginCredential {
         default: () => 'CURRENT_TIMESTAMP'
     })
     modifiedAt!: Date;
-
-    /** Flag indicating if the credential has been soft deleted */
-    @Column({ type: 'boolean', default: false })
-    @IsBoolean()
-    deleted: boolean = false;
 
     /** Timestamp of when the credential was soft deleted */
     @DeleteDateColumn({ 

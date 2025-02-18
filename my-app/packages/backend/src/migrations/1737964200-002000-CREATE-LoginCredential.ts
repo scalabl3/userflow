@@ -1,12 +1,6 @@
-import { MigrationInterface, QueryRunner, Table, TableColumn, TableForeignKey } from 'typeorm';
-import { CredentialType, OAuthProvider } from '@my-app/shared';
-import { 
-    getIdColumn, 
-    getTimestampColumns, 
-    getEnumColumn, 
-    getJsonColumn,
-    getManyToOneRelation
-} from './helpers';
+import { MigrationInterface, QueryRunner, Table, TableForeignKey } from 'typeorm';
+import { CredentialType } from '../managers/AuthenticationManager';
+import { FieldLengths } from '@my-app/shared';
 
 /**
  * Creates the login_credential table with standardized columns and relationships.
@@ -45,135 +39,126 @@ import {
  * - Unique composite: (identifier, provider) for login uniqueness
  * - Foreign keys: provider and user for relationship queries
  */
-export class Create_LoginCredential_1737964200_002000 implements MigrationInterface {
+export class CreateLoginCredential1737964200002000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
-        // Get relationship configurations using helpers
-        const providerRelation = getManyToOneRelation(
-            'loginProviderId',
-            'login_provider',
-            true,  // required
-            'RESTRICT'  // prevent provider deletion if credentials exist
-        );
-
-        const userRelation = getManyToOneRelation(
-            'baseUserId',
-            'base_user',
-            true,  // required
-            'CASCADE'  // delete credentials if user is deleted
-        );
-
         await queryRunner.createTable(
             new Table({
                 name: 'login_credential',
                 columns: [
-                    getIdColumn(queryRunner),
+                    {
+                        name: 'id',
+                        type: 'uuid',
+                        isPrimary: true,
+                        isGenerated: true,
+                        generationStrategy: 'uuid'
+                    },
                     {
                         name: 'identifier',
                         type: 'varchar',
-                        length: '255',  // Standardized length for identifiers
-                        isNullable: false,
-                    },
-                    // Relationship columns using helpers
-                    new TableColumn(providerRelation.column),
-                    new TableColumn(userRelation.column),
-                    // Core fields with named enums
-                    getEnumColumn('credentialType', Object.values(CredentialType), false),
-                    {
-                        name: 'isEnabled',
-                        type: 'boolean',
-                        isNullable: false,
-                        default: true,
-                    },
-                    // Password-specific fields
-                    {
-                        name: 'passwordHash',
-                        type: 'varchar',
-                        length: '255',  // Standard length for hashes
-                        isNullable: true,
-                    },
-                    // OAuth-specific fields with named enum
-                    getEnumColumn('provider', Object.values(OAuthProvider), true),
-                    {
-                        name: 'accessToken',
-                        type: 'varchar',
-                        length: '2048',  // Long enough for JWT tokens
-                        isNullable: true,
+                        length: String(FieldLengths.IDENTIFIER.MAX),
+                        isNullable: false
                     },
                     {
-                        name: 'accessTokenExpiresAt',
-                        type: 'datetime',
-                        isNullable: true,
-                    },
-                    {
-                        name: 'refreshToken',
-                        type: 'varchar',
-                        length: '2048',  // Long enough for refresh tokens
-                        isNullable: true,
-                    },
-                    {
-                        name: 'refreshTokenExpiresAt',
-                        type: 'datetime',
-                        isNullable: true,
-                    },
-                    // OAuth profile as structured JSON
-                    new TableColumn(
-                        getJsonColumn(queryRunner, 'profile', true, {
-                            scope: '',
-                            rawData: {}
-                        })
-                    ),
-                    // Apple-specific fields
-                    {
-                        name: 'identityToken',
-                        type: 'varchar',
-                        length: '2048',  // Long enough for JWT tokens
-                        isNullable: true,
-                    },
-                    {
-                        name: 'authorizationCode',
-                        type: 'varchar',
-                        length: '255',
-                        isNullable: true,
-                    },
-                    {
-                        name: 'realUserStatus',
+                        name: 'credential_type',
                         type: 'varchar',
                         length: '50',
-                        isNullable: true,
+                        isNullable: false,
+                        enum: Object.values(CredentialType)
                     },
                     {
-                        name: 'nonce',
+                        name: 'provider_code',
                         type: 'varchar',
-                        length: '100',
-                        isNullable: true,
+                        length: String(FieldLengths.CODE.MAX),
+                        isNullable: false
                     },
-                    ...getTimestampColumns(queryRunner)
+                    {
+                        name: 'is_enabled',
+                        type: 'boolean',
+                        default: true
+                    },
+                    {
+                        name: 'deleted',
+                        type: 'boolean',
+                        default: false
+                    },
+                    {
+                        name: 'password_hash',
+                        type: 'varchar',
+                        length: String(FieldLengths.PASSWORD_HASH.MAX),
+                        isNullable: true
+                    },
+                    {
+                        name: 'access_token',
+                        type: 'varchar',
+                        length: String(FieldLengths.TOKEN.MAX),
+                        isNullable: true
+                    },
+                    {
+                        name: 'refresh_token',
+                        type: 'varchar',
+                        length: String(FieldLengths.TOKEN.MAX),
+                        isNullable: true
+                    },
+                    {
+                        name: 'access_token_expires_at',
+                        type: 'datetime',
+                        isNullable: true
+                    },
+                    {
+                        name: 'refresh_token_expires_at',
+                        type: 'datetime',
+                        isNullable: true
+                    },
+                    {
+                        name: 'base_user_id',
+                        type: 'uuid',
+                        isNullable: false
+                    },
+                    {
+                        name: 'created_at',
+                        type: 'datetime',
+                        default: 'CURRENT_TIMESTAMP'
+                    },
+                    {
+                        name: 'modified_at',
+                        type: 'datetime',
+                        default: 'CURRENT_TIMESTAMP',
+                        onUpdate: 'CURRENT_TIMESTAMP'
+                    },
+                    {
+                        name: 'deleted_at',
+                        type: 'datetime',
+                        isNullable: true
+                    }
                 ],
                 indices: [
                     {
-                        name: 'IDX_LOGIN_CREDENTIAL_IDENTIFIER_PROVIDER',
-                        columnNames: ['identifier', 'loginProviderId'],
+                        name: 'IDX_LOGIN_CRED_IDENTIFIER',
+                        columnNames: ['identifier', 'provider_code'],
                         isUnique: true
                     },
                     {
-                        name: 'IDX_LOGIN_CREDENTIAL_PROVIDER',
-                        columnNames: ['loginProviderId']
-                    },
-                    {
-                        name: 'IDX_LOGIN_CREDENTIAL_USER',
-                        columnNames: ['baseUserId']
+                        name: 'IDX_LOGIN_CRED_USER',
+                        columnNames: ['base_user_id']
                     }
-                ],
-                foreignKeys: [
-                    new TableForeignKey(providerRelation.constraint),
-                    new TableForeignKey(userRelation.constraint)
                 ]
             }),
             true
         );
+
+        await queryRunner.createForeignKey(
+            'login_credential',
+            new TableForeignKey({
+                name: 'FK_LOGIN_CRED_USER',
+                columnNames: ['base_user_id'],
+                referencedColumnNames: ['id'],
+                referencedTableName: 'base_user',
+                onDelete: 'CASCADE'
+            })
+        );
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropTable('login_credential');
+        await queryRunner.dropTable('login_credential', true);
     }
 }

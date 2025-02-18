@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "outDir": "./dist/services"
+  },
+  "references": [
+    { "path": "./tsconfig.models.json" }
+  ],
+  "include": [
+    "src/services/**/*",
+    "src/utils/**/*",
+    "src/constants/**/*"
+  ],
+  "exclude": [
+    "**/*.spec.ts"
+  ]
+} 

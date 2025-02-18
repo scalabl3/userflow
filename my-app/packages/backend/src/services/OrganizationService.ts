@@ -2,9 +2,10 @@ import { Injectable, BadRequestException, ConflictException, NotFoundException, 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, DeepPartial, Not, FindOptionsWhere } from 'typeorm';
 import { Organization } from '../models/Organization';
-import { CreateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/CreateOrganizationDto';
-import { UpdateOrganizationDto } from '@my-app/shared/dist/dtos/Organization/UpdateOrganizationDto';
-import { ResponseOrganizationDto } from '@my-app/shared/dist/dtos/Organization/ResponseOrganizationDto';
+import { CreateOrganizationDto } from '@my-app/shared/';
+import { UpdateOrganizationDto } from '@my-app/shared/';
+import { ResponseOrganizationDto } from '@my-app/shared/';
+import { SubscriptionStatus } from '@my-app/shared/';
 import { ServiceBase } from '../utils/service-utils';
 import { User } from '../models/User';
 import { OperationType, ServiceErrorCode, OperationResult, OperationLogContext } from '../constants/service-operations';
@@ -456,7 +457,7 @@ export class OrganizationService extends ServiceBase<Organization> {
      */
     async updateSubscriptionStatus(
         id: string,
-        status: string,
+        status: SubscriptionStatus.ACTIVE,
         requestingUserId: string,
         stripeCustomerId?: string
     ): Promise<ResponseOrganizationDto> {

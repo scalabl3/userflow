@@ -32,9 +32,6 @@ import {
  * Features:
  * - Organization membership
  * - Display customization
- * - User preferences
- * - Theme settings
- * - Notification preferences
  * 
  * @returns Configured User instance
  */
@@ -45,20 +42,14 @@ const createUser = (
   organizationId: string,
   overrides: Partial<User> = {}
 ): User => {
-  const user = new User();
-  // Copy all BaseUser properties
-  Object.assign(user, baseUserInstance);
-  // Add User-specific properties
-  user.username = username;
-  user.displayname = displayname;
-  user.organizationId = organizationId;
-  user.preferences = {
-    theme: 'light',
-    notifications: {
-      email: true,
-      push: true
-    }
-  };
+    const user = new User();
+    // Copy all BaseUser properties
+    Object.assign(user, baseUserInstance);
+    // Add User-specific properties
+    user.username = username;
+    user.displayname = displayname;
+    user.organizationId = organizationId;
+  
   return Object.assign(user, overrides);
 };
 
@@ -79,16 +70,7 @@ const instances = {
     baseUser.instances.withMultipleCredentials,
     'janesmith',
     'Jane Smith',
-    core.ids.organization2,
-    {
-      preferences: {
-        theme: 'dark',
-        notifications: {
-          email: true,
-          push: false
-        }
-      }
-    }
+    core.ids.organization2
   ),
 
   // User with only OAuth
@@ -104,16 +86,7 @@ const instances = {
     baseUser.instances.disabled,
     'disableduser',
     'Disabled User',
-    core.ids.organization4,
-    { 
-      preferences: {
-        theme: 'light',
-        notifications: {
-          email: false,
-          push: false
-        }
-      }
-    }
+    core.ids.organization4
   ),
 
   noOrganization: createUser(
@@ -145,23 +118,7 @@ const dtos = {
   update: {
     standard: {
       ...baseUser.dtos.update.standard,
-      displayname: 'Johnny Doe',
-      preferences: {
-        theme: 'dark',
-        notifications: {
-          email: true,
-          push: true
-        }
-      }
-    } as UpdateUserDto,
-    preferences: {
-      preferences: {
-        theme: 'dark',
-        notifications: {
-          email: false,
-          push: true
-        }
-      }
+      displayname: 'Johnny Doe'
     } as UpdateUserDto
   },
   response: {
@@ -169,27 +126,13 @@ const dtos = {
       ...baseUser.dtos.response.standard,
       username: 'johndoe',
       displayname: 'John Doe',
-      organizationId: core.ids.organization,
-      preferences: {
-        theme: 'light',
-        notifications: {
-          email: true,
-          push: true
-        }
-      }
+      organizationId: core.ids.organization      
     } as ResponseUserDto,
     withOAuth: {
       ...baseUser.dtos.response.withOAuth,
       username: 'bobjohnson',
       displayname: 'Bob Johnson',
-      organizationId: core.ids.organization3,
-      preferences: {
-        theme: 'light',
-        notifications: {
-          email: true,
-          push: true
-        }
-      }
+      organizationId: core.ids.organization3
     } as ResponseUserDto
   }
 };
@@ -224,5 +167,10 @@ export const user = {
   instances,
   lists,
   dtos,
-  createUser
+  createUser,
+  // Add standard and base references
+  standard: instances.standard,
+  base: baseUser.instances.standard,
+  // Add baseUserDtos reference
+  baseUserDtos: baseUser.dtos
 }; 
