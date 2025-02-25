@@ -38,6 +38,7 @@ import { Exclude, Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { CredentialType, OAuthProvider } from '../../enums/CredentialType';
 import { BaseResponseDto } from '../base/BaseDto';
+import { IsString, IsUUID, IsEnum, IsOptional, IsBoolean, IsDate, IsObject, ValidateIf, IsJWT } from 'class-validator';
 
 @Exclude()
 export class ResponseLoginCredentialDto extends BaseResponseDto {

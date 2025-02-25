@@ -33,7 +33,7 @@
  */
 
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsDate, IsObject, IsString, IsOptional } from 'class-validator';
+import { IsEnum, IsDate, IsObject, IsString, IsOptional, ValidateIf, IsJWT } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OAuthProvider } from '../../../enums/CredentialType';
 import { BaseLoginCredentialDto } from './BaseLoginCredentialDto';

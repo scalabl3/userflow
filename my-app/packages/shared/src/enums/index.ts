@@ -3,12 +3,19 @@
  * Provides organized access to system-wide enums.
  * 
  * Exports:
- * 1. Authentication Enums:
- *    - CredentialType: Authentication method types
- *    - OAuthProvider: Supported OAuth providers
- * 
- * 2. User Management Enums:
+ * 1. User Management Enums:
  *    - UserState: Account lifecycle states
+ * 
+ * 2. Subscription Enums:
+ *    - SubscriptionStatus: Subscription state tracking
+ * 
+ * 3. Authentication Enums:
+ *    - CredentialType: Authentication credential types
+ *    - OAuthProvider: OAuth provider mappings
+ * 
+ * Note:
+ * - Authentication enums (CredentialType, OAuthProvider) are now managed by AuthenticationManager
+ * - Import these directly from '@my-app/backend/src/managers/AuthenticationManager'
  * 
  * Usage:
  * - Single import point for all enums
@@ -16,11 +23,11 @@
  * - Consistent enum usage across modules
  */
 
-// Export credential-related enums
-export * from './CredentialType';
-
 // Export user-related enums
 export * from './UserState';
 
 // Export new subscription status enum
-export * from './SubscriptionStatus'; 
+export * from './SubscriptionStatus';
+
+// Export authentication enums
+export * from './CredentialType'; 

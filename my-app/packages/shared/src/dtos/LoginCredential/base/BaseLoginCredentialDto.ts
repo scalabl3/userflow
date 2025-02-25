@@ -29,7 +29,7 @@
 
 import { IsString, IsUUID, IsEnum, IsOptional, IsBoolean } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { CredentialType } from '@my-app/backend/src/managers/AuthenticationManager';
+import { CredentialType } from '../../../enums/CredentialType';
 import { EnableableDto } from '../../base/BaseDto';
 import { StandardString } from '../../../utils/dto-utils';
 

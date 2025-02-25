@@ -35,9 +35,9 @@
 
 import { ApiProperty } from '@nestjs/swagger';
 import { IsJWT, IsString, IsOptional } from 'class-validator';
+import { OAuthProvider } from '../../../enums/CredentialType';
 import { BaseOAuthCredentialDto } from './BaseOAuthCredentialDto';
 import { StandardString } from '../../../utils/dto-utils';
-import { OAuthProvider } from '../../../enums/CredentialType';
 
 /**
  * Base class for Apple OAuth credential DTOs

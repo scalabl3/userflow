@@ -147,7 +147,9 @@ class UpdateOAuthCredentialDto extends UpdateLoginCredentialBaseDto {
         example: OAuthProvider.GOOGLE,
         required: false
     })
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_GOOGLE || 
+                o.credentialType === CredentialType.OAUTH_GITHUB || 
+                o.credentialType === CredentialType.OAUTH_APPLE)
     @IsEnum(OAuthProvider)
     @IsOptional()
     provider?: OAuthProvider;
@@ -157,7 +159,9 @@ class UpdateOAuthCredentialDto extends UpdateLoginCredentialBaseDto {
         example: 'ya29.a0AfB_byC...',
         required: false
     })
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_GOOGLE || 
+                o.credentialType === CredentialType.OAUTH_GITHUB || 
+                o.credentialType === CredentialType.OAUTH_APPLE)
     @IsString()
     @IsOptional()
     accessToken?: string;
@@ -167,7 +171,9 @@ class UpdateOAuthCredentialDto extends UpdateLoginCredentialBaseDto {
         example: '2024-01-28T12:00:00.000Z',
         required: false
     })
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_GOOGLE || 
+                o.credentialType === CredentialType.OAUTH_GITHUB || 
+                o.credentialType === CredentialType.OAUTH_APPLE)
     @IsDate()
     @IsOptional()
     @Type(() => Date)
@@ -178,7 +184,9 @@ class UpdateOAuthCredentialDto extends UpdateLoginCredentialBaseDto {
         example: '1//04dX...',
         required: false
     })
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_GOOGLE || 
+                o.credentialType === CredentialType.OAUTH_GITHUB || 
+                o.credentialType === CredentialType.OAUTH_APPLE)
     @IsString()
     @IsOptional()
     refreshToken?: string;
@@ -188,7 +196,9 @@ class UpdateOAuthCredentialDto extends UpdateLoginCredentialBaseDto {
         example: '2024-01-28T12:00:00.000Z',
         required: false
     })
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_GOOGLE || 
+                o.credentialType === CredentialType.OAUTH_GITHUB || 
+                o.credentialType === CredentialType.OAUTH_APPLE)
     @IsDate()
     @IsOptional()
     @Type(() => Date)
@@ -199,7 +209,9 @@ class UpdateOAuthCredentialDto extends UpdateLoginCredentialBaseDto {
         example: 'email profile',
         required: false
     })
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_GOOGLE || 
+                o.credentialType === CredentialType.OAUTH_GITHUB || 
+                o.credentialType === CredentialType.OAUTH_APPLE)
     @IsString()
     @IsOptional()
     scope?: string;
@@ -209,7 +221,9 @@ class UpdateOAuthCredentialDto extends UpdateLoginCredentialBaseDto {
         example: { name: 'John Doe', email: 'john@example.com' },
         required: false
     })
-    @ValidateIf(o => o.credentialType === CredentialType.OAUTH)
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_GOOGLE || 
+                o.credentialType === CredentialType.OAUTH_GITHUB || 
+                o.credentialType === CredentialType.OAUTH_APPLE)
     @IsObject()
     @IsOptional()
     rawProfile?: Record<string, any>;
