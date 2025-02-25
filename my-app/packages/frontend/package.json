@@ -12,6 +12,7 @@
     "@my-app/shared": "^1.0.0",
     "@tanstack/react-query": "^4.29.0",
     "axios": "^1.4.0",
+    "lodash": "4.17.21",
     "next": "15.1.6",
     "pkg-dir": "8.0.0",
     "react": "^18.2.0",

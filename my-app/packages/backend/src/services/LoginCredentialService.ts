@@ -11,7 +11,7 @@ import {
     UpdateOAuthCredentialDto,
     ResponseLoginCredentialDto
 } from '@my-app/shared/dist/dtos/LoginCredential';
-import { CredentialType, OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
+import { CredentialType, OAuthProvider } from '../managers/AuthenticationManager';
 import * as bcrypt from 'bcrypt';
 import { ServiceBase } from '../utils/service-utils';
 import { OperationType, ServiceErrorCode, OperationResult } from '../constants/service-operations';
@@ -401,7 +401,9 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
         
         return this.withTransaction(
             async (queryRunner) => {
-                if (dto.credentialType !== CredentialType.OAUTH) {
+                if (dto.credentialType !== CredentialType.OAUTH_GOOGLE && 
+                    dto.credentialType !== CredentialType.OAUTH_GITHUB && 
+                    dto.credentialType !== CredentialType.OAUTH_APPLE) {
                     throw new BadRequestException('Invalid credential type for OAuth creation');
                 }
 
@@ -463,7 +465,9 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
             async (queryRunner) => {
                 const credential = await this.validateExists(id);
                 
-                if (credential.credentialType !== CredentialType.OAUTH) {
+                if (credential.credentialType !== CredentialType.OAUTH_GOOGLE && 
+                    credential.credentialType !== CredentialType.OAUTH_GITHUB && 
+                    credential.credentialType !== CredentialType.OAUTH_APPLE) {
                     throw new BadRequestException('Invalid credential type for OAuth update');
                 }
 
@@ -525,7 +529,9 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
             async (queryRunner) => {
                 const credential = await this.validateExists(id);
 
-                if (credential.credentialType !== CredentialType.OAUTH) {
+                if (credential.credentialType !== CredentialType.OAUTH_GOOGLE && 
+                    credential.credentialType !== CredentialType.OAUTH_GITHUB && 
+                    credential.credentialType !== CredentialType.OAUTH_APPLE) {
                     throw new BadRequestException('Invalid credential type for OAuth token refresh');
                 }
 
@@ -800,8 +806,9 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
         const existing = await this.repository.findOne({
             where: {
                 baseUserId,
-                credentialType: CredentialType.OAUTH,
-                provider,
+                credentialType: provider === OAuthProvider.GOOGLE ? CredentialType.OAUTH_GOOGLE : 
+                                 provider === OAuthProvider.GITHUB ? CredentialType.OAUTH_GITHUB : 
+                                 CredentialType.OAUTH_APPLE,
                 deleted: false
             }
         });

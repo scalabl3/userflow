@@ -1,32 +1,36 @@
 import { authConfigManager, AuthConfig, OAuthProviderConfig, AppleAuthConfig, PasswordAuthConfig, PhoneAuthConfig, MagicLinkConfig, BiometricConfig } from './auth.config';
+import { CredentialType, OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
 
 /**
- * Types of authentication credentials supported by the system.
- * All types are in SCREAMING_SNAKE_CASE for consistency.
- * OAuth subtypes are prefixed with OAUTH_ to clearly indicate their category.
+ * Authentication management system that coordinates login, verification, and sessions.
+ * Provides a central point for authentication-related operations.
+ * 
+ * Core Features:
+ * - Authentication type handling
+ * - Centralized credential management
+ * - Authentication strategy coordination
+ * 
+ * Authentication Types:
+ * - Password
+ * - OAuth (multiple providers)
+ * - Apple Sign In
+ * - Phone/SMS verification
+ * - Magic Links
+ * - Biometric authentication
+ * 
+ * Security Features:
+ * - Token validation
+ * - Session management
+ * - Rate limiting
+ * - Account locking
  */
-export enum CredentialType {
-    /** Traditional username/password authentication */
-    PASSWORD = 'PASSWORD',
-    
-    /** Phone number verification (SMS/call codes) */
-    PHONE = 'PHONE',
-    
-    /** Email magic link authentication */
-    MAGIC_LINK = 'MAGIC_LINK',
-    
-    /** Biometric authentication (fingerprint, face, etc) */
-    BIOMETRIC = 'BIOMETRIC',
-    
-    /** Google OAuth authentication */
-    OAUTH_GOOGLE = 'OAUTH_GOOGLE',
-    
-    /** GitHub OAuth authentication */
-    OAUTH_GITHUB = 'OAUTH_GITHUB',
-    
-    /** Apple Sign In (special OAuth case) */
-    OAUTH_APPLE = 'OAUTH_APPLE'
-}
+
+import { Injectable } from '@nestjs/common';
+
+/**
+ * Re-export authentication enums
+ */
+export { CredentialType, OAuthProvider };
 
 /**
  * Singleton manager for handling authentication validation and flows.
@@ -38,6 +42,7 @@ export enum CredentialType {
  * const isValid = authManager.validateCredential(credential);
  * ```
  */
+@Injectable()
 export class AuthenticationManager {
     private static instance: AuthenticationManager;
     private config: AuthConfig;

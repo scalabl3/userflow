@@ -2,8 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { IsString, IsBoolean, IsUUID, IsOptional, IsEnum } from 'class-validator';
 import { User } from './User';
 import { getModelRelationConfig } from '../migrations/helpers';
-import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
-import { SubscriptionStatus } from '@my-app/shared/dist/enums/SubscriptionStatus';
+import { IsStandardLength } from '@my-app/shared';
+import { SubscriptionStatus } from '@my-app/shared';
 
 /**
  * Organization entity represents a company or group in the system.

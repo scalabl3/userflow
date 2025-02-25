@@ -9,8 +9,8 @@ import {
 } from 'typeorm';
 import { LoginCredential } from './LoginCredential';
 import { IsString, IsEmail, IsEnum, IsBoolean } from 'class-validator';
-import { UserState } from '@my-app/shared/dist/enums/UserState';
-import { IsStandardLength, IsStandardName } from '@my-app/shared/dist/decorators/validation';
+import { UserState } from '@my-app/shared';
+import { IsStandardLength, IsStandardName } from '@my-app/shared';
 
 /**
  * BaseUser entity represents the core user identity in the system.

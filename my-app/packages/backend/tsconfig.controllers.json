@@ -5,9 +5,12 @@
       "declaration": true,
       "outDir": "./dist/controllers"
     },
+    "references": [
+      { "path": "./tsconfig.services.json" }
+    ],
     "include": [
-      "src/models/**/*",
-    "src/migrations/helpers.ts"
+      "src/controllers/**/*",
+      "src/utils/**/*"
     ],
     "exclude": [
       "**/*.spec.ts"

@@ -4,7 +4,7 @@ import { Organization } from './Organization';
 import { IsString, IsUUID, IsObject, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { getModelRelationConfig } from '../migrations/helpers';
-import { IsStandardLength, IsStandardName } from '@my-app/shared/dist/decorators/validation';
+import { IsStandardLength, IsStandardName } from '@my-app/shared';
 
 
 /**

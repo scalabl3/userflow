@@ -16,7 +16,7 @@
  */
 
 import { LoginCredential } from '@my-app/backend/src/models/LoginCredential';
-import { CredentialType } from '@my-app/backend/src/managers/AuthenticationManager';
+import { CredentialType, OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
 import { core } from './core.mock';
 import { baseUser } from './baseUser.mock';
 

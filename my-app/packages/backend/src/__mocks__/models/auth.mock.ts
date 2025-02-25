@@ -11,7 +11,7 @@
  * - Requests: Login and refresh requests
  */
 
-import { OAuthProvider } from '@my-app/shared';
+import { OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
 import { core } from './core.mock';
 
 /**
@@ -94,7 +94,7 @@ export const auth = {
     google: {
       id: core.ids.googleCred,
       identifier: 'google-user-id',
-      credentialType: 'OAUTH',
+      credentialType: 'OAUTH_GOOGLE',
       isEnabled: true,
       provider: OAuthProvider.GOOGLE
     }
@@ -122,7 +122,7 @@ export const auth = {
       google: {
         id: core.ids.googleCred,
         identifier: 'google-user-id',
-        credentialType: 'OAUTH',
+        credentialType: 'OAUTH_GOOGLE',
         isEnabled: true,
         provider: OAuthProvider.GOOGLE
       }

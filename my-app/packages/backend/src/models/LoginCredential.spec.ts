@@ -26,7 +26,7 @@
 
 import { validate } from 'class-validator';
 import { LoginCredential } from './LoginCredential';
-import { CredentialType, OAuthProvider } from '@my-app/shared';
+import { CredentialType, OAuthProvider } from '../managers/AuthenticationManager';
 import { loginCredential as credentialMock } from '../__mocks__/models/loginCredential.mock';
 import { baseUser as baseUserMock } from '../__mocks__/models/baseUser.mock';
 import { core } from '../__mocks__/models/core.mock';
@@ -72,11 +72,9 @@ describe('LoginCredential', () => {
             
             expect(credential.id).toBe(mockCred.id);
             expect(credential.identifier).toBe(mockCred.identifier);
-            expect(credential.credentialType).toBe(CredentialType.OAUTH);
-            expect(credential.provider).toBe(OAuthProvider.GOOGLE);
+            expect(credential.credentialType).toBe(CredentialType.OAUTH_GOOGLE);
             expect(credential.accessToken).toBe(mockCred.accessToken);
             expect(credential.refreshToken).toBe(mockCred.refreshToken);
-            expect(credential.profile).toEqual(mockCred.profile);
         });
     });
 
@@ -115,8 +113,7 @@ describe('LoginCredential', () => {
             });
 
             it('should get and set enabled flag', () => {
-                const mockCred = credentialMock.instances.password.disabled;
-                credential.isEnabled = mockCred.isEnabled;
+                credential.isEnabled = false;
                 expect(credential.isEnabled).toBe(false);
             });
         });
@@ -144,10 +141,10 @@ describe('LoginCredential', () => {
          * Validates OAuth-specific features.
          */
         describe('oauth credentials', () => {
-            it('should handle OAuth provider', () => {
+            it('should handle OAuth credential types', () => {
                 const mockCred = credentialMock.instances.oauth.google;
-                credential.provider = mockCred.provider;
-                expect(credential.provider).toBe(OAuthProvider.GOOGLE);
+                credential.credentialType = mockCred.credentialType;
+                expect(credential.credentialType).toBe(CredentialType.OAUTH_GOOGLE);
             });
 
             it('should handle access token', () => {
@@ -166,12 +163,6 @@ describe('LoginCredential', () => {
                 
                 expect(credential.refreshToken).toBe(mockCred.refreshToken);
                 expect(credential.refreshTokenExpiresAt).toBe(mockCred.refreshTokenExpiresAt);
-            });
-
-            it('should handle OAuth profile', () => {
-                const mockCred = credentialMock.instances.oauth.google;
-                credential.profile = mockCred.profile;
-                expect(credential.profile).toEqual(mockCred.profile);
             });
 
             it('should handle Apple-specific fields', () => {

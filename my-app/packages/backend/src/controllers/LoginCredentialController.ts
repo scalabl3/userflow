@@ -8,7 +8,7 @@ import {
     UpdateLoginCredentialDto,
     ResponseLoginCredentialDto
 } from '@my-app/shared/dist/dtos/LoginCredential';
-import { CredentialType } from '@my-app/shared/dist/enums';
+import { CredentialType } from '../managers/AuthenticationManager';
 import { ControllerBase } from '../utils/controller-utils';
 
 @Controller('login-credentials')

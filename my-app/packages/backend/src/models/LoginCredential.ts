@@ -1,7 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseUser } from './BaseUser';
-import { CredentialType } from '../managers/AuthenticationManager';
-import { OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
+import { CredentialType, OAuthProvider } from '../managers/AuthenticationManager';
 import { 
     IsString, 
     IsUUID, 
@@ -16,7 +15,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { getModelRelationConfig } from '../migrations/helpers';
-import { IsStandardLength } from '@my-app/shared/dist/decorators/validation';
+import { IsStandardLength } from '@my-app/shared';
 
 /**
  * Represents OAuth-specific profile data

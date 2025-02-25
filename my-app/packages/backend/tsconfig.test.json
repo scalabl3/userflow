@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "outDir": "./dist/test"
+  },
+  "include": [
+    "src/**/*.spec.ts",
+    "src/__mocks__/**/*",
+    "test/**/*"
+  ],
+  "references": [
+    { "path": "./tsconfig.models.json" },
+    { "path": "./tsconfig.services.json" },
+    { "path": "./tsconfig.controllers.json" }
+  ]
+} 

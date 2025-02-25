@@ -12,6 +12,9 @@ npx tsc -b tsconfig.models.json
 echo "Building Services..."
 npx tsc -b tsconfig.services.json
 
+echo "Building Controllers..."
+npx tsc -b tsconfig.controllers.json
+
 echo "Building Backend..."
 npm run build
 
