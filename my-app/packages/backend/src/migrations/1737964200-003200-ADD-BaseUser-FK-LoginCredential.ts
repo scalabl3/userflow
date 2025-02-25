@@ -16,7 +16,7 @@ export class Add_BaseUser_Fk_LoginCredential_1737964200_003200 implements Migrat
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Get relationship configuration
         const userRelation = getManyToOneRelation(
-            'baseUserId',
+            'base_user_id',
             'base_user',
             true,  // required
             'CASCADE'  // delete credentials if user is deleted
@@ -31,7 +31,7 @@ export class Add_BaseUser_Fk_LoginCredential_1737964200_003200 implements Migrat
     public async down(queryRunner: QueryRunner): Promise<void> {
         const table = await queryRunner.getTable('login_credential');
         const foreignKey = table?.foreignKeys.find(fk => 
-            fk.columnNames.indexOf('baseUserId') !== -1
+            fk.columnNames.indexOf('base_user_id') !== -1
         );
         if (foreignKey) {
             await queryRunner.dropForeignKey('login_credential', foreignKey);

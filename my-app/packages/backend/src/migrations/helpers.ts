@@ -30,7 +30,7 @@ export const getIdColumn = (queryRunner: QueryRunner): TableColumnOptions => {
  * 
  * Common patterns:
  * - Child records that can't exist without parent: use CASCADE (e.g., LoginCredential -> BaseUser)
- * - Core entity relationships: use RESTRICT (e.g., LoginCredential -> LoginProvider)
+ * - Core entity relationships: use RESTRICT
  * - Optional relationships: use SET NULL (requires isNullable: true)
  * 
  * Note: Consider using soft deletion pattern instead of CASCADE if historical data is important.

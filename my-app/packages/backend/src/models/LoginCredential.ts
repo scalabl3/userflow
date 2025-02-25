@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { LoginProvider } from './LoginProvider';
 import { BaseUser } from './BaseUser';
 import { CredentialType } from '../managers/AuthenticationManager';
 import { OAuthProvider } from '@my-app/shared/dist/enums/CredentialType';
@@ -12,7 +11,8 @@ import {
     IsDate, 
     IsObject, 
     ValidateIf,
-    ValidateNested
+    ValidateNested,
+    IsJWT
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { getModelRelationConfig } from '../migrations/helpers';
@@ -38,41 +38,71 @@ class OAuthProfile {
  * 
  * Core Features:
  * - Unique identifier for each credential
- * - Credential type (password, OAuth, etc.)
+ * - Credential type (PASSWORD, OAUTH_*, etc.)
  * - Provider-specific details
  * - Soft deletion support
  * 
- * Relationships:
- * - Belongs to BaseUser (M:1)
+ * Field Groups:
+ * 1. Core Fields
+ *    - id: Primary key
+ *    - identifier: User identifier (email/phone)
+ *    - credentialType: Authentication method type
+ *    - isEnabled: Activation status
+ * 
+ * 2. Password Authentication
+ *    - passwordHash: Hashed password storage
+ * 
+ * 3. OAuth Authentication
+ *    - accessToken: OAuth access token
+ *    - refreshToken: OAuth refresh token
+ *    - accessTokenExpiresAt: Access token expiration
+ *    - refreshTokenExpiresAt: Refresh token expiration
+ * 
+ * 4. Apple Sign In
+ *    - identityToken: Apple JWT identity token
+ *    - authorizationCode: Apple authorization code
+ *    - realUserStatus: Apple's user validation status
+ *    - nonce: Security nonce for validation
+ * 
+ * 5. Relationships
+ *    - baseUserId: Foreign key to base_user
+ *    - baseUser: BaseUser relationship
+ * 
+ * 6. Timestamps
+ *    - createdAt: Creation timestamp
+ *    - modifiedAt: Last modification timestamp
+ *    - deleted: Soft deletion flag
+ *    - deletedAt: Soft deletion timestamp
+ * 
+ * Constraints:
+ * - Unique (identifier, credentialType) pair
+ * - Cannot be orphaned (user required)
+ * - Must have valid credential type
+ * - Type-specific field validation
  * 
  * Examples:
  * - Password: Email + hashed password
  * - OAuth: Provider token + refresh token
- * - Phone: Verified phone number
- * 
- * Constraints:
- * - Unique (identifier, loginProviderId) pair
- * - Cannot be orphaned (user required)
- * - Must have valid credential type
+ * - Apple: Identity token + authorization code
  */
 @Entity()
-@Index(['identifier', 'loginProviderId'], { unique: true })
-@Index(['loginProviderId'])
+@Index(['identifier', 'credentialType'], { unique: true })
 @Index(['baseUserId'])
 export class LoginCredential {
-    // Primary Key
+    // ----------------
+    // Core Fields
+    // ----------------
     /** Unique identifier for the credential */
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    // Required Core Fields
     /** User identifier (email, phone, OAuth ID) */
     @Column({ type: 'varchar', length: 255 })
     @IsString()
     @IsStandardLength('IDENTIFIER')
     identifier!: string;
 
-    /** Type of credential (PASSWORD, OAUTH, etc.) */
+    /** Type of credential (PASSWORD, OAUTH_GOOGLE, etc.) */
     @Column({ 
         type: 'varchar',
         enum: CredentialType,
@@ -81,31 +111,25 @@ export class LoginCredential {
     @IsEnum(CredentialType)
     credentialType!: CredentialType;
 
-    /** Provider code for this credential */
-    @Column({ type: 'varchar', length: 30 })
-    @IsString()
-    @IsStandardLength('CODE')
-    providerCode!: string;
-
-    // Optional Core Fields
     /** Flag indicating if the credential is enabled */
     @Column({ type: 'boolean', default: true })
     @IsBoolean()
     isEnabled: boolean = true;
 
-    /** Flag indicating if the credential has been soft deleted */
-    @Column({ type: 'boolean', default: false })
-    @IsBoolean()
-    deleted: boolean = false;
-
-    // Type-Specific Fields
+    // ----------------
+    // Password Authentication
+    // ----------------
     /** Hashed password for PASSWORD type */
     @Column({ type: 'varchar', length: 255, nullable: true })
     @IsString()
     @IsOptional()
     @IsStandardLength('PASSWORD_HASH')
+    @ValidateIf(o => o.credentialType === CredentialType.PASSWORD)
     passwordHash?: string;
 
+    // ----------------
+    // OAuth Authentication
+    // ----------------
     /** OAuth access token */
     @Column({ type: 'varchar', length: 2048, nullable: true })
     @IsString()
@@ -132,7 +156,44 @@ export class LoginCredential {
     @IsOptional()
     refreshTokenExpiresAt?: Date;
 
-    // Relationship Fields
+    // ----------------
+    // Apple Sign In
+    // ----------------
+    /** Apple identity token (JWT) */
+    @Column({ type: 'varchar', length: 2048, nullable: true })
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_APPLE)
+    @IsJWT()
+    @IsOptional()
+    @IsStandardLength('TOKEN')
+    identityToken?: string;
+
+    /** Apple authorization code */
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_APPLE)
+    @IsString()
+    @IsOptional()
+    @IsStandardLength('AUTH_CODE')
+    authorizationCode?: string;
+
+    /** Apple's real user status */
+    @Column({ type: 'varchar', length: 50, nullable: true })
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_APPLE)
+    @IsString()
+    @IsOptional()
+    @IsStandardLength('REAL_USER_STATUS')
+    realUserStatus?: string;
+
+    /** Nonce used for Apple token verification */
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    @ValidateIf(o => o.credentialType === CredentialType.OAUTH_APPLE)
+    @IsString()
+    @IsOptional()
+    @IsStandardLength('NONCE')
+    nonce?: string;
+
+    // ----------------
+    // Relationships
+    // ----------------
     /** ID of the user this credential belongs to */
     @Column(getModelRelationConfig(true, 'CASCADE').columnOptions)
     @IsUUID()
@@ -140,10 +201,12 @@ export class LoginCredential {
 
     /** The user this credential belongs to */
     @ManyToOne(() => BaseUser, user => user.loginCredentials, getModelRelationConfig(true, 'CASCADE').relationOptions)
-    @JoinColumn({ name: 'baseUserId' })
+    @JoinColumn({ name: 'base_user_id' })
     baseUser!: BaseUser;
 
+    // ----------------
     // Timestamps
+    // ----------------
     /** Timestamp of when the credential was created */
     @CreateDateColumn({ 
         type: 'datetime',
@@ -157,6 +220,11 @@ export class LoginCredential {
         default: () => 'CURRENT_TIMESTAMP'
     })
     modifiedAt!: Date;
+
+    /** Flag indicating if the credential has been soft deleted */
+    @Column({ type: 'boolean', default: false })
+    @IsBoolean()
+    deleted: boolean = false;
 
     /** Timestamp of when the credential was soft deleted */
     @DeleteDateColumn({ 

@@ -2,17 +2,12 @@ import { authConfigManager, AuthConfig, OAuthProviderConfig, AppleAuthConfig, Pa
 
 /**
  * Types of authentication credentials supported by the system.
- * Defines both the storage format and validation rules for each type.
+ * All types are in SCREAMING_SNAKE_CASE for consistency.
+ * OAuth subtypes are prefixed with OAUTH_ to clearly indicate their category.
  */
 export enum CredentialType {
     /** Traditional username/password authentication */
     PASSWORD = 'PASSWORD',
-    
-    /** Standard OAuth2 authentication (e.g. Google) */
-    OAUTH = 'OAUTH',
-    
-    /** Apple Sign-In (OAuth2 + additional requirements) */
-    APPLE = 'APPLE',
     
     /** Phone number verification (SMS/call codes) */
     PHONE = 'PHONE',
@@ -21,7 +16,16 @@ export enum CredentialType {
     MAGIC_LINK = 'MAGIC_LINK',
     
     /** Biometric authentication (fingerprint, face, etc) */
-    BIOMETRIC = 'BIOMETRIC'
+    BIOMETRIC = 'BIOMETRIC',
+    
+    /** Google OAuth authentication */
+    OAUTH_GOOGLE = 'OAUTH_GOOGLE',
+    
+    /** GitHub OAuth authentication */
+    OAUTH_GITHUB = 'OAUTH_GITHUB',
+    
+    /** Apple Sign In (special OAuth case) */
+    OAUTH_APPLE = 'OAUTH_APPLE'
 }
 
 /**
@@ -91,10 +95,10 @@ export class AuthenticationManager {
         switch (method) {
             case CredentialType.PASSWORD:
                 return this.config.password.enabled;
-            case CredentialType.OAUTH:
+            case CredentialType.OAUTH_GOOGLE:
+            case CredentialType.OAUTH_GITHUB:
+            case CredentialType.OAUTH_APPLE:
                 return this.config.oauth.enabled;
-            case CredentialType.APPLE:
-                return this.config.apple.enabled;
             case CredentialType.PHONE:
                 return this.config.phone.enabled;
             case CredentialType.MAGIC_LINK:
@@ -189,11 +193,10 @@ export class AuthenticationManager {
             case CredentialType.PASSWORD:
                 return this.validatePasswordCredential(credential);
             
-            case CredentialType.OAUTH:
+            case CredentialType.OAUTH_GOOGLE:
+            case CredentialType.OAUTH_GITHUB:
+            case CredentialType.OAUTH_APPLE:
                 return this.validateOAuthCredential(credential);
-            
-            case CredentialType.APPLE:
-                return this.validateAppleCredential(credential);
             
             case CredentialType.PHONE:
                 return this.validatePhoneCredential(credential);
@@ -226,16 +229,6 @@ export class AuthenticationManager {
     private validateOAuthCredential(credential: any): boolean {
         const config = this.getOAuthConfig(credential.provider);
         // TODO: Implement OAuth validation using config
-        throw new Error('Not implemented');
-    }
-
-    /**
-     * Validates Apple Sign-In credentials.
-     * Handles additional Apple-specific requirements.
-     */
-    private validateAppleCredential(credential: any): boolean {
-        const config = this.config.apple;
-        // TODO: Implement Apple validation using config
         throw new Error('Not implemented');
     }
 

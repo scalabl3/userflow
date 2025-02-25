@@ -60,27 +60,17 @@ describe('LoginCredentialController', () => {
     const mockPasswordCredentialResponse = plainToClass(ResponseLoginCredentialDto, {
         id: auth.credentials.password.id,
         identifier: auth.credentials.password.identifier,
-        loginProviderId: auth.credentials.password.loginProviderId,
         credentialType: CredentialType.PASSWORD,
         isEnabled: true,
         hasPassword: true,
         baseUserId: auth.credentials.password.baseUserId,
         createdAt: auth.credentials.password.createdAt,
-        modifiedAt: auth.credentials.password.modifiedAt,
-        loginProvider: {
-            id: auth.providers.email.id,
-            code: auth.providers.email.code,
-            name: auth.providers.email.name,
-            isEnabled: auth.providers.email.isEnabled,
-            createdAt: auth.providers.email.createdAt,
-            modifiedAt: auth.providers.email.modifiedAt
-        }
+        modifiedAt: auth.credentials.password.modifiedAt
     });
 
     const mockGoogleCredentialResponse = plainToClass(ResponseLoginCredentialDto, {
         id: auth.credentials.google.id,
         identifier: auth.credentials.google.identifier,
-        loginProviderId: auth.credentials.google.loginProviderId,
         credentialType: CredentialType.OAUTH,
         provider: OAuthProvider.GOOGLE,
         isEnabled: true,
@@ -91,21 +81,12 @@ describe('LoginCredentialController', () => {
         accessTokenExpiresAt: auth.credentials.google.accessTokenExpiresAt,
         refreshTokenExpiresAt: auth.credentials.google.refreshTokenExpiresAt,
         scope: auth.credentials.google.scope,
-        rawProfile: auth.credentials.google.rawProfile,
-        loginProvider: {
-            id: auth.providers.google.id,
-            code: auth.providers.google.code,
-            name: auth.providers.google.name,
-            isEnabled: auth.providers.google.isEnabled,
-            createdAt: auth.providers.google.createdAt,
-            modifiedAt: auth.providers.google.modifiedAt
-        }
+        rawProfile: auth.credentials.google.rawProfile
     });
 
     const mockAppleCredentialResponse = plainToClass(ResponseLoginCredentialDto, {
         id: 'cred789',
         identifier: 'apple123',
-        loginProviderId: 'apple-provider-id',
         credentialType: CredentialType.OAUTH,
         provider: OAuthProvider.APPLE,
         isEnabled: true,
@@ -117,15 +98,7 @@ describe('LoginCredentialController', () => {
         modifiedAt: auth.credentials.google.modifiedAt,
         accessTokenExpiresAt: auth.credentials.google.accessTokenExpiresAt,
         refreshTokenExpiresAt: auth.credentials.google.refreshTokenExpiresAt,
-        rawProfile: { email: 'john@example.com' },
-        loginProvider: {
-            id: 'apple-provider-id',
-            code: 'apple',
-            name: 'Apple OAuth',
-            isEnabled: true,
-            createdAt: auth.credentials.google.createdAt,
-            modifiedAt: auth.credentials.google.modifiedAt
-        }
+        rawProfile: { email: 'john@example.com' }
     });
 
     beforeEach(async () => {
@@ -214,7 +187,6 @@ describe('LoginCredentialController', () => {
 
                 const result = await controller.create({
                     identifier: 'test@example.com',
-                    loginProviderId: 'provider123',
                     credentialType: CredentialType.PASSWORD,
                     password: 'password123',
                     isEnabled: true
@@ -226,7 +198,6 @@ describe('LoginCredentialController', () => {
             it('should throw BadRequestException for invalid credential type', async () => {
                 const invalidDto = {
                     identifier: 'test@example.com',
-                    loginProviderId: 'provider123',
                     credentialType: CredentialType.OAUTH,
                     password: 'password123'
                 } as CreatePasswordCredentialDto;
@@ -273,7 +244,6 @@ describe('LoginCredentialController', () => {
             it('should create a Google OAuth credential', async () => {
                 const createOAuthDto: CreateOAuthCredentialDto = {
                     identifier: 'google-user',
-                    loginProviderId: 'google-provider',
                     credentialType: CredentialType.OAUTH,
                     provider: OAuthProvider.GOOGLE,
                     accessToken: 'access-token',
@@ -296,7 +266,6 @@ describe('LoginCredentialController', () => {
             it('should create an Apple OAuth credential', async () => {
                 const createAppleOAuthDto: CreateOAuthCredentialDto = {
                     identifier: 'apple123',
-                    loginProviderId: 'apple-provider-id',
                     credentialType: CredentialType.OAUTH,
                     provider: OAuthProvider.APPLE,
                     accessToken: 'access-token',

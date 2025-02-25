@@ -2,7 +2,6 @@ import { Injectable, Logger, BadRequestException, ConflictException, NotFoundExc
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, DeepPartial, Not, In } from 'typeorm';
 import { LoginCredential } from '../models/LoginCredential';
-import { LoginProvider } from '../models/LoginProvider';
 import { 
     CreateLoginCredentialDto,
     CreatePasswordCredentialDto,
@@ -48,7 +47,7 @@ import { OperationType, ServiceErrorCode, OperationResult } from '../constants/s
 @Injectable()
 export class LoginCredentialService extends ServiceBase<LoginCredential> {
     protected readonly ENTITY_NAME = 'LoginCredential';
-    protected readonly defaultRelations = ['loginProvider', 'baseUser'];
+    protected readonly defaultRelations = ['baseUser'];
 
     constructor(
         @InjectRepository(LoginCredential)
@@ -156,20 +155,20 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
     }
 
     /**
-     * Find all credentials for a login provider.
+     * Find all credentials by credential type.
      * Requires Organization Administrator role (ADMIN_OP).
      * 
-     * @param loginProviderId - Provider ID to find credentials for
+     * @param credentialType - The credential type to find credentials for
      * @param requestingUserId - ID of the admin user making the request
      * @returns Array of credential DTOs
      * @throws UnauthorizedException if user lacks admin access
      */
-    async findByProvider(loginProviderId: string, requestingUserId: string): Promise<ResponseLoginCredentialDto[]> {
+    async findByCredentialType(credentialType: CredentialType, requestingUserId: string): Promise<ResponseLoginCredentialDto[]> {
         await this.validateAccess(OperationType.ADMIN, requestingUserId);
         
         const credentials = await this.repository.find({
             where: { 
-                loginProviderId,
+                credentialType,
                 deleted: false
             },
             relations: this.defaultRelations
@@ -177,12 +176,12 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
         
         this.logOperation(
             OperationType.ADMIN,
-            'findByProvider',
+            'findByCredentialType',
             OperationResult.SUCCESS,
             {
                 userId: requestingUserId,
                 metadata: { 
-                    providerId: loginProviderId,
+                    credentialType,
                     count: credentials.length
                 }
             }
@@ -192,18 +191,18 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
     }
 
     /**
-     * Find a credential by identifier and provider
+     * Find a credential by identifier and credential type
      * Used for authentication, requires system access
      * 
      * @param identifier - Credential identifier
-     * @param loginProviderId - Provider ID
+     * @param credentialType - Credential type
      * @param requestingUserId - ID of the user making the request
      * @returns Credential DTO if found
      * @throws UnauthorizedException if access denied
      */
-    async findByIdentifierAndProvider(
+    async findByIdentifierAndType(
         identifier: string,
-        loginProviderId: string,
+        credentialType: CredentialType,
         requestingUserId: string
     ): Promise<ResponseLoginCredentialDto | null> {
         await this.validateAccess(OperationType.SYSTEM, requestingUserId);
@@ -211,7 +210,7 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
         const credential = await this.repository.findOne({
             where: { 
                 identifier, 
-                loginProviderId,
+                credentialType,
                 deleted: false
             },
             relations: this.defaultRelations
@@ -219,13 +218,13 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
         
         this.logOperation(
             OperationType.SYSTEM,
-            'findByIdentifierAndProvider',
+            'findByIdentifierAndType',
             OperationResult.SUCCESS,
             {
                 userId: requestingUserId,
                 metadata: { 
                     identifier,
-                    loginProviderId
+                    credentialType
                 }
             }
         );
@@ -253,12 +252,11 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
                     throw new BadRequestException('Invalid credential type for password creation');
                 }
 
-                await this.validateUniqueness('identifier', dto.identifier, dto.loginProviderId);
+                await this.validateUniqueness('identifier', dto.identifier, dto.credentialType);
                 
                 await this.validateNoExistingCredentialType(
                     dto.baseUserId,
-                    dto.loginProviderId,
-                    CredentialType.PASSWORD
+                    dto.credentialType
                 );
 
                 if ('password' in dto) {
@@ -407,11 +405,10 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
                     throw new BadRequestException('Invalid credential type for OAuth creation');
                 }
 
-                await this.validateUniqueness('identifier', dto.identifier, dto.loginProviderId);
+                await this.validateUniqueness('identifier', dto.identifier, dto.credentialType);
                 
                 await this.validateNoExistingOAuthProvider(
                     dto.baseUserId,
-                    dto.loginProviderId,
                     dto.provider
                 );
 
@@ -705,23 +702,23 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
     }
 
     /**
-     * Validate that a field value is unique for a provider.
+     * Validate that a field value is unique for a credential type.
      * 
      * @param field - Field name to check
      * @param value - Field value to check
-     * @param loginProviderId - Provider ID context
+     * @param credentialType - Credential type context
      * @param excludeId - Optional ID to exclude from check
      * @throws ConflictException if value is not unique
      */
     protected async validateUniqueness(
         field: string,
         value: string,
-        loginProviderId: string,
+        credentialType: CredentialType,
         excludeId?: string
     ): Promise<void> {
         const where: any = { 
             [field]: value,
-            loginProviderId,
+            credentialType,
             deleted: false
         };
         
@@ -733,8 +730,8 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
         if (existing) {
             throw new ConflictException({
                 code: ServiceErrorCode.ALREADY_EXISTS,
-                message: `${this.ENTITY_NAME} with ${field} '${value}' already exists for this provider`,
-                details: { field, value, loginProviderId }
+                message: `${this.ENTITY_NAME} with ${field} '${value}' already exists for this credential type`,
+                details: { field, value, credentialType }
             });
         }
     }
@@ -759,22 +756,19 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
     }
 
     /**
-     * Validate no existing credential of type exists for user and provider.
+     * Validate no existing credential of type exists for user.
      * 
      * @param baseUserId - User ID to check
-     * @param loginProviderId - Provider ID to check
      * @param credentialType - Credential type to check
      * @throws ConflictException if credential already exists
      */
     protected async validateNoExistingCredentialType(
         baseUserId: string,
-        loginProviderId: string,
         credentialType: CredentialType
     ): Promise<void> {
         const existing = await this.repository.findOne({
             where: {
                 baseUserId,
-                loginProviderId,
                 credentialType,
                 deleted: false
             }
@@ -783,10 +777,9 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
         if (existing) {
             throw new ConflictException({
                 code: ServiceErrorCode.ALREADY_EXISTS,
-                message: `User already has a ${credentialType} credential for this provider`,
+                message: `User already has a ${credentialType} credential`,
                 details: { 
                     baseUserId,
-                    loginProviderId,
                     credentialType
                 }
             });
@@ -797,19 +790,16 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
      * Validate no existing OAuth provider credential exists for user.
      * 
      * @param baseUserId - User ID to check
-     * @param loginProviderId - Provider ID to check
      * @param provider - OAuth provider to check
      * @throws ConflictException if credential already exists
      */
     protected async validateNoExistingOAuthProvider(
         baseUserId: string,
-        loginProviderId: string,
         provider: OAuthProvider
     ): Promise<void> {
         const existing = await this.repository.findOne({
             where: {
                 baseUserId,
-                loginProviderId,
                 credentialType: CredentialType.OAUTH,
                 provider,
                 deleted: false
@@ -822,7 +812,6 @@ export class LoginCredentialService extends ServiceBase<LoginCredential> {
                 message: `User already has a credential for ${provider}`,
                 details: {
                     baseUserId,
-                    loginProviderId,
                     provider
                 }
             });

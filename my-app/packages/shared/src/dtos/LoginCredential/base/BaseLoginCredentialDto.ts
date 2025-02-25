@@ -4,21 +4,19 @@
  * 
  * Core Features:
  * - Basic credential identification
- * - Provider association
- * - User association
  * - Type classification
+ * - User association
  * - State management
  * 
  * Common Properties:
  * - identifier: User's authentication identifier
- * - loginProviderId: Associated provider reference
+ * - credentialType: Type of credential (PASSWORD, OAUTH_*, etc.)
  * - baseUserId: Associated user reference
- * - credentialType: Type of credential
  * - isEnabled: Activation state
  * 
  * Validation:
  * - Required fields validation
- * - UUID format validation
+ * - String format validation
  * - Enum value validation
  * - Boolean state validation
  * 
@@ -31,9 +29,9 @@
 
 import { IsString, IsUUID, IsEnum, IsOptional, IsBoolean } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { CredentialType } from '../../../enums/CredentialType';
+import { CredentialType } from '@my-app/backend/src/managers/AuthenticationManager';
 import { EnableableDto } from '../../base/BaseDto';
-import { StandardString, RelationshipId } from '../../../utils/dto-utils';
+import { StandardString } from '../../../utils/dto-utils';
 
 /**
  * Base class for all login credential DTOs
@@ -47,11 +45,12 @@ export class BaseLoginCredentialDto extends EnableableDto {
     identifier!: string;
 
     @ApiProperty({
-        description: 'ID of the associated login provider',
-        example: '123e4567-e89b-12d3-a456-426614174000'
+        description: 'Type of credential',
+        enum: CredentialType,
+        example: CredentialType.PASSWORD
     })
-    @IsUUID()
-    loginProviderId!: string;
+    @IsEnum(CredentialType)
+    credentialType!: CredentialType;
 
     @ApiProperty({
         description: 'ID of the associated base user',
@@ -59,14 +58,6 @@ export class BaseLoginCredentialDto extends EnableableDto {
     })
     @IsUUID()
     baseUserId!: string;
-
-    @ApiProperty({
-        description: 'Type of credential',
-        enum: CredentialType,
-        example: CredentialType.PASSWORD
-    })
-    @IsEnum(CredentialType)
-    credentialType!: CredentialType;
 
     @ApiProperty({
         description: 'Whether the credential is enabled',

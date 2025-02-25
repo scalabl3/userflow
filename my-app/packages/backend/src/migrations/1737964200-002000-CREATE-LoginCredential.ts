@@ -5,39 +5,70 @@ import { FieldLengths } from '@my-app/shared';
 /**
  * Creates the login_credential table with standardized columns and relationships.
  * 
- * Core Fields:
- * - UUID primary key
- * - Identifier (username/email/phone)
- * - Credential type (password/oauth) with named enum
- * - Enabled flag for credential activation
+ * Table Structure:
+ * ================
  * 
- * Relationships:
- * - Many-to-One with LoginProvider (RESTRICT delete)
- *   - Prevents orphaned credentials
- *   - Required relationship
- * - Many-to-One with BaseUser (CASCADE delete)
- *   - Credentials deleted with user
- *   - Required relationship
+ * Core Fields
+ * -----------
+ * | Column          | Type      | Description                    |
+ * |-----------------|-----------|--------------------------------|
+ * | id              | uuid      | Primary key                    |
+ * | identifier      | varchar   | User identifier (email/phone)  |
+ * | credential_type | enum      | Authentication method type     |
+ * | is_enabled      | boolean   | Activation status             |
+ * | deleted         | boolean   | Soft deletion flag            |
  * 
- * Type-specific Fields:
- * - Password Authentication:
- *   - Password hash (nullable)
+ * Password Authentication
+ * ----------------------
+ * | Column          | Type      | Description                    |
+ * |-----------------|-----------|--------------------------------|
+ * | password_hash   | varchar   | Hashed password storage        |
  * 
- * - OAuth Authentication:
- *   - Provider type (named enum)
- *   - Access token with expiry
- *   - Refresh token with expiry
- *   - Profile data as structured JSON
+ * OAuth Authentication
+ * -------------------
+ * | Column                    | Type      | Description                    |
+ * |---------------------------|-----------|--------------------------------|
+ * | access_token             | varchar   | OAuth access token             |
+ * | refresh_token            | varchar   | OAuth refresh token            |
+ * | access_token_expires_at  | datetime  | Access token expiration        |
+ * | refresh_token_expires_at | datetime  | Refresh token expiration       |
  * 
- * - Apple-specific OAuth:
- *   - Identity token
- *   - Authorization code
- *   - Real user status
- *   - Nonce for security
+ * Apple Sign In
+ * -------------
+ * | Column             | Type      | Description                    |
+ * |--------------------|-----------|--------------------------------|
+ * | identity_token     | varchar   | Apple JWT identity token       |
+ * | authorization_code | varchar   | Apple authorization code       |
+ * | real_user_status   | varchar   | Apple's user validation status |
+ * | nonce              | varchar   | Security nonce for validation  |
  * 
- * Indices:
- * - Unique composite: (identifier, provider) for login uniqueness
- * - Foreign keys: provider and user for relationship queries
+ * Relationships
+ * ------------
+ * | Column        | Type      | Description                    |
+ * |---------------|-----------|--------------------------------|
+ * | base_user_id  | uuid      | Foreign key to base_user       |
+ * 
+ * Timestamps
+ * ----------
+ * | Column      | Type      | Description                    |
+ * |-------------|-----------|--------------------------------|
+ * | created_at  | datetime  | Creation timestamp             |
+ * | modified_at | datetime  | Last modification timestamp    |
+ * | deleted_at  | datetime  | Soft deletion timestamp        |
+ * 
+ * Indices
+ * -------
+ * 1. IDX_LOGIN_CRED_IDENTIFIER (identifier, credential_type) UNIQUE
+ *    - Ensures unique login credentials per type
+ * 2. IDX_LOGIN_CRED_USER (base_user_id)
+ *    - Optimizes user credential lookups
+ * 
+ * Foreign Keys
+ * ------------
+ * 1. FK_LOGIN_CRED_USER
+ *    - References: base_user(id)
+ *    - On Delete: CASCADE
+ *    - Ensures credential cleanup with user deletion
  */
 export class CreateLoginCredential1737964200002000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
@@ -45,6 +76,7 @@ export class CreateLoginCredential1737964200002000 implements MigrationInterface
             new Table({
                 name: 'login_credential',
                 columns: [
+                    // Core Fields
                     {
                         name: 'id',
                         type: 'uuid',
@@ -66,12 +98,6 @@ export class CreateLoginCredential1737964200002000 implements MigrationInterface
                         enum: Object.values(CredentialType)
                     },
                     {
-                        name: 'provider_code',
-                        type: 'varchar',
-                        length: String(FieldLengths.CODE.MAX),
-                        isNullable: false
-                    },
-                    {
                         name: 'is_enabled',
                         type: 'boolean',
                         default: true
@@ -81,12 +107,16 @@ export class CreateLoginCredential1737964200002000 implements MigrationInterface
                         type: 'boolean',
                         default: false
                     },
+
+                    // Password Authentication Fields
                     {
                         name: 'password_hash',
                         type: 'varchar',
                         length: String(FieldLengths.PASSWORD_HASH.MAX),
                         isNullable: true
                     },
+
+                    // OAuth Authentication Fields
                     {
                         name: 'access_token',
                         type: 'varchar',
@@ -109,11 +139,41 @@ export class CreateLoginCredential1737964200002000 implements MigrationInterface
                         type: 'datetime',
                         isNullable: true
                     },
+
+                    // Apple Sign In Fields
+                    {
+                        name: 'identity_token',
+                        type: 'varchar',
+                        length: String(FieldLengths.TOKEN.MAX),
+                        isNullable: true
+                    },
+                    {
+                        name: 'authorization_code',
+                        type: 'varchar',
+                        length: String(FieldLengths.AUTH_CODE.MAX),
+                        isNullable: true
+                    },
+                    {
+                        name: 'real_user_status',
+                        type: 'varchar',
+                        length: String(FieldLengths.REAL_USER_STATUS.MAX),
+                        isNullable: true
+                    },
+                    {
+                        name: 'nonce',
+                        type: 'varchar',
+                        length: String(FieldLengths.NONCE.MAX),
+                        isNullable: true
+                    },
+
+                    // Relationship Fields
                     {
                         name: 'base_user_id',
                         type: 'uuid',
                         isNullable: false
                     },
+
+                    // Timestamp Fields
                     {
                         name: 'created_at',
                         type: 'datetime',
@@ -134,7 +194,7 @@ export class CreateLoginCredential1737964200002000 implements MigrationInterface
                 indices: [
                     {
                         name: 'IDX_LOGIN_CRED_IDENTIFIER',
-                        columnNames: ['identifier', 'provider_code'],
+                        columnNames: ['identifier', 'credential_type'],
                         isUnique: true
                     },
                     {
