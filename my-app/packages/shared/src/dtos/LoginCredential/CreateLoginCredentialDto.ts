@@ -58,12 +58,6 @@ class CreateLoginCredentialBaseDto {
     @IsString()
     identifier!: string;
 
-    @ApiProperty({
-        description: 'ID of the associated login provider',
-        example: '123e4567-e89b-12d3-a456-426614174000'
-    })
-    @IsUUID()
-    loginProviderId!: string;
 
     @ApiProperty({
         description: 'ID of the associated base user',

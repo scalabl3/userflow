@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LoginCredentialController } from './LoginCredentialController';
 import { LoginCredentialService } from '../services/LoginCredentialService';
 import { LoginCredential } from '../models/LoginCredential';
-import { LoginProvider } from '../models/LoginProvider';
 import { BaseUser } from '../models/BaseUser';
 import { 
     CreateLoginCredentialDto,
@@ -43,14 +42,6 @@ describe('LoginCredentialController', () => {
     };
 
     // Mock data setup
-    const mockLoginProvider: LoginProvider = {
-        id: 'provider123',
-        code: 'email',
-        name: 'Email Provider',
-        isEnabled: true,
-        createdAt: new Date(),
-        modifiedAt: new Date()
-    } as LoginProvider;
 
     const mockBaseUser: BaseUser = {
         id: 'user123',

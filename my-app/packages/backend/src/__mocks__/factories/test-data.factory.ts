@@ -3,7 +3,7 @@
  * Provides utility methods for creating test entities and DTOs with proper relationships.
  * 
  * Core Features:
- * - Entity creation (User, BaseUser, Organization, LoginProvider, LoginCredential)
+ * - Entity creation (User, BaseUser, Organization, LoginCredential)
  * - DTO generation for all entity types
  * - Complex scenario generation with proper relationships
  * - Customizable through overrides
@@ -23,7 +23,6 @@
 import { auth } from '../models/auth.mock';
 import { user } from '../models/user.mock';
 import { organization } from '../models/organization.mock';
-import { LoginProvider } from '../../models/LoginProvider';
 import { LoginCredential } from '../../models/LoginCredential';
 import { BaseUser } from '../../models/BaseUser';
 import { User } from '../../models/User';
@@ -45,17 +44,8 @@ import { Organization } from '../../models/Organization';
 
 export class TestDataFactory {
   /**
-   * Create a login provider instance for testing.
-   * Supports email and Google OAuth providers.
-   * 
-   * @param type - Provider type ('email' or 'google')
-   * @param overrides - Optional property overrides
-   * @returns Configured LoginProvider instance
+   * This method has been removed. Authentication is now handled by the AuthenticationManager singleton.
    */
-  static createLoginProvider(type: 'email' | 'google', overrides = {}) {
-    const base = auth.providers[type];
-    return { ...base, ...overrides } as LoginProvider;
-  }
 
   /**
    * Create a standard user instance for testing.
@@ -166,22 +156,16 @@ export class TestDataFactory {
   }
 
   /**
-   * Create a base user with login credentials and provider.
+   * Create a base user with login credentials.
    * Sets up complete authentication structure with proper relationships.
    * 
    * @param type - Credential type ('password' or 'google')
    * @param overrides - Optional property overrides for base user
-   * @returns Object containing related entities (baseUser, credential, provider)
+   * @returns Object containing related entities (baseUser, credential)
    */
   static createBaseUserWithLoginCredentials(type: 'password' | 'google' = 'password', overrides = {}) {
-    // Create provider first
-    const provider = this.createLoginProvider(type === 'password' ? 'email' : 'google');
-    
-    // Create credential with reference to provider
-    const credential = this.createCredential(type, {
-      loginProvider: provider,
-      loginProviderId: provider.id
-    });
+    // Create credential
+    const credential = this.createCredential(type);
 
     // Create base user with reference to credential
     const baseUser = this.createBaseUser(false, {
@@ -193,23 +177,20 @@ export class TestDataFactory {
     credential.baseUser = baseUser;
     credential.baseUserId = baseUser.id;
 
-    // Update provider's credentials array
-    provider.credentials = [credential];
-
-    return { baseUser, credential, provider };
+    return { baseUser, credential };
   }
 
   /**
-   * Create a user with login credentials and provider.
+   * Create a user with login credentials.
    * Sets up complete user structure with authentication.
    * 
    * @param type - Credential type ('password' or 'google')
    * @param overrides - Optional property overrides for user
-   * @returns Object containing related entities (user, credential, provider)
+   * @returns Object containing related entities (user, credential)
    */
   static createUserWithLoginCredentials(type: 'password' | 'google' = 'password', overrides = {}) {
     // Create base user with credentials first
-    const { baseUser, credential, provider } = this.createBaseUserWithLoginCredentials(type);
+    const { baseUser, credential } = this.createBaseUserWithLoginCredentials(type);
     
     // Create user extending the base user
     const user = this.createUser({
@@ -218,7 +199,7 @@ export class TestDataFactory {
       loginCredentials: [credential]
     });
 
-    return { user, credential, provider };
+    return { user, credential };
   }
 
   /**

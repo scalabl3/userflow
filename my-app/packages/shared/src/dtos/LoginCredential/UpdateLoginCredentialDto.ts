@@ -60,14 +60,6 @@ class UpdateLoginCredentialBaseDto {
     @IsOptional()
     identifier?: string;
 
-    @ApiProperty({
-        description: 'ID of the associated login provider',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-        required: false
-    })
-    @IsUUID()
-    @IsOptional()
-    loginProviderId?: string;
 
     @ApiProperty({
         description: 'Type of credential',
