@@ -10,7 +10,6 @@
  * 
  * Categories:
  * 1. Authentication:
- *    - LoginProvider: Provider management
  *    - LoginCredential: Credential handling
  * 
  * 2. User Management:
@@ -31,11 +30,6 @@
  * - Documentation generation
  * - Type safety enforcement
  */
-
-// Export LoginProvider DTOs
-export * from './LoginProvider/CreateLoginProviderDto';
-export * from './LoginProvider/UpdateLoginProviderDto';
-export * from './LoginProvider/ResponseLoginProviderDto';
 
 // Export LoginCredential DTOs and enums
 export * from './LoginCredential/CreateLoginCredentialDto';

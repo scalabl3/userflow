@@ -12,7 +12,6 @@ import { getSoftDeletionColumn } from './helpers';
  * Affected Tables:
  *   - BaseUser
  *   - LoginCredential
- *   - LoginProvider
  *   - Organization
  * 
  * Note: User table inherits from BaseUser, so it gets soft deletion automatically
@@ -38,11 +37,6 @@ export class AddSoftDeleteFields1738084610030000 implements MigrationInterface {
             new TableColumn(softDeleteColumn)
         ]);
 
-        // Add to LoginProvider
-        await queryRunner.addColumns('login_provider', [
-            deletedColumn,
-            new TableColumn(softDeleteColumn)
-        ]);
 
         // Add to Organization
         await queryRunner.addColumns('organization', [
@@ -56,9 +50,6 @@ export class AddSoftDeleteFields1738084610030000 implements MigrationInterface {
         await queryRunner.dropColumn('organization', 'deleted');
         await queryRunner.dropColumn('organization', 'deletedAt');
 
-        // Remove from LoginProvider
-        await queryRunner.dropColumn('login_provider', 'deleted');
-        await queryRunner.dropColumn('login_provider', 'deletedAt');
 
         // Remove from LoginCredential
         await queryRunner.dropColumn('login_credential', 'deleted');

@@ -37,7 +37,6 @@
 import { Exclude, Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { CredentialType, OAuthProvider } from '../../enums/CredentialType';
-import { ResponseLoginProviderDto } from '../LoginProvider/ResponseLoginProviderDto';
 import { BaseResponseDto } from '../base/BaseDto';
 
 @Exclude()
@@ -56,20 +55,6 @@ export class ResponseLoginCredentialDto extends BaseResponseDto {
     })
     identifier!: string;
 
-    @Expose()
-    @ApiProperty({
-        description: 'ID of the associated login provider',
-        example: '123e4567-e89b-12d3-a456-426614174000'
-    })
-    loginProviderId!: string;
-
-    @Expose()
-    @Type(() => ResponseLoginProviderDto)
-    @ApiProperty({
-        description: 'Associated login provider details',
-        type: () => ResponseLoginProviderDto
-    })
-    loginProvider?: ResponseLoginProviderDto;
 
     @Expose()
     @ApiProperty({

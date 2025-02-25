@@ -6,14 +6,13 @@
  * - Initialization: Default values and instance creation
  * - Core Properties: Credential identification and type
  * - Authentication: Password and OAuth handling
- * - Relationships: Provider and user associations
+ * - Relationships: User associations
  * - Timestamps: Temporal tracking
  * 
  * Coverage Areas:
  * - Credential Configuration:
  *   - Identifier management
  *   - Type validation
- *   - Provider association
  *   - User binding
  * 
  * - Authentication Types:
@@ -22,7 +21,6 @@
  *   - Token management
  * 
  * - Relationship Management:
- *   - Provider linkage
  *   - User association
  */
 
@@ -30,7 +28,6 @@ import { validate } from 'class-validator';
 import { LoginCredential } from './LoginCredential';
 import { CredentialType, OAuthProvider } from '@my-app/shared';
 import { loginCredential as credentialMock } from '../__mocks__/models/loginCredential.mock';
-import { loginProvider as providerMock } from '../__mocks__/models/loginProvider.mock';
 import { baseUser as baseUserMock } from '../__mocks__/models/baseUser.mock';
 import { core } from '../__mocks__/models/core.mock';
 
@@ -54,7 +51,6 @@ describe('LoginCredential', () => {
             expect(credential.identifier).toBeUndefined();
             expect(credential.credentialType).toBeUndefined();
             expect(credential.isEnabled).toBe(true);
-            expect(credential.loginProviderId).toBeUndefined();
             expect(credential.baseUserId).toBeUndefined();
         });
 
@@ -66,7 +62,6 @@ describe('LoginCredential', () => {
             expect(credential.identifier).toBe(mockCred.identifier);
             expect(credential.credentialType).toBe(CredentialType.PASSWORD);
             expect(credential.isEnabled).toBe(mockCred.isEnabled);
-            expect(credential.loginProviderId).toBe(mockCred.loginProviderId);
             expect(credential.baseUserId).toBe(mockCred.baseUserId);
             expect(credential.passwordHash).toBe(mockCred.passwordHash);
         });
@@ -191,35 +186,9 @@ describe('LoginCredential', () => {
 
     /**
      * Tests for LoginCredential relationships.
-     * Validates provider and user associations.
+     * Validates user associations.
      */
     describe('relationships', () => {
-        /**
-         * Tests for login provider relationship.
-         * Ensures proper provider assignment and validation.
-         */
-        describe('loginProvider relationship', () => {
-            describe('foreign key', () => {
-                it('should get and set loginProviderId', () => {
-                    const mockCred = credentialMock.instances.password.standard;
-                    credential.loginProviderId = mockCred.loginProviderId;
-                    expect(credential.loginProviderId).toBe(mockCred.loginProviderId);
-                });
-
-                it('should require loginProviderId', async () => {
-                    const errors = await validate(credential);
-                    const providerIdErrors = errors.find(e => e.property === 'loginProviderId');
-                    expect(providerIdErrors?.constraints).toHaveProperty('isUuid');
-                });
-            });
-
-            it('should set login provider relationship', () => {
-                const mockCred = credentialMock.instances.password.standard;
-                credential.loginProvider = providerMock.instances.standard;
-                expect(credential.loginProvider.id).toBe(mockCred.loginProviderId);
-            });
-        });
-
         /**
          * Tests for base user relationship.
          * Ensures proper user assignment and validation.

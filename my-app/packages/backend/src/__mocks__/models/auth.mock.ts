@@ -82,28 +82,11 @@ export const auth = {
     }
   },
 
-  // Provider instances
-  providers: {
-    email: {
-      id: core.ids.emailProvider,
-      code: 'email',
-      name: 'Email Provider',
-      isEnabled: true
-    },
-    google: {
-      id: core.ids.googleProvider,
-      code: 'google',
-      name: 'Google OAuth',
-      isEnabled: true
-    }
-  },
-
   // Credential instances
   credentials: {
     password: {
       id: core.ids.passwordCred,
       identifier: core.constants.email,
-      loginProviderId: core.ids.emailProvider,
       credentialType: 'PASSWORD',
       isEnabled: true,
       passwordHash: 'hashed_password'
@@ -111,7 +94,6 @@ export const auth = {
     google: {
       id: core.ids.googleCred,
       identifier: 'google-user-id',
-      loginProviderId: core.ids.googleProvider,
       credentialType: 'OAUTH',
       isEnabled: true,
       provider: OAuthProvider.GOOGLE
@@ -123,12 +105,10 @@ export const auth = {
     create: {
       password: {
         identifier: core.constants.email,
-        password: core.constants.password,
-        loginProviderId: core.ids.emailProvider
+        password: core.constants.password
       },
       google: {
         identifier: 'google-user-id',
-        loginProviderId: core.ids.googleProvider,
         provider: OAuthProvider.GOOGLE
       }
     },
@@ -136,14 +116,12 @@ export const auth = {
       password: {
         id: core.ids.passwordCred,
         identifier: core.constants.email,
-        loginProviderId: core.ids.emailProvider,
         credentialType: 'PASSWORD',
         isEnabled: true
       },
       google: {
         id: core.ids.googleCred,
         identifier: 'google-user-id',
-        loginProviderId: core.ids.googleProvider,
         credentialType: 'OAUTH',
         isEnabled: true,
         provider: OAuthProvider.GOOGLE
